@@ -1,0 +1,442 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Go Report Card | A Gopher Gala Hackathon Product</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    
+      ga('create', 'UA-58936835-1', 'auto');
+      ga('send', 'pageview');
+    
+    </script>
+    <style>
+    /* Page header 
+    -------------------------------------------------- */
+    .header {
+      text-align: center;
+    }
+    .header h2 {
+      font-size: 3em;
+    }
+    .input-row {
+      margin-top: 20px;
+    }
+    .input-row input.input-box {
+        width: 100%;
+        height: 46px;
+    }
+    .btn-test {
+        width: 100%;
+    }
+    .url label {
+        z-index: 2;
+        position: absolute;
+        line-height: 46px;
+        font-weight: normal;
+        color: rgb(51, 51, 51);
+        font-weight: 200;
+    }
+    .url input {
+        position: absolute;
+        right: 0;
+        z-index: 1;
+        margin-left: -190px;
+        padding-left: 190px;
+    }
+
+    /* Results section
+    -------------------------------------------------- */
+    .results {
+      width: 100%;
+    }
+    .results .head-row {
+      cursor: pointer;
+    }
+    .results .cell-description {
+      width: 30%;
+    }
+    .results .cell-progress-bar {
+      width: 70%;
+    }
+    .results .files, .results .errors {
+      padding-left: 0;
+    }
+    .results .files .file {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    .results .files .errors .error {
+      list-style-type: none;
+      padding-left: 4em;
+      margin: 1em 0;
+    }
+    .results .progress {
+      margin-bottom: 0;
+    }
+    .results .details-row:hover {
+      background: inherit;
+    }
+    .results .perfect {
+      color: #aaa;
+    }
+    .results-text p {
+      font-size: 1.5em;
+    }
+    .huge {
+      font-size: 3em;
+      font-weight: bold;
+    }
+    .results .tool-description {
+      color: #666;
+    }
+    .container-update {
+      text-align: right;
+    }
+
+    /* Partials section
+    -------------------------------------------------- */
+    #partials {
+      display: none;
+    }
+    .alert {
+      margin-bottom: 0;
+    }
+    .gopher {
+      width: 150px;
+    }
+
+    /* Footer section!
+    -------------------------------------------------- */
+    .footer-text {
+      text-align: center;
+      line-height: 4em;
+    }
+
+    /* Sticky footer
+    -------------------------------------------------- */
+    html {
+      position: relative;
+      min-height: 100%;
+    }
+    body {
+      /* Margin bottom by footer height */
+      margin-bottom: 60px;
+    }
+    .footer {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      /* Set the fixed height of the footer here */
+      height: 60px;
+      background-color: #f5f5f5;
+    }
+    </style>
+</head>
+<body>
+  <div id="notifications">
+  </div>
+  <div class="jumbotron">
+    <div class="container">
+      <div class="row header">
+        <div class="col-md-8 col-md-offset-2">
+          <h2 class="title">Go Report Card</h2>
+          <p class="description">Enter the <strong>Github URL</strong> below to generate a report on the quality of the Go code in the project</p>
+        </div>
+      </div>
+      <div class="row input-row">
+        <div class="col-md-8 col-md-offset-2">
+          <form method="GET" action="/checks" id="check-form">
+            <div class="col-md-9">
+              <p class="url">
+                <label>https://github.com/</label><input name="repo" type="text" class="input-box" placeholder="gojp/nihongo"/>
+              </p>
+            </div>
+            <div class="col-md-3">
+              <button type="submit" class="btn btn-primary btn-lg" href="#" role="button" class="btn-test">Test Now</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container">
+    <div class="row container-gopher">
+      <div class="col-md-12 text-center">
+        <img src="/assets/gopherhat.jpg" class="gopher" />
+      </div>
+    </div>
+    <div class="row container-results hidden">
+      <div class="col-md-10 col-md-offset-1 results-text">
+      </div>
+      <div class="col-md-10 col-md-offset-1">
+        <table class="table table-hover results">
+        </table>
+        <div class="container-update">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <p class="footer-text">
+          Made by 
+            <a href="https://twitter.com/shawnps">@shawnps</a> and
+            <a href="https://twitter.com/ironzeb">@ironzeb</a>. The Go Gopher was created by <a href="http://reneefrench.blogspot.com/">Renée French</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
+  <script id="template-alert" type="text/x-handlebars-template">
+    <div class="alert alert-warning alert-dismissible" role="alert">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="message">
+      {{{message}}}
+      </div>
+    </div>
+  </script>
+  <script id="template-grade" type="text/x-handlebars-template">
+    <div>
+      <div class="col-md-6">
+        <p><span class="huge">{{grade}}</span> &nbsp;&nbsp; {{gradeMessage grade}}</p>
+      </div>
+      <div class="col-md-6 text-right">
+        <p>Found <span class="huge">{{issues}}</span> issues across <span class="huge">{{files}}</span> files</p>
+      </div>
+    </div>
+  </script>
+  <script id="template-check" type="text/x-handlebars-template">
+    <tr class="head-row">
+      <td class="cell-description">
+        {{{name}}}
+      </td>
+      <td class="cell-progress-bar">
+        <div class="progress">
+          <div class="progress-bar progress-bar-{{color percentage}}" role="progressbar" aria-valuenow="{{percentage}}" aria-valuemin="0" aria-valuemax="100" style="width: {{percentage}}%;">
+            {{percentage}}%
+          </div>
+        </div>
+      </td>
+    </tr>
+  </script>
+  <script id="template-details" type="text/x-handlebars-template">
+    <tr class="details-row hidden">
+      <td colspan="2">
+        <div class="wrapper">
+          <p class="tool-description">{{{description}}}</p>
+        {{^file_summaries}}
+          <p class="perfect">No problems detected. Good job!</p>
+        {{/file_summaries}}
+        {{#each file_summaries}}
+          <ul class="files">
+            <li class="file">
+              <ul class="errors">
+              <a href="{{this.file_url}}">{{this.filename}}</a>
+              {{#each this.errors}}
+                {{#if line_number}}
+                <li class="error"><a href="{{../../file_url}}#L{{this.line_number}}">Line {{this.line_number}}</a>: {{this.error_string}}</li>
+                {{/if}}
+              {{/each}}
+              </ul>
+            </li>
+          </ul>
+        {{/each}}
+        </div>
+      </td>
+    </tr>
+  </script>
+  <script id="template-lastrefresh" type="text/x-handlebars-template">
+  <p>Last refresh: {{last_refresh}} <a href=""><strong>Update now</strong></a></p>
+  </script>
+  <script type="text/javascript">
+    var loading = false;
+
+    // add a helper for getting the grade for a percentage
+    var getGrade = function(percentage) {
+      switch(true){
+        case percentage > 90:
+          return "A+";
+        case percentage > 80:
+          return "A";
+        case percentage > 70:
+          return "B";
+        case percentage > 60:
+          return "C";
+        case percentage > 50:
+          return "D";
+        case percentage > 40:
+          return "E";
+        default:
+          return "F";
+      }
+    };
+
+    Handlebars.registerHelper('gradeMessage', function(grade, options) {
+      var gradeMessages = {
+        "A+": "Excellent!",
+        "A": "Great!",
+        "B": "Not bad!",
+        "C": "Needs some work",
+        "D": "Needs lots improvement",
+        "E": "Urgent improvement needed",
+        "F": "... is for lots of things to Fix!"
+      };
+      return gradeMessages[grade];
+    });
+
+    // add a helper for picking the progress bar colors
+    Handlebars.registerHelper('color', function(percentage, options) {
+      switch(true){
+        case percentage < 30:
+          return 'danger';
+        case percentage < 50:
+          return 'warning';
+        case percentage < 80:
+          return 'info';
+        default:
+          return 'success';
+      };
+    });
+
+    Handlebars.registerHelper('isfalse', function(percentage, options) {
+      return percentage == false;
+    });
+
+    // initialize handlebars templates
+    var templates = {};
+    $("script[id^=template]").each(function(){
+      var name = $(this).attr("id").substring(9);
+      var source   = $(this).html();
+      templates[name] = Handlebars.compile(source);
+    });
+
+    var shrinkHeader = function(){
+      var $header = $(".header");
+      $header.find(".title, .description").slideUp();
+    }
+
+    function spinGopher(){
+      if (!loading) {
+        return false;
+      };
+      var $gopher = $(".gopher"),
+          angle = 360;
+      $({deg: 0}).animate({deg: angle}, {
+        duration: 1000,
+        step: function(now) {
+          $gopher.css({
+              transform: 'rotate(' + now + 'deg)'
+          });
+        },
+        easing: 'linear',
+        always: spinGopher
+      });
+      return true;
+    }
+
+    function hideGopher(){
+      $(".container-gopher").hide();
+    }
+
+    function showGopher(){
+      $(".container-gopher").show();
+      spinGopher();
+    }
+
+    var populateResults = function(data){
+        console.log("data is", data);
+        var checks = data.checks;
+        var $resultsText = $(".results-text");
+        data.grade = getGrade(data.average * 100);
+        $resultsText.html($(templates.grade(data)));
+
+        var $table = $(".table.results");
+        $table.empty();
+        for (var i = 0; i < checks.length; i++) {
+            checks[i].percentage = parseInt(checks[i].percentage * 100.0);
+            var $headRow = $(templates.check(checks[i]));
+            $headRow.on("click", function(){
+              $(this).next(".details-row").toggleClass('hidden');
+              
+            });
+            $headRow.appendTo($table);
+
+            var $details = $(templates.details(checks[i]));
+            $details.appendTo($table);
+        }
+        $(".container-results").removeClass('hidden').slideDown();
+
+        $lastRefresh = $(templates.lastrefresh(data));
+        $(".container-update").html($lastRefresh).find("a").on("click", function(e){
+          loadData.call($("form#check-form")[0], false);
+          return false;
+        });
+    };
+
+    var loadData = function(getRequest){
+      loading = true;
+      var $form = $(this),
+          url = $form.attr("action"),
+          method = $form.attr("method"),
+          data = {};
+      console.log("GOnna make", getRequest ? "GET" : "POST");
+      shrinkHeader();
+      hideResults();
+      showGopher();
+      $form.serializeArray().map(function(x){data[x.name] = x.value;}); 
+      $.ajax({
+          type: getRequest ? "GET" : "POST",
+          url: url,
+          data: data,
+          dataType: "json"
+      }).fail(function(xhr, status, err){;
+          var html = templates.alert({message: "<strong>Oops!</strong> There was an error processing your request: " + err});
+          var $alert = $(html);
+          $alert.on("click", function(){
+            $(this).closest(".alert").remove();
+          });
+          $alert.hide();
+          $alert.appendTo("#notifications");
+          $alert.slideDown();
+      }).done(function(data, textStatus, jqXHR){
+          hideGopher();
+          populateResults(data);
+      }).always(function(){
+          loading = false;
+      });
+      history.pushState('', "Go Report Card for " + data.repo + " | A Gopher Gala Hackathon Product", "/report/" + data.repo);
+      return false;
+    };
+
+    var hideResults = function(){
+      $(".container-results").hide();
+    };
+
+    // on ready
+    $(function(){
+
+      // handle form submission
+      $("form#check-form").submit(loadData);
+
+      var path = window.location.pathname;
+      if (path.indexOf("/report/") == 0) {
+        repo = path.replace(/^\/report\//, "");
+        $("form#check-form").find("input").val(repo);
+        loadData.call($("form#check-form")[0], true);
+      }
+    });
+  </script>
+</body>
+</html>
