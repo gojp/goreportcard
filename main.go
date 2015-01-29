@@ -119,7 +119,7 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
 			resp := checksResp{}
 			err := coll.Find(bson.M{"repo": repo}).One(&resp)
 			if err != nil {
-				log.Println("Failed to fetch from mongo: ", err)
+				log.Printf("Failed to fetch %q from mongo: %v", repo, err)
 			} else {
 				resp.LastRefresh = resp.LastRefresh.UTC()
 				b, err := json.Marshal(resp)
