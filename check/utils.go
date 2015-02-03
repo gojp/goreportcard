@@ -91,11 +91,13 @@ func getFileSummary(filename, dir, cmd, out string) (FileSummary, error) {
 		e := Error{ErrorString: msg}
 		switch cmd {
 		case "golint", "gocyclo", "vet":
-			ln, err := strconv.Atoi(strings.Split(sp, ":")[1])
-			if err != nil {
-				return fs, err
+			if len(strings.Split(sp, ":")) >= 2 {
+				ln, err := strconv.Atoi(strings.Split(sp, ":")[1])
+				if err != nil {
+					return fs, err
+				}
+				e.LineNumber = ln
 			}
-			e.LineNumber = ln
 		}
 
 		fs.Errors = append(fs.Errors, e)
