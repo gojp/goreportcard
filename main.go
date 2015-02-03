@@ -100,6 +100,23 @@ type checksResp struct {
 	LastRefresh time.Time `json:"last_refresh"`
 }
 
+func getFromCache(repo string) (checksResp, error) {
+	// try and fetch from mongo
+	coll, err := getMongoCollection()
+	if err != nil {
+		return checksResp{}, fmt.Errorf("Failed to get mongo collection during GET: %v", err)
+	}
+	resp := checksResp{}
+	err = coll.Find(bson.M{"repo": repo}).One(&resp)
+	if err != nil {
+		return checksResp{}, fmt.Errorf("Failed to fetch %q from mongo: %v", repo, err)
+	}
+
+	resp.LastRefresh = resp.LastRefresh.UTC()
+
+	return resp, nil
+}
+
 func checkHandler(w http.ResponseWriter, r *http.Request) {
 	repo := r.FormValue("repo")
 	url := repo
@@ -111,27 +128,20 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
 
 	// if this is a GET request, fetch from cached version in mongo
 	if r.Method == "GET" {
-		// try and fetch from mongo
-		coll, err := getMongoCollection()
+		resp, err := getFromCache(repo)
 		if err != nil {
-			log.Println("Failed to get mongo collection during GET: ", err)
+			// just log the error and continue
+			log.Println(err)
 		} else {
-			resp := checksResp{}
-			err := coll.Find(bson.M{"repo": repo}).One(&resp)
+			b, err := json.Marshal(resp)
 			if err != nil {
-				log.Printf("Failed to fetch %q from mongo: %v", repo, err)
-			} else {
-				resp.LastRefresh = resp.LastRefresh.UTC()
-				b, err := json.Marshal(resp)
-				if err != nil {
-					log.Println("ERROR: could not marshal json:", err)
-					http.Error(w, err.Error(), 500)
-					return
-				}
-				w.Write(b)
-				log.Println("Loaded from cache!", repo)
+				log.Println("ERROR: could not marshal json:", err)
+				http.Error(w, err.Error(), 500)
 				return
 			}
+			w.Write(b)
+			log.Println("Loaded from cache!", repo)
+			return
 		}
 	}
 
