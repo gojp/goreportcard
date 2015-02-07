@@ -253,7 +253,7 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("Failed to get mongo collection: ", err)
 	} else {
 		log.Println("Writing to mongo...")
-		_, err := coll.Upsert(bson.M{"Repo": repo}, resp)
+		_, err := coll.Upsert(bson.M{"repo": repo}, resp)
 		if err != nil {
 			log.Println("Mongo writing error:", err)
 		}
