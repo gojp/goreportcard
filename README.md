@@ -1,3 +1,6 @@
+[![test](https://img.shields.io/badge/go_report-B-yellowgreen.png)](http://goreportcard.com/report/gojp/goreportcard)
+
+
 # Go Report Card
 
 A web application that generates a report on the quality of an open source go project. It uses several measures, including `gofmt`, `go vet`, `go lint` and `gocyclo`.
