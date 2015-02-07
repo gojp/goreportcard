@@ -156,8 +156,8 @@ func getGrade(percentage float64) Grade {
 
 func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	url := repo
-	if !strings.HasPrefix(url, "https://github.com/") {
-		url = "https://github.com/" + url
+	if !strings.HasPrefix(url, "https://gojp:gojp@github.com/") {
+		url = "https://gojp:gojp@github.com/" + url
 	}
 
 	if !forceRefresh {
