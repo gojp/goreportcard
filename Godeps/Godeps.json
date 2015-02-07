@@ -1,0 +1,15 @@
+{
+	"ImportPath": "github.com/gojp/goreportcard",
+	"GoVersion": "go1.4.1",
+	"Deps": [
+		{
+			"ImportPath": "gopkg.in/mgo.v2",
+			"Rev": "8c1ecfe7d8a0b5bc49a809f4c15955e514f77a80"
+		},
+		{
+			"ImportPath": "labix.org/v2/mgo/bson",
+			"Comment": "287",
+			"Rev": "gustavo@niemeyer.net-20140501184651-975yyw9ipld92pji"
+		}
+	]
+}
