@@ -1,6 +1,6 @@
 package check
 
-// GoCycle is the check for the go cyclo command
+// GoCyclo is the check for the go cyclo command
 type GoCyclo struct {
 	Dir       string
 	Filenames []string
