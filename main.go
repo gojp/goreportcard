@@ -94,6 +94,7 @@ type score struct {
 type checksResp struct {
 	Checks      []score   `json:"checks"`
 	Average     float64   `json:"average"`
+	Grade       Grade     `json:"grade"`
 	Files       int       `json:"files"`
 	Issues      int       `json:"issues"`
 	Repo        string    `json:"repo"`
@@ -117,47 +118,69 @@ func getFromCache(repo string) (checksResp, error) {
 	return resp, nil
 }
 
-func checkHandler(w http.ResponseWriter, r *http.Request) {
-	repo := r.FormValue("repo")
+// Grade represents a grade returned by the server, which is normally
+// somewhere between A+ (highest) and F (lowest).
+type Grade string
+
+// The Grade constants below indicate the current available
+// grades.
+const (
+	GradeAPlus Grade = "A+"
+	GradeA           = "A"
+	GradeB           = "B"
+	GradeC           = "C"
+	GradeD           = "D"
+	GradeE           = "E"
+	GradeF           = "F"
+)
+
+// getGrade is a helper for getting the grade for a percentage
+func getGrade(percentage float64) Grade {
+	switch true {
+	case percentage > 90:
+		return GradeAPlus
+	case percentage > 80:
+		return GradeA
+	case percentage > 70:
+		return GradeB
+	case percentage > 60:
+		return GradeC
+	case percentage > 50:
+		return GradeD
+	case percentage > 40:
+		return GradeE
+	default:
+		return GradeF
+	}
+}
+
+func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	url := repo
 	if !strings.HasPrefix(url, "https://github.com/") {
 		url = "https://github.com/" + url
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	// if this is a GET request, fetch from cached version in mongo
-	if r.Method == "GET" {
+	if !forceRefresh {
 		resp, err := getFromCache(repo)
 		if err != nil {
 			// just log the error and continue
 			log.Println(err)
 		} else {
-			b, err := json.Marshal(resp)
-			if err != nil {
-				log.Println("ERROR: could not marshal json:", err)
-				http.Error(w, err.Error(), 500)
-				return
-			}
-			w.Write(b)
-			log.Println("Loaded from cache!", repo)
-			return
+			resp.Grade = getGrade(resp.Average * 100) // grade is not stored for some repos, yet
+			return resp, nil
 		}
 	}
 
+	// fetch the repo and grade it
 	err := clone(url)
 	if err != nil {
-		log.Println("ERROR: could not clone repo: ", err)
-		http.Error(w, fmt.Sprintf("Could not clone repo: %v", err), 500)
-		return
+		return checksResp{}, fmt.Errorf("Could not clone repo: %v", err)
 	}
 
 	dir := dirName(url)
 	filenames, err := check.GoFiles(dir)
 	if err != nil {
-		log.Println("ERROR: could not get filenames: ", err)
-		http.Error(w, fmt.Sprintf("Could not get filenames: %v", err), 500)
-		return
+		return checksResp{}, fmt.Errorf("Could not get filenames: %v", err)
 	}
 	checks := []check.Check{check.GoFmt{Dir: dir, Filenames: filenames},
 		check.GoVet{Dir: dir, Filenames: filenames},
@@ -198,6 +221,22 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
 
 	resp.Average = avg / float64(len(checks))
 	resp.Issues = len(issues)
+	resp.Grade = getGrade(resp.Average * 100)
+
+	return resp, nil
+}
+
+func checkHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	repo := r.FormValue("repo")
+	forceRefresh := r.Method != "GET" // if this is a GET request, try fetch from cached version in mongo first
+	resp, err := newChecksResp(repo, forceRefresh)
+	if err != nil {
+		b, _ := json.Marshal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(b)
+	}
 
 	b, err := json.Marshal(resp)
 	if err != nil {
@@ -224,9 +263,35 @@ func reportHandler(w http.ResponseWriter, r *http.Request, org, repo string) {
 	http.ServeFile(w, r, "templates/home.html")
 }
 
-func makeReportHandler(fn func(http.ResponseWriter, *http.Request, string, string)) http.HandlerFunc {
+func badgeURL(grade Grade) string {
+	colorMap := map[Grade]string{
+		GradeAPlus: "brightgreen",
+		GradeA:     "brightgreen",
+		GradeB:     "yellowgreen",
+		GradeC:     "yellow",
+		GradeD:     "orange",
+		GradeE:     "red",
+		GradeF:     "red",
+	}
+	url := fmt.Sprintf("https://img.shields.io/badge/go_report-%s-%s.svg", grade, colorMap[grade])
+	return url
+}
+
+func badgeHandler(w http.ResponseWriter, r *http.Request, org, repo string) {
+	name := fmt.Sprintf("%s/%s", org, repo)
+	resp, err := newChecksResp(name, false)
+	if err != nil {
+		log.Printf("ERROR: fetching badge for %s: %v", name, err)
+		http.Redirect(w, r, "https://img.shields.io/badge/go%20report-error-lightgrey.svg", http.StatusTemporaryRedirect)
+		return
+	}
+
+	http.Redirect(w, r, badgeURL(resp.Grade), http.StatusTemporaryRedirect)
+}
+
+func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		validPath := regexp.MustCompile(`^/report/([a-zA-Z0-9\-_]+)/([a-zA-Z0-9\-_]+)$`)
+		validPath := regexp.MustCompile(fmt.Sprintf(`^/%s/([a-zA-Z0-9\-_]+)/([a-zA-Z0-9\-_]+)$`, name))
 
 		m := validPath.FindStringSubmatch(r.URL.Path)
 		if m == nil {
@@ -244,7 +309,8 @@ func main() {
 
 	http.HandleFunc("/assets/", assetsHandler)
 	http.HandleFunc("/checks", checkHandler)
-	http.HandleFunc("/report/", makeReportHandler(reportHandler))
+	http.HandleFunc("/report/", makeHandler("report", reportHandler))
+	http.HandleFunc("/badge/", makeHandler("badge", badgeHandler))
 	http.HandleFunc("/", homeHandler)
 
 	fmt.Println("Running on 127.0.01:8080...")
