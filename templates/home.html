@@ -258,30 +258,15 @@
     </tr>
   </script>
   <script id="template-lastrefresh" type="text/x-handlebars-template">
-  <p>Last refresh: {{last_refresh}} <a href=""><strong>Update now</strong></a></p>
+  <!--
+  <p>Last refresh: {{last_refresh}} <a class="refresh-button" href=""><strong>Update now</strong></a></p>
+    <div class="col-md-12 text-right">
+    <a class="copy-button" data-repo="{{repo}}" href="/badge/{{repo}}"><img src="/badge/{{repo}}"/></a>
+  </div>
+  -->
   </script>
   <script type="text/javascript">
     var loading = false;
-
-    // add a helper for getting the grade for a percentage
-    var getGrade = function(percentage) {
-      switch(true){
-        case percentage > 90:
-          return "A+";
-        case percentage > 80:
-          return "A";
-        case percentage > 70:
-          return "B";
-        case percentage > 60:
-          return "C";
-        case percentage > 50:
-          return "D";
-        case percentage > 40:
-          return "E";
-        default:
-          return "F";
-      }
-    };
 
     Handlebars.registerHelper('gradeMessage', function(grade, options) {
       var gradeMessages = {
@@ -356,10 +341,8 @@
     }
 
     var populateResults = function(data){
-        console.log("data is", data);
         var checks = data.checks;
         var $resultsText = $(".results-text");
-        data.grade = getGrade(data.average * 100);
         $resultsText.html($(templates.grade(data)));
 
         var $table = $(".table.results");
@@ -379,11 +362,23 @@
         $(".container-results").removeClass('hidden').slideDown();
 
         $lastRefresh = $(templates.lastrefresh(data));
-        $(".container-update").html($lastRefresh).find("a").on("click", function(e){
+        $div = $(".container-update").html($lastRefresh);
+        $div.find("a.refresh-button").on("click", function(e){
           loadData.call($("form#check-form")[0], false);
           return false;
         });
     };
+
+    function alertMessage(msg){
+      var html = templates.alert({message: msg});
+      var $alert = $(html);
+      $alert.on("click", function(){
+        $(this).closest(".alert").remove();
+      });
+      $alert.hide();
+      $alert.appendTo("#notifications");
+      $alert.slideDown();
+    }
 
     var loadData = function(getRequest){
       loading = true;
@@ -391,7 +386,6 @@
           url = $form.attr("action"),
           method = $form.attr("method"),
           data = {};
-      console.log("GOnna make", getRequest ? "GET" : "POST");
       shrinkHeader();
       hideResults();
       showGopher();
@@ -402,14 +396,7 @@
           data: data,
           dataType: "json"
       }).fail(function(xhr, status, err){;
-          var html = templates.alert({message: "<strong>Oops!</strong> There was an error processing your request: " + err});
-          var $alert = $(html);
-          $alert.on("click", function(){
-            $(this).closest(".alert").remove();
-          });
-          $alert.hide();
-          $alert.appendTo("#notifications");
-          $alert.slideDown();
+          alertMessage("<strong>Oops!</strong> There was an error processing your request: " + err);
       }).done(function(data, textStatus, jqXHR){
           hideGopher();
           populateResults(data);
