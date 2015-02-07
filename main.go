@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/gojp/goreportcard/check"
-	"gopkg.in/mgo.v2"
+	"github.com/gojp/goreportcard/db"
 	"labix.org/v2/mgo/bson"
 )
 
@@ -21,15 +21,6 @@ var (
 	mongoDatabase   = "goreportcard"
 	mongoCollection = "reports"
 )
-
-func getMongoCollection() (*mgo.Collection, error) {
-	session, err := mgo.Dial(mongoURL)
-	if err != nil {
-		return nil, err
-	}
-	c := session.DB(mongoDatabase).C(mongoCollection)
-	return c, nil
-}
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Serving home page")
@@ -103,7 +94,8 @@ type checksResp struct {
 
 func getFromCache(repo string) (checksResp, error) {
 	// try and fetch from mongo
-	coll, err := getMongoCollection()
+	db := db.Mongo{URL: mongoURL, Database: mongoDatabase, CollectionName: mongoCollection}
+	coll, err := db.Collection()
 	if err != nil {
 		return checksResp{}, fmt.Errorf("Failed to get mongo collection during GET: %v", err)
 	}
@@ -248,7 +240,8 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 
 	// write to mongo
-	coll, err := getMongoCollection()
+	db := db.Mongo{URL: mongoURL, Database: mongoDatabase, CollectionName: mongoCollection}
+	coll, err := db.Collection()
 	if err != nil {
 		log.Println("Failed to get mongo collection: ", err)
 	} else {
