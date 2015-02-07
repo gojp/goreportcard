@@ -1,4 +1,4 @@
-[![Go Report Card](https://img.shields.io/badge/go_report-B-yellowgreen.png)](http://goreportcard.com/report/gojp/goreportcard)
+[![Go Report Card](http://goreportcard.com/badge/gojp/goreportcard)](http://goreportcard.com/report/gojp/goreportcard)
 
 
 # Go Report Card
