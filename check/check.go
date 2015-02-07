@@ -1,5 +1,7 @@
 package check
 
+// Check describes what methods various checks (gofmt, go lint, etc.)
+// should implement
 type Check interface {
 	Name() string
 	Description() string

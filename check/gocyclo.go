@@ -1,10 +1,12 @@
 package check
 
+// GoCycle is the check for the go cyclo command
 type GoCyclo struct {
 	Dir       string
 	Filenames []string
 }
 
+// Name returns the name of the display name of the command
 func (g GoCyclo) Name() string {
 	return "gocyclo"
 }

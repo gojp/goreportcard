@@ -1,10 +1,12 @@
 package check
 
+// GoVet is the check for the go vet command
 type GoVet struct {
 	Dir       string
 	Filenames []string
 }
 
+// Name returns the name of the display name of the command
 func (g GoVet) Name() string {
 	return "go_vet"
 }

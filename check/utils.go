@@ -54,11 +54,15 @@ func lineCount(filepath string) (int, error) {
 	return count, nil
 }
 
+// Error contains the line number and the reason for
+// an error output from a command
 type Error struct {
 	LineNumber  int    `json:"line_number"`
 	ErrorString string `json:"error_string"`
 }
 
+// FileSummary contains the filename, location of the file
+// on GitHub, and all of the errors related to the file
 type FileSummary struct {
 	Filename string  `json:"filename"`
 	FileURL  string  `json:"file_url"`

@@ -1,10 +1,12 @@
 package check
 
+// GoFmt is the check for the go fmt command
 type GoFmt struct {
 	Dir       string
 	Filenames []string
 }
 
+// Name returns the name of the display name of the command
 func (g GoFmt) Name() string {
 	return "gofmt"
 }

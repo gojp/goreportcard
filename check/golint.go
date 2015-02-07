@@ -1,10 +1,12 @@
 package check
 
+// GoLint is the check for the go lint command
 type GoLint struct {
 	Dir       string
 	Filenames []string
 }
 
+// Name returns the name of the display name of the command
 func (g GoLint) Name() string {
 	return "golint"
 }
