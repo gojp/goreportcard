@@ -233,6 +233,7 @@ func checkHandler(w http.ResponseWriter, r *http.Request) {
 	forceRefresh := r.Method != "GET" // if this is a GET request, try fetch from cached version in mongo first
 	resp, err := newChecksResp(repo, forceRefresh)
 	if err != nil {
+		log.Println("ERROR: ", err)
 		b, _ := json.Marshal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(b)
