@@ -9,6 +9,10 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+func add(x, y int) int {
+	return x + y
+}
+
 var highScores []struct {
 	Repo    string
 	Files   int
@@ -31,12 +35,8 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := template.New("high_scores.html").ParseFiles("templates/high_scores.html")
-	if err != nil {
-		log.Println("ERROR: ", err)
-		http.Error(w, err.Error(), 500)
-		return
-	}
+	funcs := template.FuncMap{"add": add}
+	t := template.Must(template.New("high_scores.html").Funcs(funcs).ParseFiles("templates/high_scores.html"))
 
 	t.Execute(w, map[string]interface{}{"HighScores": highScores})
 }
