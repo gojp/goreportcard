@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
+	"text/template"
 
 	"github.com/gojp/goreportcard/db"
 	"gopkg.in/mgo.v2/bson"
@@ -16,8 +16,6 @@ var highScores []struct {
 }
 
 func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	db := db.Mongo{URL: mongoURL, Database: mongoDatabase, CollectionName: mongoCollection}
 	coll, err := db.Collection()
 	if err != nil {
@@ -26,19 +24,19 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = coll.Find(bson.M{"files": bson.M{"$gt": 100}}).Sort("average").All(&highScores)
+	err = coll.Find(bson.M{"files": bson.M{"$gt": 100}}).Sort("-average").All(&highScores)
 	if err != nil {
 		log.Println("ERROR: could not get high scores: ", err)
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	b, err := json.Marshal(highScores)
+	t, err := template.New("high_scores.html").ParseFiles("templates/high_scores.html")
 	if err != nil {
-		log.Println("ERROR: could not marshal json:", err)
+		log.Println("ERROR: ", err)
 		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	w.Write(b)
+	t.Execute(w, map[string]interface{}{"HighScores": highScores})
 }
