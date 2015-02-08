@@ -13,7 +13,7 @@ func (g GoCyclo) Name() string {
 
 // Percentage returns the percentage of .go files that pass gofmt
 func (g GoCyclo) Percentage() (float64, []FileSummary, error) {
-	return GoTool(g.Dir, g.Filenames, []string{"gocyclo", "-over", "10"})
+	return GoTool(g.Dir, g.Filenames, []string{"gocyclo", "-over", "15"})
 }
 
 // Description returns the description of GoCyclo
