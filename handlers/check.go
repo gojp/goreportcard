@@ -31,19 +31,17 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(b)
 
-	if forceRefresh {
-		// write to mongo
-		db := db.Mongo{URL: mongoURL, Database: mongoDatabase, CollectionName: mongoCollection}
-		coll, err := db.Collection()
-		if err != nil {
-			log.Println("Failed to get mongo collection: ", err)
-			return
-		}
-		log.Printf("Upserting repo %s...", repo)
-		_, err = coll.Upsert(bson.M{"repo": repo}, resp)
-		if err != nil {
-			log.Println("Mongo writing error:", err)
-			return
-		}
+	// write to mongo
+	db := db.Mongo{URL: mongoURL, Database: mongoDatabase, CollectionName: mongoCollection}
+	coll, err := db.Collection()
+	if err != nil {
+		log.Println("Failed to get mongo collection: ", err)
+		return
+	}
+	log.Printf("Upserting repo %s...", repo)
+	_, err = coll.Upsert(bson.M{"repo": repo}, resp)
+	if err != nil {
+		log.Println("Mongo writing error:", err)
+		return
 	}
 }
