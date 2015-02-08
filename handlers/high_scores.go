@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -28,7 +27,6 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = coll.Find(bson.M{"files": bson.M{"$gt": 100}}).Sort("average").All(&highScores)
-	fmt.Println(highScores)
 	if err != nil {
 		log.Println("ERROR: could not get high scores: ", err)
 		http.Error(w, err.Error(), 500)
