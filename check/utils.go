@@ -12,13 +12,17 @@ import (
 	"syscall"
 )
 
+var skipDirs = []string{"Godeps", "vendor", "third_party"}
+
 // GoFiles returns a slice of Go filenames
 // in a given directory.
 func GoFiles(dir string) ([]string, error) {
 	var filenames []string
 	visit := func(fp string, fi os.FileInfo, err error) error {
-		if strings.Contains(fp, "Godeps") {
-			return nil
+		for _, skip := range skipDirs {
+			if strings.Contains(fp, skip) {
+				return nil
+			}
 		}
 		if err != nil {
 			fmt.Println(err) // can't walk here,

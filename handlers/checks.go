@@ -105,7 +105,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 			// just log the error and continue
 			log.Println(err)
 		} else {
-			resp.Grade = getGrade(resp.Average * 100) // grade is not stored for some repos, yet
+			resp.Grade = grade(resp.Average * 100) // grade is not stored for some repos, yet
 			return resp, nil
 		}
 	}
@@ -163,7 +163,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 
 	resp.Average = avg / float64(len(checks))
 	resp.Issues = len(issues)
-	resp.Grade = getGrade(resp.Average * 100)
+	resp.Grade = grade(resp.Average * 100)
 
 	return resp, nil
 }

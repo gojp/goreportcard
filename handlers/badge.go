@@ -22,9 +22,9 @@ const (
 	GradeF           = "F"
 )
 
-// getGrade is a helper for getting the grade for a percentage
-func getGrade(percentage float64) Grade {
-	switch true {
+// grade is a helper for getting the grade for a percentage
+func grade(percentage float64) Grade {
+	switch {
 	case percentage > 90:
 		return GradeAPlus
 	case percentage > 80:
