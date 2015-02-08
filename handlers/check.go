@@ -20,6 +20,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 		b, _ := json.Marshal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(b)
+		return
 	}
 
 	b, err := json.Marshal(resp)
