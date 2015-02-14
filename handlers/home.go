@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// HomeHandler handles the homepage
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Serving home page")
 	if r.URL.Path[1:] == "" {

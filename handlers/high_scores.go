@@ -13,6 +13,7 @@ func add(x, y int) int {
 	return x + y
 }
 
+// HighScoresHandler handles the stats page
 func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 	var highScores []struct {
 		Repo    string

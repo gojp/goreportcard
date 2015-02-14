@@ -56,6 +56,7 @@ func badgeURL(grade Grade) string {
 	return url
 }
 
+// BadgeHandler handles fetching the badge images
 func BadgeHandler(w http.ResponseWriter, r *http.Request, org, repo string) {
 	name := fmt.Sprintf("%s/%s", org, repo)
 	resp, err := newChecksResp(name, false)
