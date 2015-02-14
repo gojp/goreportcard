@@ -11,3 +11,5 @@ install:
 
 services:
   - mongodb
+
+script: godep go test -cover ./...
