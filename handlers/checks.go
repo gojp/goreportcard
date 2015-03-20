@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gojp/goreportcard/check"
-	"github.com/gojp/goreportcard/db"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -21,11 +21,12 @@ var (
 
 func getFromCache(repo string) (checksResp, error) {
 	// try and fetch from mongo
-	db := db.Mongo{URL: mongoURL, Database: mongoDatabase, CollectionName: mongoCollection}
-	coll, err := db.Collection()
+	session, err := mgo.Dial(mongoURL)
 	if err != nil {
 		return checksResp{}, fmt.Errorf("Failed to get mongo collection during GET: %v", err)
 	}
+	defer session.Close()
+	coll := session.DB(mongoDatabase).C(mongoCollection)
 	resp := checksResp{}
 	err = coll.Find(bson.M{"repo": repo}).One(&resp)
 	if err != nil {
@@ -77,7 +78,7 @@ func clone(url string) error {
 	dir := dirName(url)
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
-		cmd := exec.Command("timeout", "120", "git", "clone", "--depth", "1", "--single-branch", url, dir)
+		cmd := exec.Command("gtimeout", "120", "git", "clone", "--depth", "1", "--single-branch", url, dir)
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("could not run git clone: %v", err)
 		}

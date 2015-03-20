@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"text/template"
 
-	"github.com/gojp/goreportcard/db"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -21,13 +21,14 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 		Average float64
 	}
 
-	db := db.Mongo{URL: mongoURL, Database: mongoDatabase, CollectionName: mongoCollection}
-	coll, err := db.Collection()
+	session, err := mgo.Dial(mongoURL)
 	if err != nil {
 		log.Println("ERROR: could not get collection:", err)
 		http.Error(w, err.Error(), 500)
 		return
 	}
+	defer session.Close()
+	coll := session.DB(mongoDatabase).C(mongoCollection)
 
 	err = coll.Find(bson.M{"files": bson.M{"$gt": 100}}).Sort("-average").All(&highScores)
 	if err != nil {

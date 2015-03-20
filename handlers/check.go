@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gojp/goreportcard/db"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -33,12 +33,13 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 
 	// write to mongo
-	db := db.Mongo{URL: mongoURL, Database: mongoDatabase, CollectionName: mongoCollection}
-	coll, err := db.Collection()
+	session, err := mgo.Dial(mongoURL)
 	if err != nil {
 		log.Println("Failed to get mongo collection: ", err)
 		return
 	}
+	defer session.Close()
+	coll := session.DB(mongoDatabase).C(mongoCollection)
 	log.Printf("Upserting repo %s...", repo)
 	_, err = coll.Upsert(bson.M{"repo": repo}, resp)
 	if err != nil {
