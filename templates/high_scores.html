@@ -60,7 +60,7 @@
     <tbody>
     {{ range $index, $highScore := .HighScores }}
       <tr>
-      <td>{{ add $index 1 }}</td>
+      <td><a href="/report/{{ $highScore.Repo}}">{{ add $index 1 }}</td></a>
       <td><a href="https://github.com/{{ $highScore.Repo }}" rel="nofollow">{{ $highScore.Repo }}</a></td>
       <td>{{ $highScore.Files }}</td>
       <td>{{ formatScore $highScore.Average }}</td>
