@@ -63,7 +63,7 @@
       <td>{{ add $index 1 }}</td>
       <td><a href="https://github.com/{{ $highScore.Repo }}" rel="nofollow">{{ $highScore.Repo }}</a></td>
       <td>{{ $highScore.Files }}</td>
-      <td>{{ $highScore.Average }}</td>
+      <td>{{ formatScore $highScore.Average }}</td>
       </tr>
     {{end}}
     </tbody>
