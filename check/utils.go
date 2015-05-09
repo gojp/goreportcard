@@ -99,8 +99,16 @@ func getFileSummary(filename, dir, cmd, out string) (FileSummary, error) {
 		e := Error{ErrorString: msg}
 		switch cmd {
 		case "golint", "gocyclo", "vet":
-			if len(strings.Split(sp, ":")) >= 2 {
-				ln, err := strconv.Atoi(strings.Split(sp, ":")[1])
+			ls := strings.Split(sp, ":")
+			if len(ls) >= 2 && strings.Contains(sp, filename) {
+				idx := len(ls) - 2
+				if cmd == "golint" {
+					idx = len(ls) - 3
+				}
+				if cmd == "vet" {
+					idx = 1
+				}
+				ln, err := strconv.Atoi(ls[idx])
 				if err != nil {
 					return fs, err
 				}
