@@ -125,33 +125,33 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 		cmd := exec.Command(command[0], params...)
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
-			return 0, []FileSummary{}, nil
+			return 0, []FileSummary{}, err
 		}
 
 		stderr, err := cmd.StderrPipe()
 		if err != nil {
-			return 0, []FileSummary{}, nil
+			return 0, []FileSummary{}, err
 		}
 
 		err = cmd.Start()
 		if err != nil {
-			return 0, []FileSummary{}, nil
+			return 0, []FileSummary{}, err
 		}
 
 		out, err := ioutil.ReadAll(stdout)
 		if err != nil {
-			return 0, []FileSummary{}, nil
+			return 0, []FileSummary{}, err
 		}
 
 		errout, err := ioutil.ReadAll(stderr)
 		if err != nil {
-			return 0, []FileSummary{}, nil
+			return 0, []FileSummary{}, err
 		}
 
 		if string(out) != "" {
 			fs, err := getFileSummary(fi, dir, command[0], string(out))
 			if err != nil {
-				return 0, []FileSummary{}, nil
+				return 0, []FileSummary{}, err
 			}
 			failed = append(failed, fs)
 		}
@@ -164,7 +164,7 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 			}
 			fs, err := getFileSummary(fi, dir, cmd, string(errout))
 			if err != nil {
-				return 0, []FileSummary{}, nil
+				return 0, []FileSummary{}, err
 			}
 			failed = append(failed, fs)
 		}
