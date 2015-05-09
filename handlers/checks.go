@@ -78,7 +78,7 @@ func clone(url string) error {
 	dir := dirName(url)
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
-		cmd := exec.Command("timeout", "120", "git", "clone", "--depth", "1", "--single-branch", url, dir)
+		cmd := exec.Command("git", "clone", "--depth", "1", "--single-branch", url, dir)
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("could not run git clone: %v", err)
 		}
