@@ -395,7 +395,7 @@
           data: data,
           dataType: "json"
       }).fail(function(xhr, status, err){;
-          alertMessage("<strong>Oops!</strong> There was an error processing your request: " + err);
+          alertMessage("<strong>Oops!</strong> There was an error processing your request: " + xhr.responseText);
       }).done(function(data, textStatus, jqXHR){
           hideGopher();
           populateResults(data);
