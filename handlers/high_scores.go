@@ -34,7 +34,7 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 		Files   int
 		Average float64
 	}
-	err = coll.Find(bson.M{"files": bson.M{"$gt": 100}}).Sort("-average").All(&highScores)
+	err = coll.Find(bson.M{"files": bson.M{"$gt": 100}}).Sort("-average").Limit(50).All(&highScores)
 	if err != nil {
 		log.Println("ERROR: could not get high scores: ", err)
 		http.Error(w, err.Error(), 500)
