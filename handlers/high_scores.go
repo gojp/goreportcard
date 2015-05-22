@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"text/template"
 
+	"github.com/dustin/go-humanize"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -51,5 +52,5 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 	funcs := template.FuncMap{"add": add, "formatScore": formatScore}
 	t := template.Must(template.New("high_scores.html").Funcs(funcs).ParseFiles("templates/high_scores.html"))
 
-	t.Execute(w, map[string]interface{}{"HighScores": highScores, "Count": count})
+	t.Execute(w, map[string]interface{}{"HighScores": highScores, "Count": humanize.Comma(int64(count))})
 }

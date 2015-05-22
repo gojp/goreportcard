@@ -1,7 +1,11 @@
 {
 	"ImportPath": "github.com/gojp/goreportcard",
-	"GoVersion": "go1.4.1",
+	"GoVersion": "go1.4.2",
 	"Deps": [
+		{
+			"ImportPath": "github.com/dustin/go-humanize",
+			"Rev": "00897f070f09f194c26d65afae734ba4c32404e8"
+		},
 		{
 			"ImportPath": "gopkg.in/mgo.v2",
 			"Rev": "8c1ecfe7d8a0b5bc49a809f4c15955e514f77a80"
