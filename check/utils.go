@@ -91,20 +91,25 @@ func getFileSummary(filename, dir, cmd, out string) (FileSummary, error) {
 	}
 	split := strings.Split(string(out), "\n")
 	for _, sp := range split[0 : len(split)-1] {
-		parts := strings.Split(sp, ":")
 		msg := sp
-		if cmd != "gocyclo" {
-			msg = parts[len(parts)-1]
+		var loc string
+		if cmd == "gocyclo" {
+			s := strings.SplitN(sp, " ", 2)
+			loc = s[1]
+		} else {
+			s := strings.SplitN(sp, ": ", 2)
+			loc = s[0]
+			if len(s) > 1 {
+				msg = s[1]
+			}
 		}
+
 		e := Error{ErrorString: msg}
 		switch cmd {
 		case "golint", "gocyclo", "vet":
-			ls := strings.Split(sp, ":")
-			if len(ls) >= 2 && strings.Contains(sp, filename) {
+			ls := strings.Split(loc, ":")
+			if len(ls) >= 1 && strings.Contains(loc, filename) {
 				idx := len(ls) - 2
-				if cmd == "golint" {
-					idx = len(ls) - 3
-				}
 				if cmd == "vet" {
 					idx = 1
 				}
