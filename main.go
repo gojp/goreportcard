@@ -22,7 +22,7 @@ func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string
 		}
 
 		// catch the special period cases that github does not allow for repos
-		if len(m) > 2 && (m[2] == "." || m[2] == "..") {
+		if m[2] == "." || m[2] == ".." {
 			http.NotFound(w, r)
 			return
 		}
