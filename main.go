@@ -12,13 +12,21 @@ import (
 
 func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		validPath := regexp.MustCompile(fmt.Sprintf(`^/%s/([a-zA-Z0-9\-_]+)/([a-zA-Z0-9\-_]+)$`, name))
+		validPath := regexp.MustCompile(fmt.Sprintf(`^/%s/([a-zA-Z0-9\-_]+)/([a-zA-Z0-9\-_.]+)$`, name))
 
 		m := validPath.FindStringSubmatch(r.URL.Path)
+
 		if m == nil {
 			http.NotFound(w, r)
 			return
 		}
+
+		// catch the special period cases that github does not allow for repos
+		if m[2] == "." || m[2] == ".." {
+			http.NotFound(w, r)
+			return
+		}
+
 		fn(w, r, m[1], m[2])
 	}
 }
