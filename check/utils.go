@@ -95,7 +95,9 @@ func getFileSummary(filename, dir, cmd, out string) (FileSummary, error) {
 		var loc string
 		if cmd == "gocyclo" {
 			s := strings.SplitN(sp, " ", 2)
-			loc = s[1]
+			if len(s) > 1 {
+				loc = s[1]
+			}
 		} else {
 			s := strings.SplitN(sp, ": ", 2)
 			loc = s[0]
