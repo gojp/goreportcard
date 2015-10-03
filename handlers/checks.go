@@ -82,13 +82,16 @@ func clone(url string) error {
 		if err := cmd.Run(); err != nil {
 			return fmt.Errorf("could not run git clone: %v", err)
 		}
-	} else if err != nil {
+
+		return nil
+	}
+	if err != nil {
 		return fmt.Errorf("could not stat dir: %v", err)
-	} else {
-		cmd := exec.Command("git", "-C", dir, "pull")
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("could not pull repo: %v", err)
-		}
+	}
+
+	cmd := exec.Command("git", "-C", dir, "pull")
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("could not pull repo: %v", err)
 	}
 
 	return nil
