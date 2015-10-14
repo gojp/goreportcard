@@ -13,7 +13,7 @@ func (g GoLint) Name() string {
 
 // Weight returns the weight this check has in the overall average
 func (g GoLint) Weight() float64 {
-	return .225
+	return .10
 }
 
 // Percentage returns the percentage of .go files that pass golint

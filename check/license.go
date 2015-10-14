@@ -18,7 +18,7 @@ func (g License) Name() string {
 
 // Weight returns the weight this check has in the overall average
 func (g License) Weight() float64 {
-	return .1
+	return .10
 }
 
 // Percentage returns 0 if no LICENSE, 1 if LICENSE
