@@ -155,18 +155,18 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	resp := checksResp{Repo: repo,
 		Files:       len(filenames),
 		LastRefresh: time.Now().UTC()}
-	var avg float64
+	var total float64
 	var issues = make(map[string]bool)
 	for i := 0; i < len(checks); i++ {
 		s := <-ch
 		resp.Checks = append(resp.Checks, s)
-		avg += s.Percentage
+		total += s.Percentage
 		for _, fs := range s.FileSummaries {
 			issues[fs.Filename] = true
 		}
 	}
 
-	resp.Average = avg / float64(len(checks))
+	resp.Average = total / float64(len(checks))
 	resp.Issues = len(issues)
 	resp.Grade = grade(resp.Average * 100)
 
