@@ -26,7 +26,7 @@ func (g License) Percentage() (float64, []FileSummary, error) {
 		return 0.0, []FileSummary{}, err
 	}
 	if out.String() == "" {
-		return 0.0, []FileSummary{}, nil
+		return 0.0, []FileSummary{{"", "http://choosealicense.com/", []Error{}}}, nil
 	}
 
 	return 100.0, []FileSummary{}, nil
