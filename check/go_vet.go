@@ -11,6 +11,11 @@ func (g GoVet) Name() string {
 	return "go_vet"
 }
 
+// Weight returns the weight this check has in the overall average
+func (g GoVet) Weight() float64 {
+	return .225
+}
+
 // Percentage returns the percentage of .go files that pass go vet
 func (g GoVet) Percentage() (float64, []FileSummary, error) {
 	return GoTool(g.Dir, g.Filenames, []string{"go", "tool", "vet"})

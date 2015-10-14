@@ -42,6 +42,7 @@ type score struct {
 	Name          string              `json:"name"`
 	Description   string              `json:"description"`
 	FileSummaries []check.FileSummary `json:"file_summaries"`
+	Weight        float64             `json:"weight"`
 	Percentage    float64             `json:"percentage"`
 }
 
@@ -128,7 +129,8 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	if len(filenames) == 0 {
 		return checksResp{}, fmt.Errorf("No .go files found")
 	}
-	checks := []check.Check{check.GoFmt{Dir: dir, Filenames: filenames},
+	checks := []check.Check{
+		check.GoFmt{Dir: dir, Filenames: filenames},
 		check.GoVet{Dir: dir, Filenames: filenames},
 		check.GoLint{Dir: dir, Filenames: filenames},
 		check.GoCyclo{Dir: dir, Filenames: filenames},
@@ -146,6 +148,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 				Name:          c.Name(),
 				Description:   c.Description(),
 				FileSummaries: summaries,
+				Weight:        c.Weight(),
 				Percentage:    p,
 			}
 			ch <- s
@@ -160,15 +163,15 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	for i := 0; i < len(checks); i++ {
 		s := <-ch
 		resp.Checks = append(resp.Checks, s)
-		total += s.Percentage
+		total += s.Percentage * s.Weight
 		for _, fs := range s.FileSummaries {
 			issues[fs.Filename] = true
 		}
 	}
 
-	resp.Average = total / float64(len(checks))
+	resp.Average = total
 	resp.Issues = len(issues)
-	resp.Grade = grade(resp.Average * 100)
+	resp.Grade = grade(total * 100)
 
 	return resp, nil
 }

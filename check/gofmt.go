@@ -11,6 +11,11 @@ func (g GoFmt) Name() string {
 	return "gofmt"
 }
 
+// Weight returns the weight this check has in the overall average
+func (g GoFmt) Weight() float64 {
+	return .225
+}
+
 // Percentage returns the percentage of .go files that pass gofmt
 func (g GoFmt) Percentage() (float64, []FileSummary, error) {
 	return GoTool(g.Dir, g.Filenames, []string{"gofmt", "-s", "-l"})

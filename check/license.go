@@ -16,7 +16,12 @@ func (g License) Name() string {
 	return "license"
 }
 
-// Percentage returns 0 if no LICENSE, 100 if LICENSE
+// Weight returns the weight this check has in the overall average
+func (g License) Weight() float64 {
+	return .1
+}
+
+// Percentage returns 0 if no LICENSE, 1 if LICENSE
 func (g License) Percentage() (float64, []FileSummary, error) {
 	cmd := exec.Command("find", g.Dir, "-maxdepth", "1", "-type", "f", "-name", "LICENSE")
 	var out bytes.Buffer
@@ -29,7 +34,7 @@ func (g License) Percentage() (float64, []FileSummary, error) {
 		return 0.0, []FileSummary{{"", "http://choosealicense.com/", []Error{}}}, nil
 	}
 
-	return 100.0, []FileSummary{}, nil
+	return 1.0, []FileSummary{}, nil
 }
 
 // Description returns the description of License
