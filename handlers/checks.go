@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	mongoURL        = "mongodb://localhost:27017"
+	mongoURL        = "mongodb://127.0.0.1:27017"
 	mongoDatabase   = "goreportcard"
 	mongoCollection = "reports"
 )
