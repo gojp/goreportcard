@@ -90,9 +90,13 @@ func clone(url string) error {
 		return fmt.Errorf("could not stat dir: %v", err)
 	}
 
-	cmd := exec.Command("git", "-C", dir, "pull")
+	cmd := exec.Command("git", "-C", dir, "fetch", "origin", "master")
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("could not pull repo: %v", err)
+		return fmt.Errorf("could not fetch master branch: %v", err)
+	}
+	cmd = exec.Command("git", "-C", dir, "reset", "--hard", "origin/master")
+	if err = cmd.Run(); err != nil {
+		return fmt.Errorf("could not reset origin/master: %v", err)
 	}
 
 	return nil
