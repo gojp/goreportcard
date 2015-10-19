@@ -5,7 +5,7 @@ import (
 	"os/exec"
 )
 
-// License is the check for the go cyclo command
+// License is the check for the existance of a license file
 type License struct {
 	Dir       string
 	Filenames []string
@@ -23,7 +23,7 @@ func (g License) Weight() float64 {
 
 // Percentage returns 0 if no LICENSE, 1 if LICENSE
 func (g License) Percentage() (float64, []FileSummary, error) {
-	cmd := exec.Command("find", g.Dir, "-maxdepth", "1", "-type", "f", "-name", "LICENSE")
+	cmd := exec.Command("find", g.Dir, "-maxdepth", "1", "-type", "f", "-name", "LICENSE*")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
