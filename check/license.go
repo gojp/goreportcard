@@ -5,7 +5,7 @@ import (
 	"os/exec"
 )
 
-// License is the check for the existance of a license file
+// License is the check for the existence of a license file
 type License struct {
 	Dir       string
 	Filenames []string
