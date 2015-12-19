@@ -12,7 +12,10 @@ import (
 	"syscall"
 )
 
-var skipDirs = []string{"Godeps", "vendor", "third_party"}
+var (
+	skipDirs     = []string{"Godeps", "vendor", "third_party"}
+	skipSuffixes = []string{".pb.go", ".pb.gw.go"}
+)
 
 // GoFiles returns a slice of Go filenames
 // in a given directory.
@@ -31,7 +34,13 @@ func GoFiles(dir string) ([]string, error) {
 		if fi.IsDir() {
 			return nil // not a file.  ignore.
 		}
-		ext := filepath.Ext(fi.Name())
+		fiName := fi.Name()
+		for _, skip := range skipSuffixes {
+			if strings.HasSuffix(fiName, skip) {
+				return nil
+			}
+		}
+		ext := filepath.Ext(fiName)
 		if ext == ".go" {
 			filenames = append(filenames, fp)
 		}
