@@ -89,14 +89,7 @@ func (a ByFilename) Len() int           { return len(a) }
 func (a ByFilename) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByFilename) Less(i, j int) bool { return a[i].Filename < a[j].Filename }
 
-func getFileSummary(filename, dir, out string) (FileSummary, error) {
-	filename = strings.TrimPrefix(filename, "repos/src")
-	githubLink := strings.TrimPrefix(dir, "repos/src")
-	fileURL := "https://" + strings.TrimPrefix(dir, "repos/src/") + "/blob/master" + strings.TrimPrefix(filename, githubLink)
-	fs := FileSummary{
-		Filename: filename,
-		FileURL:  fileURL,
-	}
+func (fs *FileSummary) AddError(out string) error {
 	s := strings.SplitN(out, ":", 2)
 	msg := strings.SplitAfterN(s[1], ":", 3)[2]
 
@@ -104,13 +97,13 @@ func getFileSummary(filename, dir, out string) (FileSummary, error) {
 	ls := strings.Split(s[1], ":")
 	ln, err := strconv.Atoi(ls[0])
 	if err != nil {
-		return fs, err
+		return err
 	}
 	e.LineNumber = ln
 
 	fs.Errors = append(fs.Errors, e)
 
-	return fs, nil
+	return nil
 }
 
 // GoTool runs a given go command (for example gofmt, go tool vet)
@@ -133,13 +126,28 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 
 	out := bufio.NewScanner(stdout)
 
+	githubLink := strings.TrimPrefix(dir, "repos/src")
+
+	var fs FileSummary
+	var filename string
 	for out.Scan() {
-		filename := strings.Split(out.Text(), ":")[0]
-		fs, err := getFileSummary(filename, dir, out.Text())
+		name := strings.Split(out.Text(), ":")[0]
+		name = strings.TrimPrefix(name, "repos/src")
+		if name != filename {
+			if fs.Filename != "" {
+				failed = append(failed, fs)
+			}
+			filename = name
+			fileURL := "https://" + strings.TrimPrefix(dir, "repos/src/") + "/blob/master" + strings.TrimPrefix(filename, githubLink)
+			fs = FileSummary{
+				Filename: filename,
+				FileURL:  fileURL,
+			}
+		}
+		err = fs.AddError(out.Text())
 		if err != nil {
 			return 0, []FileSummary{}, err
 		}
-		failed = append(failed, fs)
 	}
 	if err := out.Err(); err != nil {
 		return 0, []FileSummary{}, err
