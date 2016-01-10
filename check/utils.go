@@ -1,12 +1,11 @@
 package check
 
 import (
+	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"strconv"
 	"strings"
 	"syscall"
@@ -90,7 +89,7 @@ func (a ByFilename) Len() int           { return len(a) }
 func (a ByFilename) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByFilename) Less(i, j int) bool { return a[i].Filename < a[j].Filename }
 
-func getFileSummary(filename, dir, cmd, out string) (FileSummary, error) {
+func getFileSummary(filename, dir, out string) (FileSummary, error) {
 	filename = strings.TrimPrefix(filename, "repos/src")
 	githubLink := strings.TrimPrefix(dir, "repos/src")
 	fileURL := "https://" + strings.TrimPrefix(dir, "repos/src/") + "/blob/master" + strings.TrimPrefix(filename, githubLink)
@@ -98,42 +97,18 @@ func getFileSummary(filename, dir, cmd, out string) (FileSummary, error) {
 		Filename: filename,
 		FileURL:  fileURL,
 	}
-	split := strings.Split(string(out), "\n")
-	for _, sp := range split[0 : len(split)-1] {
-		msg := sp
-		var loc string
-		if cmd == "gocyclo" {
-			s := strings.SplitN(sp, " ", 2)
-			if len(s) > 1 {
-				loc = s[1]
-			}
-		} else {
-			s := strings.SplitN(sp, ": ", 2)
-			loc = s[0]
-			if len(s) > 1 {
-				msg = s[1]
-			}
-		}
+	s := strings.SplitN(out, ":", 2)
+	msg := strings.SplitAfterN(s[1], ":", 3)[2]
 
-		e := Error{ErrorString: msg}
-		switch cmd {
-		case "golint", "gocyclo", "vet":
-			ls := strings.Split(loc, ":")
-			if len(ls) >= 1 && strings.Contains(loc, filename) {
-				idx := len(ls) - 2
-				if cmd == "vet" {
-					idx = 1
-				}
-				ln, err := strconv.Atoi(ls[idx])
-				if err != nil {
-					return fs, err
-				}
-				e.LineNumber = ln
-			}
-		}
-
-		fs.Errors = append(fs.Errors, e)
+	e := Error{ErrorString: msg}
+	ls := strings.Split(s[1], ":")
+	ln, err := strconv.Atoi(ls[0])
+	if err != nil {
+		return fs, err
 	}
+	e.LineNumber = ln
+
+	fs.Errors = append(fs.Errors, e)
 
 	return fs, nil
 }
@@ -142,70 +117,45 @@ func getFileSummary(filename, dir, cmd, out string) (FileSummary, error) {
 // on a directory
 func GoTool(dir string, filenames, command []string) (float64, []FileSummary, error) {
 	var failed = []FileSummary{}
-	for _, fi := range filenames {
-		params := command[1:]
-		params = append(params, fi)
+	params := command[1:]
+	params = append(params, dir)
 
-		cmd := exec.Command(command[0], params...)
-		stdout, err := cmd.StdoutPipe()
+	cmd := exec.Command(command[0], params...)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return 0, []FileSummary{}, err
+	}
+
+	err = cmd.Start()
+	if err != nil {
+		return 0, []FileSummary{}, err
+	}
+
+	out := bufio.NewScanner(stdout)
+
+	for out.Scan() {
+		filename := strings.Split(out.Text(), ":")[0]
+		fs, err := getFileSummary(filename, dir, out.Text())
 		if err != nil {
 			return 0, []FileSummary{}, err
 		}
+		failed = append(failed, fs)
+	}
+	if err := out.Err(); err != nil {
+		return 0, []FileSummary{}, err
+	}
 
-		stderr, err := cmd.StderrPipe()
-		if err != nil {
-			return 0, []FileSummary{}, err
-		}
+	err = cmd.Wait()
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		// The program has exited with an exit code != 0
 
-		err = cmd.Start()
-		if err != nil {
-			return 0, []FileSummary{}, err
-		}
-
-		out, err := ioutil.ReadAll(stdout)
-		if err != nil {
-			return 0, []FileSummary{}, err
-		}
-
-		errout, err := ioutil.ReadAll(stderr)
-		if err != nil {
-			return 0, []FileSummary{}, err
-		}
-
-		if string(out) != "" {
-			fs, err := getFileSummary(fi, dir, command[0], string(out))
-			if err != nil {
-				return 0, []FileSummary{}, err
-			}
-			failed = append(failed, fs)
-		}
-
-		// go vet logs to stderr
-		if string(errout) != "" {
-			cmd := command[0]
-			if reflect.DeepEqual(command, []string{"go", "tool", "vet"}) {
-				cmd = "vet"
-			}
-			fs, err := getFileSummary(fi, dir, cmd, string(errout))
-			if err != nil {
-				return 0, []FileSummary{}, err
-			}
-			failed = append(failed, fs)
-		}
-
-		err = cmd.Wait()
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			// The program has exited with an exit code != 0
-
-			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-				// some commands exit 1 when files fail to pass (for example go vet)
-				if status.ExitStatus() != 1 {
-					return 0, failed, err
-					// return 0, Error{}, err
-				}
+		if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+			// some commands exit 1 when files fail to pass (for example go vet)
+			if status.ExitStatus() != 1 {
+				return 0, failed, err
+				// return 0, Error{}, err
 			}
 		}
-
 	}
 
 	if len(filenames) == 1 {
