@@ -19,6 +19,7 @@ var (
 func AddSkipDirs(params []string) []string {
 	for _, dir := range skipDirs {
 		params = append(params, fmt.Sprintf("--skip=%s", dir))
+		params = append(params, fmt.Sprintf("--exclude=%s", dir))
 	}
 	return params
 }
