@@ -1,12 +1,11 @@
 package check
 
 import (
+	"bufio"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"strconv"
 	"strings"
 	"syscall"
@@ -16,6 +15,13 @@ var (
 	skipDirs     = []string{"Godeps", "vendor", "third_party"}
 	skipSuffixes = []string{".pb.go", ".pb.gw.go"}
 )
+
+func AddSkipDirs(params []string) []string {
+	for _, dir := range skipDirs {
+		params = append(params, fmt.Sprintf("--skip=%s", dir))
+	}
+	return params
+}
 
 // GoFiles returns a slice of Go filenames
 // in a given directory.
@@ -90,122 +96,89 @@ func (a ByFilename) Len() int           { return len(a) }
 func (a ByFilename) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByFilename) Less(i, j int) bool { return a[i].Filename < a[j].Filename }
 
-func getFileSummary(filename, dir, cmd, out string) (FileSummary, error) {
-	filename = strings.TrimPrefix(filename, "repos/src")
-	githubLink := strings.TrimPrefix(dir, "repos/src")
-	fileURL := "https://" + strings.TrimPrefix(dir, "repos/src/") + "/blob/master" + strings.TrimPrefix(filename, githubLink)
-	fs := FileSummary{
-		Filename: filename,
-		FileURL:  fileURL,
+func (fs *FileSummary) AddError(out string) error {
+	s := strings.SplitN(out, ":", 2)
+	msg := strings.SplitAfterN(s[1], ":", 3)[2]
+
+	e := Error{ErrorString: msg}
+	ls := strings.Split(s[1], ":")
+	ln, err := strconv.Atoi(ls[0])
+	if err != nil {
+		return err
 	}
-	split := strings.Split(string(out), "\n")
-	for _, sp := range split[0 : len(split)-1] {
-		msg := sp
-		var loc string
-		if cmd == "gocyclo" {
-			s := strings.SplitN(sp, " ", 2)
-			if len(s) > 1 {
-				loc = s[1]
-			}
-		} else {
-			s := strings.SplitN(sp, ": ", 2)
-			loc = s[0]
-			if len(s) > 1 {
-				msg = s[1]
-			}
-		}
+	e.LineNumber = ln
 
-		e := Error{ErrorString: msg}
-		switch cmd {
-		case "golint", "gocyclo", "vet":
-			ls := strings.Split(loc, ":")
-			if len(ls) >= 1 && strings.Contains(loc, filename) {
-				idx := len(ls) - 2
-				if cmd == "vet" {
-					idx = 1
-				}
-				ln, err := strconv.Atoi(ls[idx])
-				if err != nil {
-					return fs, err
-				}
-				e.LineNumber = ln
-			}
-		}
+	fs.Errors = append(fs.Errors, e)
 
-		fs.Errors = append(fs.Errors, e)
-	}
-
-	return fs, nil
+	return nil
 }
 
 // GoTool runs a given go command (for example gofmt, go tool vet)
 // on a directory
 func GoTool(dir string, filenames, command []string) (float64, []FileSummary, error) {
+	params := command[1:]
+	params = append(params, dir+"/...")
+
+	cmd := exec.Command(command[0], params...)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return 0, []FileSummary{}, err
+	}
+
+	err = cmd.Start()
+	if err != nil {
+		return 0, []FileSummary{}, err
+	}
+
+	out := bufio.NewScanner(stdout)
+
+	githubLink := strings.TrimPrefix(dir, "repos/src")
+
+	// the same file can appear multiple times out of order
+	// in the output, so we can't go line by line, have to store
+	// a map of filename to FileSummary
+	fsMap := map[string]FileSummary{}
 	var failed = []FileSummary{}
-	for _, fi := range filenames {
-		params := command[1:]
-		params = append(params, fi)
-
-		cmd := exec.Command(command[0], params...)
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
-			return 0, []FileSummary{}, err
-		}
-
-		stderr, err := cmd.StderrPipe()
-		if err != nil {
-			return 0, []FileSummary{}, err
-		}
-
-		err = cmd.Start()
-		if err != nil {
-			return 0, []FileSummary{}, err
-		}
-
-		out, err := ioutil.ReadAll(stdout)
-		if err != nil {
-			return 0, []FileSummary{}, err
-		}
-
-		errout, err := ioutil.ReadAll(stderr)
-		if err != nil {
-			return 0, []FileSummary{}, err
-		}
-
-		if string(out) != "" {
-			fs, err := getFileSummary(fi, dir, command[0], string(out))
-			if err != nil {
-				return 0, []FileSummary{}, err
-			}
-			failed = append(failed, fs)
-		}
-
-		// go vet logs to stderr
-		if string(errout) != "" {
-			cmd := command[0]
-			if reflect.DeepEqual(command, []string{"go", "tool", "vet"}) {
-				cmd = "vet"
-			}
-			fs, err := getFileSummary(fi, dir, cmd, string(errout))
-			if err != nil {
-				return 0, []FileSummary{}, err
-			}
-			failed = append(failed, fs)
-		}
-
-		err = cmd.Wait()
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			// The program has exited with an exit code != 0
-
-			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-				// some commands exit 1 when files fail to pass (for example go vet)
-				if status.ExitStatus() != 1 {
-					return 0, failed, err
-					// return 0, Error{}, err
-				}
+outer:
+	for out.Scan() {
+		filename := strings.Split(out.Text(), ":")[0]
+		filename = strings.TrimPrefix(filename, "repos/src")
+		for _, skip := range skipSuffixes {
+			if strings.HasSuffix(filename, skip) {
+				continue outer
 			}
 		}
+		fileURL := "https://" + strings.TrimPrefix(dir, "repos/src/") + "/blob/master" + strings.TrimPrefix(filename, githubLink)
+		fs := fsMap[filename]
+		if fs.Filename == "" {
+			fs.Filename = filename
+			fs.FileURL = fileURL
+		}
+		err = fs.AddError(out.Text())
+		if err != nil {
+			return 0, []FileSummary{}, err
+		}
+		fsMap[filename] = fs
+	}
+	if err := out.Err(); err != nil {
+		return 0, []FileSummary{}, err
+	}
 
+	for _, v := range fsMap {
+		failed = append(failed, v)
+	}
+
+	err = cmd.Wait()
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		// The program has exited with an exit code != 0
+
+		if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
+			// some commands exit 1 when files fail to pass (for example go vet)
+			if status.ExitStatus() != 1 {
+				return 0, failed, err
+				// return 0, Error{}, err
+			}
+		}
 	}
 
 	if len(filenames) == 1 {
