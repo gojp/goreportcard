@@ -1,7 +1,5 @@
 package check
 
-import "fmt"
-
 // Misspell is the check for the misspell command
 type Misspell struct {
 	Dir       string
@@ -21,7 +19,6 @@ func (g Misspell) Weight() float64 {
 // Percentage returns the percentage of .go files that pass gofmt
 func (g Misspell) Percentage() (float64, []FileSummary, error) {
 	params := AddSkipDirs([]string{"gometalinter", "--deadline=180s", "--disable-all", "--linter", "misspell:misspell ./*.go:PATH:LINE:MESSAGE", "--enable=misspell"})
-	fmt.Println(params)
 	return GoTool(g.Dir, g.Filenames, params)
 }
 
