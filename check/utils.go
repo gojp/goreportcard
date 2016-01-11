@@ -139,9 +139,15 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 	// a map of filename to FileSummary
 	fsMap := map[string]FileSummary{}
 	var failed = []FileSummary{}
+outer:
 	for out.Scan() {
 		filename := strings.Split(out.Text(), ":")[0]
 		filename = strings.TrimPrefix(filename, "repos/src")
+		for _, skip := range skipSuffixes {
+			if strings.HasSuffix(filename, skip) {
+				continue outer
+			}
+		}
 		fileURL := "https://" + strings.TrimPrefix(dir, "repos/src/") + "/blob/master" + strings.TrimPrefix(filename, githubLink)
 		fs := fsMap[filename]
 		if fs.Filename == "" {
