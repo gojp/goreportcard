@@ -139,6 +139,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		check.GoLint{Dir: dir, Filenames: filenames},
 		check.GoCyclo{Dir: dir, Filenames: filenames},
 		check.License{Dir: dir, Filenames: []string{}},
+		check.Misspell{Dir: dir, Filenames: filenames},
 	}
 
 	ch := make(chan score)
