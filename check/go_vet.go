@@ -18,7 +18,7 @@ func (g GoVet) Weight() float64 {
 
 // Percentage returns the percentage of .go files that pass go vet
 func (g GoVet) Percentage() (float64, []FileSummary, error) {
-	params := AddSkipDirs([]string{"gometalinter", "--disable-all", "--enable=vet"})
+	params := AddSkipDirs([]string{"gometalinter", "--deadline=180s", "--disable-all", "--enable=vet"})
 	return GoTool(g.Dir, g.Filenames, params)
 }
 
