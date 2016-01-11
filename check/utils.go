@@ -16,6 +16,13 @@ var (
 	skipSuffixes = []string{".pb.go", ".pb.gw.go"}
 )
 
+func AddSkipDirs(params []string) []string {
+	for _, dir := range skipDirs {
+		params = append(params, fmt.Sprintf("--skip=%s", dir))
+	}
+	return params
+}
+
 // GoFiles returns a slice of Go filenames
 // in a given directory.
 func GoFiles(dir string) ([]string, error) {
@@ -111,7 +118,7 @@ func (fs *FileSummary) AddError(out string) error {
 func GoTool(dir string, filenames, command []string) (float64, []FileSummary, error) {
 	var failed = []FileSummary{}
 	params := command[1:]
-	params = append(params, dir)
+	params = append(params, dir+"/...")
 
 	cmd := exec.Command(command[0], params...)
 	stdout, err := cmd.StdoutPipe()
