@@ -214,6 +214,7 @@
       <div class="col-md-6">
         <p><span class="huge">{{grade}}</span> &nbsp;&nbsp; {{gradeMessage grade}}</p>
       </div>
+      <div class="col-md-6 text-right"><img src="http://goreportcard.com/badge/{{repo}}"/></div>
       <div class="col-md-6 text-right">
         <p>Found <span class="huge">{{issues}}</span> issues across <span class="huge">{{files}}</span> files</p>
       </div>
@@ -262,7 +263,6 @@
   <script id="template-lastrefresh" type="text/x-handlebars-template">
   <p>Last refresh: {{last_refresh}} <a class="refresh-button" href=""><strong>Update now</strong></a></p>
     <div class="col-md-12 text-right">
-    <!-- <a class="copy-button" data-repo="{{repo}}" href="/badge/{{repo}}"><img src="/badge/{{repo}}"/></a> -->
   </div>
   </script>
   <script type="text/javascript">
