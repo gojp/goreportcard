@@ -116,7 +116,6 @@ func (fs *FileSummary) AddError(out string) error {
 // GoTool runs a given go command (for example gofmt, go tool vet)
 // on a directory
 func GoTool(dir string, filenames, command []string) (float64, []FileSummary, error) {
-	var failed = []FileSummary{}
 	params := command[1:]
 	params = append(params, dir+"/...")
 
@@ -135,29 +134,32 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 
 	githubLink := strings.TrimPrefix(dir, "repos/src")
 
-	var fs FileSummary
-	var filename string
+	// the same file can appear multiple times out of order
+	// in the output, so we can't go line by line, have to store
+	// a map of filename to FileSummary
+	fsMap := map[string]FileSummary{}
+	var failed = []FileSummary{}
 	for out.Scan() {
-		name := strings.Split(out.Text(), ":")[0]
-		name = strings.TrimPrefix(name, "repos/src")
-		if name != filename {
-			if fs.Filename != "" {
-				failed = append(failed, fs)
-			}
-			filename = name
-			fileURL := "https://" + strings.TrimPrefix(dir, "repos/src/") + "/blob/master" + strings.TrimPrefix(filename, githubLink)
-			fs = FileSummary{
-				Filename: filename,
-				FileURL:  fileURL,
-			}
+		filename := strings.Split(out.Text(), ":")[0]
+		filename = strings.TrimPrefix(filename, "repos/src")
+		fileURL := "https://" + strings.TrimPrefix(dir, "repos/src/") + "/blob/master" + strings.TrimPrefix(filename, githubLink)
+		fs := fsMap[filename]
+		if fs.Filename == "" {
+			fs.Filename = filename
+			fs.FileURL = fileURL
 		}
 		err = fs.AddError(out.Text())
 		if err != nil {
 			return 0, []FileSummary{}, err
 		}
+		fsMap[filename] = fs
 	}
 	if err := out.Err(); err != nil {
 		return 0, []FileSummary{}, err
+	}
+
+	for _, v := range fsMap {
+		failed = append(failed, v)
 	}
 
 	err = cmd.Wait()
