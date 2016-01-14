@@ -16,7 +16,7 @@ var (
 	skipSuffixes = []string{".pb.go", ".pb.gw.go"}
 )
 
-func AddSkipDirs(params []string) []string {
+func addSkipDirs(params []string) []string {
 	for _, dir := range skipDirs {
 		params = append(params, fmt.Sprintf("--skip=%s", dir))
 	}
@@ -117,6 +117,7 @@ func (fs *FileSummary) AddError(out string) error {
 // on a directory
 func GoTool(dir string, filenames, command []string) (float64, []FileSummary, error) {
 	params := command[1:]
+	params = addSkipDirs(params)
 	params = append(params, dir+"/...")
 
 	cmd := exec.Command(command[0], params...)
