@@ -13,7 +13,7 @@ import (
 
 var (
 	skipDirs     = []string{"Godeps", "vendor", "third_party"}
-	skipSuffixes = []string{".pb.go", ".pb.gw.go"}
+	skipSuffixes = []string{".pb.go", ".pb.gw.go", ".generated.go"}
 )
 
 func addSkipDirs(params []string) []string {
