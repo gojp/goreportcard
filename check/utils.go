@@ -96,6 +96,7 @@ func (a ByFilename) Len() int           { return len(a) }
 func (a ByFilename) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByFilename) Less(i, j int) bool { return a[i].Filename < a[j].Filename }
 
+// AddError adds an Error to FileSummary
 func (fs *FileSummary) AddError(out string) error {
 	s := strings.SplitN(out, ":", 2)
 	msg := strings.SplitAfterN(s[1], ":", 3)[2]
