@@ -95,14 +95,14 @@ var ten = big.NewInt(10)
 
 func humanateBigBytes(s, base *big.Int, sizes []string) string {
 	if s.Cmp(ten) < 0 {
-		return fmt.Sprintf("%dB", s)
+		return fmt.Sprintf("%d B", s)
 	}
 	c := (&big.Int{}).Set(s)
 	val, mag := oomm(c, base, len(sizes)-1)
 	suffix := sizes[mag]
-	f := "%.0f%s"
+	f := "%.0f %s"
 	if val < 10 {
-		f = "%.1f%s"
+		f = "%.1f %s"
 	}
 
 	return fmt.Sprintf(f, val, suffix)
@@ -115,7 +115,7 @@ func humanateBigBytes(s, base *big.Int, sizes []string) string {
 //
 // BigBytes(82854982) -> 83MB
 func BigBytes(s *big.Int) string {
-	sizes := []string{"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
+	sizes := []string{"B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"}
 	return humanateBigBytes(s, bigSIExp, sizes)
 }
 
