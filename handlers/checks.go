@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"encoding/binary"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -8,34 +11,49 @@ import (
 	"strings"
 	"time"
 
+	"github.com/boltdb/bolt"
 	"github.com/gojp/goreportcard/check"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
-)
-
-var (
-	mongoURL        = "mongodb://127.0.0.1:27017"
-	mongoDatabase   = "goreportcard"
-	mongoCollection = "reports"
 )
 
 func getFromCache(repo string) (checksResp, error) {
-	// try and fetch from mongo
-	session, err := mgo.Dial(mongoURL)
+	// try and fetch from boltdb
+	db, err := bolt.Open(DBPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		return checksResp{}, fmt.Errorf("Failed to get mongo collection during GET: %v", err)
+		return checksResp{}, fmt.Errorf("Failed to open bolt database during GET: %v", err)
 	}
-	defer session.Close()
-	coll := session.DB(mongoDatabase).C(mongoCollection)
+	defer db.Close()
+
 	resp := checksResp{}
-	err = coll.Find(bson.M{"repo": repo}).One(&resp)
+	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(RepoBucket))
+		if b == nil {
+			return errors.New("No repo bucket")
+		}
+		cached := b.Get([]byte(repo))
+		if cached == nil {
+			return fmt.Errorf("%q not found in cache", repo)
+		}
+
+		err = json.Unmarshal(cached, &resp)
+		if err != nil {
+			return fmt.Errorf("failed to parse JSON for %q in cache", repo)
+		}
+		return nil
+	})
+
 	if err != nil {
-		return checksResp{}, fmt.Errorf("Failed to fetch %q from mongo: %v", repo, err)
+		return resp, err
 	}
 
 	resp.LastRefresh = resp.LastRefresh.UTC()
-
 	return resp, nil
+}
+
+// itob returns an 8-byte big endian representation of v.
+func itob(v int) []byte {
+	b := make([]byte, 8)
+	binary.BigEndian.PutUint64(b, uint64(v))
+	return b
 }
 
 type score struct {

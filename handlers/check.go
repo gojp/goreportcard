@@ -2,12 +2,21 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/boltdb/bolt"
+)
+
+const (
+	// DBPath is the relative (or absolute) path to the bolt database file
+	DBPath string = "goreportcard.db"
+
+	// RepoBucket is the bucket in which repos will be cached in the bolt DB
+	RepoBucket string = "repos"
 )
 
 // CheckHandler handles the request for checking a repo
@@ -31,26 +40,34 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b, err := json.Marshal(resp)
+	respBytes, err := json.Marshal(resp)
 	if err != nil {
 		log.Println("ERROR: could not marshal json:", err)
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	w.Write(b)
+	w.Write(respBytes)
 
-	// write to mongo
-	session, err := mgo.Dial(mongoURL)
+	// write to boltdb
+	db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		log.Println("Failed to get mongo collection: ", err)
+		log.Println("Failed to open bolt database: ", err)
 		return
 	}
-	defer session.Close()
-	coll := session.DB(mongoDatabase).C(mongoCollection)
-	log.Printf("Upserting repo %s...", repo)
-	_, err = coll.Upsert(bson.M{"repo": repo}, resp)
+	defer db.Close()
+
+	log.Printf("Saving repo %q to cache...", repo)
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(RepoBucket))
+		if b == nil {
+			return fmt.Errorf("Repo bucket not found")
+		}
+		return b.Put([]byte(repo), respBytes)
+	})
+
 	if err != nil {
-		log.Println("Mongo writing error:", err)
-		return
+		log.Println("Bolt writing error:", err)
 	}
+	return
 }
