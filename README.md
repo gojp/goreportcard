@@ -22,7 +22,7 @@ go get ./...
 Now run main.go,
 
 ```
-go run main.go
+godep go run main.go
 ```
 
 and you should see
@@ -36,7 +36,7 @@ Navigate to that URL in your browser and check that you can see the front page.
 
 ### Contributing
 
-Goreportcard is an open source project run by volunteers, and contributions are welcome! Check out the [Issues](https://github.com/gojp/goreportcard/issues) page to see if your idea for a contribution has already been mentioned, and feel free to raise an issue or submit a pull request.
+Go Report Card is an open source project run by volunteers, and contributions are welcome! Check out the [Issues](https://github.com/gojp/goreportcard/issues) page to see if your idea for a contribution has already been mentioned, and feel free to raise an issue or submit a pull request.
 
 ### License
 
