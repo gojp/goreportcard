@@ -16,13 +16,13 @@ Go into the source directory and pull down the project dependencies:
 
 ```
 cd $GOPATH/src/github.com/gojp/goreportcard
-go get ./...
+make install
 ```
 
-Now run main.go,
+Now run
 
 ```
-godep go run main.go
+make start
 ```
 
 and you should see
