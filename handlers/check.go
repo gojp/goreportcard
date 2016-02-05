@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"container/heap"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -17,6 +18,10 @@ const (
 
 	// RepoBucket is the bucket in which repos will be cached in the bolt DB
 	RepoBucket string = "repos"
+
+	// HighScoreBucket is the bucket containing the names of the projects with the
+	// top 100 high scores
+	HighScoreBucket string = "high_scores"
 )
 
 // CheckHandler handles the request for checking a repo
@@ -63,7 +68,81 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 		if b == nil {
 			return fmt.Errorf("Repo bucket not found")
 		}
-		return b.Put([]byte(repo), respBytes)
+
+		// is this a new repo? if so, increase the count in the high scores bucket later
+		isNewRepo := b.Get([]byte(repo)) == nil
+
+		err := b.Put([]byte(repo), respBytes)
+		if err != nil {
+			return err
+		}
+
+		// check if we might need to update the high score list
+		if resp.Files < 100 {
+			// only repos with >= 100 files are considered for the high score list
+			return nil
+		}
+
+		hsb := tx.Bucket([]byte(HighScoreBucket))
+		if hsb == nil {
+			return fmt.Errorf("High score bucket not found")
+		}
+		// update total repos count
+		if isNewRepo {
+			totalInt := 0
+			total := hsb.Get([]byte("total_repos"))
+			if total != nil {
+				err = json.Unmarshal(total, totalInt)
+				if err != nil {
+					return fmt.Errorf("Could not unmarshal total repos count: %v", err)
+				}
+			}
+			total, err = json.Marshal(totalInt + 1)
+			if err != nil {
+				return fmt.Errorf("Could not marshal total repos count: %v", err)
+			}
+			hsb.Put([]byte("total_repos"), total)
+		}
+
+		scoreBytes := hsb.Get([]byte("scores"))
+		if scoreBytes == nil {
+			scoreBytes, _ = json.Marshal([]scoreHeap{})
+		}
+		scores := &scoreHeap{}
+		json.Unmarshal(scoreBytes, scores)
+
+		heap.Init(scores)
+		if len(*scores) > 0 && (*scores)[0].Score > resp.Average*100.0 {
+			// lowest score on list is higher than this repo's score, so no need to add
+			return nil
+		}
+		// if this repo is already in the list, remove the original entry:
+		for i := range *scores {
+			if strings.Compare((*scores)[i].Repo, repo) == 0 {
+				heap.Remove(scores, i)
+				break
+			}
+		}
+		// now we can safely push it onto the heap
+		heap.Push(scores, scoreItem{
+			Repo:  repo,
+			Score: resp.Average * 100.0,
+			Files: resp.Files,
+		})
+		if len(*scores) > 100 {
+			// trim heap if it's grown to over 100
+			*scores = (*scores)[:100]
+		}
+		scoreBytes, err = json.Marshal(&scores)
+		if err != nil {
+			return err
+		}
+		err = hsb.Put([]byte("scores"), scoreBytes)
+		if err != nil {
+			return err
+		}
+
+		return nil
 	})
 
 	if err != nil {

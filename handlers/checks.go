@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -47,13 +46,6 @@ func getFromCache(repo string) (checksResp, error) {
 
 	resp.LastRefresh = resp.LastRefresh.UTC()
 	return resp, nil
-}
-
-// itob returns an 8-byte big endian representation of v.
-func itob(v int) []byte {
-	b := make([]byte, 8)
-	binary.BigEndian.PutUint64(b, uint64(v))
-	return b
 }
 
 type score struct {

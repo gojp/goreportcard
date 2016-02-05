@@ -44,6 +44,10 @@ func initDB() error {
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(handlers.RepoBucket))
+		if err != nil {
+			return err
+		}
+		_, err = tx.CreateBucketIfNotExists([]byte(handlers.HighScoreBucket))
 		return err
 	})
 	return err
