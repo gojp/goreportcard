@@ -68,6 +68,7 @@ func main() {
 	http.HandleFunc("/report/", makeHandler("report", handlers.ReportHandler))
 	http.HandleFunc("/badge/", makeHandler("badge", handlers.BadgeHandler))
 	http.HandleFunc("/high_scores/", handlers.HighScoresHandler)
+	http.HandleFunc("/about/", handlers.AboutHandler)
 	http.HandleFunc("/", handlers.HomeHandler)
 
 	fmt.Println("Running on 127.0.0.1:8080...")
