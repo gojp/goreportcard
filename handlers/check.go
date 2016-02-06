@@ -48,26 +48,29 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(respBytes)
 
-	// write to boltdb
-	db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		log.Println("Failed to open bolt database: ", err)
-		return
-	}
-	defer db.Close()
-
-	log.Printf("Saving repo %q to cache...", repo)
-
-	err = db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(RepoBucket))
-		if b == nil {
-			return fmt.Errorf("repo bucket not found")
+	if forceRefresh {
+		// write to boltdb
+		db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
+		if err != nil {
+			log.Println("Failed to open bolt database: ", err)
+			return
 		}
-		return b.Put([]byte(repo), respBytes)
-	})
+		defer db.Close()
 
-	if err != nil {
-		log.Println("Bolt writing error:", err)
+		log.Printf("Saving repo %q to cache...", repo)
+
+		err = db.Update(func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte(RepoBucket))
+			if b == nil {
+				return fmt.Errorf("repo bucket not found")
+			}
+			return b.Put([]byte(repo), respBytes)
+		})
+
+		if err != nil {
+			log.Println("Bolt writing error:", err)
+		}
 	}
+
 	return
 }
