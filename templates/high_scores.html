@@ -4,9 +4,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Go Report Card | A Gopher Gala Hackathon Product</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+    <title>Go Report Card | Go project code quality report cards</title>
+    <link rel="stylesheet" href="https://cdn.rawgit.com/jgthms/bulma/master/css/bulma.min.css">
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -18,76 +17,86 @@
 
     </script>
     <style>
-    /* Footer section!
-    -------------------------------------------------- */
-    .footer-text {
-      text-align: center;
-      line-height: 4em;
-    }
-
-    /* Sticky footer
-    -------------------------------------------------- */
-    html {
-      position: relative;
-      min-height: 100%;
-    }
-    body {
-      /* Margin bottom by footer height */
-      margin-bottom: 60px;
-    }
-    .footer {
-      position: absolute;
-      bottom: 0;
-      width: 100%;
-      /* Set the fixed height of the footer here */
-      height: 60px;
-      background-color: #f5f5f5;
+    .header .is-active {
+        font-weight: bold;
     }
     </style>
 </head>
 <body>
-  <div class="container">
-    <h1>High Scores</h1>
-    <p><a href="/">Back</a></p>
-    <table class="table">
-      <thead>
-        <tr>
-        <th>Rank</th>
-        <th>Name</th>
-        <th>Go Files</th>
-        <th>Score</th>
-        </tr>
-      </thead>
-    <tbody>
-    {{ range $index, $highScore := .HighScores }}
-      <tr>
-      <td><a href="/report/{{ $highScore.Repo}}">{{ add $index 1 }}</td></a>
-      <td><a href="https://github.com/{{ $highScore.Repo }}" rel="nofollow">{{ $highScore.Repo }}</a></td>
-      <td>{{ $highScore.Files }}</td>
-      <td>{{ formatScore $highScore.Score }}</td>
-      </tr>
-    {{end}}
-    </tbody>
-    </table>
-    <h1>Stats</h1>
-    <ul>
-    <li><h4>Reports generated for {{ .Count }} repos.</h4></li>
-    </ul>
-  </div>
-  <div class="footer">
+    <header class="header">
     <div class="container">
-      <div class="row">
-        <div class="col-md-12">
-          <p class="footer-text">
-          Made by
-            <a href="https://twitter.com/shawnps">@shawnps</a> and
-            <a href="https://twitter.com/ironzeb">@ironzeb</a>. The Go Gopher was created by <a href="http://reneefrench.blogspot.com/">Renée French</a>
+          <!-- Left side -->
+          <div class="header-left">
+            <a class="header-item" href="/">
+              <h3 class="title">Go Report Card</h3>
+            </a>
+          </div>
+
+          <!-- Hamburger menu (on mobile) -->
+          <span class="header-toggle">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+
+          <!-- Right side -->
+          <div class="header-right header-menu">
+            <span class="header-item is-active">
+              <a href="/high_scores">High Scores</a>
+            </span>
+            <span class="header-item">
+              <a href="https://github.com/gojp/goreportcard">Github</a>
+            </span>
+            <span class="header-item">
+              <a href="/about">About</a>
+            </span>
+          </div>
+        </div>
+    </header>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">High Scores</h1>
+            <table class="table">
+              <thead>
+                <tr>
+                <th>Rank</th>
+                <th>Name</th>
+                <th>Go Files</th>
+                <th>Score</th>
+                </tr>
+              </thead>
+            <tbody>
+            {{ range $index, $highScore := .HighScores }}
+              <tr>
+              <td><a href="/report/{{ $highScore.Repo}}">{{ add $index 1 }}</td></a>
+              <td><a href="https://github.com/{{ $highScore.Repo }}" rel="nofollow">{{ $highScore.Repo }}</a></td>
+              <td>{{ $highScore.Files }}</td>
+              <td>{{ formatScore $highScore.Score }}</td>
+              </tr>
+            {{end}}
+            </tbody>
+            </table>
+            <hr>
+            <p>
+                Reports generated for <strong>{{ .Count }}</strong> unique repos so far.
+            </p>
+        </div>
+    </section>
+    <footer class="footer">
+      <div class="container">
+        <div class="content is-centered">
+          <p>
+              <strong>Go Report Card</strong> by
+                <a href="https://twitter.com/shawnps">Shawn Smith</a> and
+                <a href="https://twitter.com/ironzeb">Herman Schaaf</a>.
+          </p>
+          <p>
+              <a href="https://www.digitalocean.com/" class="dolink">
+                  <img width="15%" src="/assets/do-proudly-hosted.png">
+              </a>
           </p>
         </div>
       </div>
-    </div>
-  </div>
-  <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.js"></script>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
+    </footer>
 </body>
 </html>
