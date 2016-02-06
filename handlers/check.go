@@ -132,9 +132,9 @@ func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
 	json.Unmarshal(scoreBytes, scores)
 
 	heap.Init(scores)
-	if len(*scores) > 0 && (*scores)[0].Score > resp.Average*100.0 && len(*scores) == 100 {
+	if len(*scores) > 0 && (*scores)[0].Score > resp.Average*100.0 && len(*scores) == 50 {
 		// lowest score on list is higher than this repo's score, so no need to add, unless
-		// we do not have 100 high scores yet
+		// we do not have 50 high scores yet
 		return nil
 	}
 	// if this repo is already in the list, remove the original entry:
@@ -150,9 +150,9 @@ func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
 		Score: resp.Average * 100.0,
 		Files: resp.Files,
 	})
-	if len(*scores) > 100 {
-		// trim heap if it's grown to over 100
-		*scores = (*scores)[:100]
+	if len(*scores) > 50 {
+		// trim heap if it's grown to over 50
+		*scores = (*scores)[1:51]
 	}
 	scoreBytes, err := json.Marshal(&scores)
 	if err != nil {
