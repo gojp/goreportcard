@@ -18,7 +18,7 @@ func getFromCache(repo string) (checksResp, error) {
 	// try and fetch from boltdb
 	db, err := bolt.Open(DBPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		return checksResp{}, fmt.Errorf("Failed to open bolt database during GET: %v", err)
+		return checksResp{}, fmt.Errorf("failed to open bolt database during GET: %v", err)
 	}
 	defer db.Close()
 
@@ -132,16 +132,16 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	// fetch the repo and grade it
 	err := clone(url)
 	if err != nil {
-		return checksResp{}, fmt.Errorf("Could not clone repo: %v", err)
+		return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
 	}
 
 	dir := dirName(url)
 	filenames, err := check.GoFiles(dir)
 	if err != nil {
-		return checksResp{}, fmt.Errorf("Could not get filenames: %v", err)
+		return checksResp{}, fmt.Errorf("could not get filenames: %v", err)
 	}
 	if len(filenames) == 0 {
-		return checksResp{}, fmt.Errorf("No .go files found")
+		return checksResp{}, fmt.Errorf("no .go files found")
 	}
 	checks := []check.Check{
 		check.GoFmt{Dir: dir, Filenames: filenames},
