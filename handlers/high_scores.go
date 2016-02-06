@@ -33,7 +33,7 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 
 	count, scores := 0, &scoreHeap{}
 	err = db.View(func(tx *bolt.Tx) error {
-		hsb := tx.Bucket([]byte(HighScoreBucket))
+		hsb := tx.Bucket([]byte(MetaBucket))
 		if hsb == nil {
 			return fmt.Errorf("High score bucket not found")
 		}

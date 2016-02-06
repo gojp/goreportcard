@@ -47,7 +47,7 @@ func initDB() error {
 		if err != nil {
 			return err
 		}
-		_, err = tx.CreateBucketIfNotExists([]byte(handlers.HighScoreBucket))
+		_, err = tx.CreateBucketIfNotExists([]byte(handlers.MetaBucket))
 		return err
 	})
 	return err

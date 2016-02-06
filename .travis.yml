@@ -3,6 +3,7 @@ language: go
 go: 1.5
 
 install:
+  - go get github.com/boltdb/bolt
   - go get github.com/fzipp/gocyclo
   - go get github.com/golang/lint
   - go get golang.org/x/tools/cmd/vet
