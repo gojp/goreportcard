@@ -12,10 +12,10 @@
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-    
+
       ga('create', 'UA-58936835-1', 'auto');
       ga('send', 'pageview');
-    
+
     </script>
     <style>
     /* Footer section!
@@ -47,7 +47,8 @@
 </head>
 <body>
   <div class="container">
-    <h1> High Scores</h1>
+    <h1>High Scores</h1>
+    <p><a href="/">Back</a></p>
     <table class="table">
       <thead>
         <tr>
@@ -63,7 +64,7 @@
       <td><a href="/report/{{ $highScore.Repo}}">{{ add $index 1 }}</td></a>
       <td><a href="https://github.com/{{ $highScore.Repo }}" rel="nofollow">{{ $highScore.Repo }}</a></td>
       <td>{{ $highScore.Files }}</td>
-      <td>{{ formatScore $highScore.Average }}</td>
+      <td>{{ formatScore $highScore.Score }}</td>
       </tr>
     {{end}}
     </tbody>
@@ -78,7 +79,7 @@
       <div class="row">
         <div class="col-md-12">
           <p class="footer-text">
-          Made by 
+          Made by
             <a href="https://twitter.com/shawnps">@shawnps</a> and
             <a href="https://twitter.com/ironzeb">@ironzeb</a>. The Go Gopher was created by <a href="http://reneefrench.blogspot.com/">Renée French</a>
           </p>

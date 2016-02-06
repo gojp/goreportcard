@@ -26,3 +26,5 @@ _testmain.go
 *.swp
 *.DS_Store
 repos
+
+goreportcard.db
