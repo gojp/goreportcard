@@ -354,8 +354,8 @@
           url = $form.attr("action"),
           method = $form.attr("method"),
           data = {};
-      shrinkHeader();
       hideResults();
+      $("#check_form .button").addClass("is-loading");
       $form.serializeArray().map(function(x){data[x.name] = x.value;});
       $.ajax({
           type: getRequest ? "GET" : "POST",
@@ -365,7 +365,9 @@
       }).fail(function(xhr, status, err){;
           alertMessage("There was an error processing your request: " + xhr.responseText);
       }).done(function(data, textStatus, jqXHR){
+          shrinkHeader();
           populateResults(data);
+          $("#check_form .button").removeClass("is-loading");
       }).always(function(){
           loading = false;
       });
@@ -374,7 +376,7 @@
     };
 
     var hideResults = function(){
-      // $(".container-results").hide();
+      $(".container-results").hide();
     };
 
     // on ready

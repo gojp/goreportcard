@@ -122,9 +122,9 @@ func clone(url string) error {
 
 func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	url := repo
-	// if !strings.HasPrefix(url, "https://gojp:gojp@github.com/") {
-	// 	url = "https://gojp:gojp@github.com/" + url
-	// }
+	if strings.Count(repo, ".") == 0 {
+		url = "github.com/" + url
+	}
 
 	if !forceRefresh {
 		resp, err := getFromCache(repo)
