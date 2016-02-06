@@ -1,6 +1,6 @@
-/*
 package main
 
+/*
 import (
 	"container/heap"
 	"encoding/json"
