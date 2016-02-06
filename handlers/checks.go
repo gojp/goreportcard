@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -86,12 +87,19 @@ func clone(url string) error {
 	if err := os.Mkdir(fmt.Sprintf("repos/src/github.com/%s", org), 0755); err != nil && !os.IsExist(err) {
 		return fmt.Errorf("could not create dir: %v", err)
 	}
+	d, err := filepath.Abs("repos")
+	if err != nil {
+		return fmt.Errorf("could not fetch absolute path: %v", err)
+	}
+	os.Setenv("GOPATH", d)
 	dir := dirName(url)
-	_, err := os.Stat(dir)
+	_, err = os.Stat(dir)
 	if os.IsNotExist(err) {
-		cmd := exec.Command("git", "clone", "--depth", "1", "--single-branch", url, dir)
+		cmd := exec.Command("go", "get", "-u", url)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
 		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("could not run git clone: %v", err)
+			return fmt.Errorf("could not run go get: %v", err)
 		}
 
 		return nil
@@ -100,23 +108,23 @@ func clone(url string) error {
 		return fmt.Errorf("could not stat dir: %v", err)
 	}
 
-	cmd := exec.Command("git", "-C", dir, "fetch", "origin", "master")
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("could not fetch master branch: %v", err)
-	}
-	cmd = exec.Command("git", "-C", dir, "reset", "--hard", "origin/master")
-	if err = cmd.Run(); err != nil {
-		return fmt.Errorf("could not reset origin/master: %v", err)
-	}
+	// cmd := exec.Command("git", "-C", dir, "fetch", "origin", "master")
+	// if err := cmd.Run(); err != nil {
+	// 	return fmt.Errorf("could not fetch master branch: %v", err)
+	// }
+	// cmd = exec.Command("git", "-C", dir, "reset", "--hard", "origin/master")
+	// if err = cmd.Run(); err != nil {
+	// 	return fmt.Errorf("could not reset origin/master: %v", err)
+	// }
 
 	return nil
 }
 
 func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	url := repo
-	if !strings.HasPrefix(url, "https://gojp:gojp@github.com/") {
-		url = "https://gojp:gojp@github.com/" + url
-	}
+	// if !strings.HasPrefix(url, "https://gojp:gojp@github.com/") {
+	// 	url = "https://gojp:gojp@github.com/" + url
+	// }
 
 	if !forceRefresh {
 		resp, err := getFromCache(repo)
