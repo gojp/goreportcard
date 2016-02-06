@@ -5,4 +5,6 @@ go: 1.5
 install:
   - make install
 
-script: godep go test -cover ./...
+script:
+  - make lint
+  - godep go test -cover ./...
