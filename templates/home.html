@@ -211,7 +211,7 @@
   <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
   <script id="template-alert" type="text/x-handlebars-template">
-      <div class="notification is-primary">
+      <div class="notification is-warning">
           <button class="delete"></button>
           {{{message}}}
       </div>
@@ -219,9 +219,10 @@
   </script>
   <script id="template-grade" type="text/x-handlebars-template">
       <div class="column">
+          <h1 class="title">Report for <strong>{{repo}}</strong></h1>
         <p><span class="huge">{{grade}}</span> &nbsp;&nbsp; {{gradeMessage grade}} &emsp;&emsp; Found <strong>{{issues}}</strong> issues across <strong>{{files}}</strong> files</p>
       </div>
-      <div class="column badge-col"><img src="http://goreportcard.com/badge/{{repo}}"/></div>
+      <div class="column is-quarter badge-col"><img src="http://goreportcard.com/badge/{{repo}}"/></div>
   </script>
   <script id="template-check" type="text/x-handlebars-template">
       <a class="menu-block" href="#{{{name}}}">
@@ -309,7 +310,6 @@
         var $resultsText = $(".results-text");
         var $resultsDetails = $('.results-details');
         $resultsText.html($(templates.grade(data)));
-
         var $table = $(".results");
         $table.html('<p class="menu-heading">Results</p>');
         for (var i = 0; i < checks.length; i++) {

@@ -30,6 +30,16 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 
 	repo := r.FormValue("repo")
 	log.Printf("Checking repo %s...", repo)
+
+	// repoRoot, err := vcs.RepoRootForImportPath(repo, true)
+	// if err != nil {
+	// 	log.Println("ERROR:", err)
+	// 	http.Error(w, err.Error(), 404)
+	// 	return
+	// }
+	// repo = repoRoot.Root
+	// log.Println("RepoRootForImportPath:", repo)
+
 	if strings.ToLower(repo) == "golang/go" {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("We've decided to omit results for the Go repository because it has lots of test files that (purposely) don't pass our checks. Go gets an A+ in our books though!"))
@@ -38,7 +48,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in boltdb first
 	resp, err := newChecksResp(repo, forceRefresh)
 	if err != nil {
-		log.Println("ERROR: ", err)
+		log.Println("ERROR: from newChecksResp: ", err)
 		b, _ := json.Marshal(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(b)
