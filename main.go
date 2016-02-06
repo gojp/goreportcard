@@ -40,7 +40,9 @@ func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string
 		if m2 != nil {
 			// old format is being used
 			repo = "github.com/" + repo
-			log.Printf("Assuming intended repo is %q", repo)
+			log.Printf("Assuming intended repo is %q, redirecting", repo)
+			http.Redirect(w, r, fmt.Sprintf("/%s/%s", name, repo), http.StatusMovedPermanently)
+			return
 		}
 
 		fn(w, r, repo)
