@@ -1,19 +1,15 @@
 {
 	"ImportPath": "github.com/gojp/goreportcard",
-	"GoVersion": "go1.4.2",
+	"GoVersion": "devel +fd9fd4c Fri Feb 5 17:06:51 2016 +0000",
 	"Deps": [
+		{
+			"ImportPath": "github.com/boltdb/bolt",
+			"Comment": "v1.1.0-66-gfc7313d",
+			"Rev": "fc7313d46ce2ee887e6d7d32acf648a30e379d8d"
+		},
 		{
 			"ImportPath": "github.com/dustin/go-humanize",
 			"Rev": "8929fe90cee4b2cb9deb468b51fb34eba64d1bf0"
-		},
-		{
-			"ImportPath": "gopkg.in/mgo.v2",
-			"Rev": "8c1ecfe7d8a0b5bc49a809f4c15955e514f77a80"
-		},
-		{
-			"ImportPath": "labix.org/v2/mgo/bson",
-			"Comment": "287",
-			"Rev": "gustavo@niemeyer.net-20140501184651-975yyw9ipld92pji"
 		}
 	]
 }

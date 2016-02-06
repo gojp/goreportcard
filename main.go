@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/boltdb/bolt"
+	"github.com/gojp/goreportcard/Godeps/_workspace/src/github.com/boltdb/bolt"
 	"github.com/gojp/goreportcard/handlers"
 )
 
