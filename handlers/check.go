@@ -61,8 +61,6 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	log.Printf("Saving repo %q to cache...", repo)
-
 	// is this a new repo? if so, increase the count in the high scores bucket later
 	isNewRepo := false
 	err = db.View(func(tx *bolt.Tx) error {
@@ -80,6 +78,8 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	// if this is a new repo, or the user force-refreshed, update the cache
 	if isNewRepo || forceRefresh {
 		err = db.Update(func(tx *bolt.Tx) error {
+			log.Printf("Saving repo %q to cache...", repo)
+
 			b := tx.Bucket([]byte(RepoBucket))
 			if b == nil {
 				return fmt.Errorf("repo bucket not found")
