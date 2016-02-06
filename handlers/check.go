@@ -30,7 +30,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("We've decided to omit results for the Go repository because it has lots of test files that (purposely) don't pass our checks. Go gets an A+ in our books though!"))
 		return
 	}
-	forceRefresh := r.Method != "GET" // if this is a GET request, try fetch from cached version in mongo first
+	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in boltdb first
 	resp, err := newChecksResp(repo, forceRefresh)
 	if err != nil {
 		log.Println("ERROR: ", err)
