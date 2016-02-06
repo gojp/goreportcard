@@ -61,7 +61,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(RepoBucket))
 		if b == nil {
-			return fmt.Errorf("Repo bucket not found")
+			return fmt.Errorf("repo bucket not found")
 		}
 		return b.Put([]byte(repo), respBytes)
 	})
