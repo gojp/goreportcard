@@ -377,6 +377,7 @@
         $div = $(".container-update").html($lastRefresh);
         $div.find("a.refresh-button").on("click", function(e){
           loadData.call($("form#check_form")[0], false);
+          $(this).addClass('is-loading');
           return false;
         });
     };
@@ -398,7 +399,6 @@
           url = $form.attr("action"),
           method = $form.attr("method"),
           data = {};
-      hideResults();
       $("#check_form .button").addClass("is-loading");
       $form.serializeArray().map(function(x){data[x.name] = x.value;});
       $.ajax({
@@ -413,6 +413,7 @@
           populateResults(data);
       }).always(function(){
           loading = false;
+          $("a.refresh-button").removeClass("is-loading");
           $("#check_form .button").removeClass("is-loading");
       });
       history.pushState('', "Go Report Card for " + data.repo + "", "/report/" + data.repo);
