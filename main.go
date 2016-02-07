@@ -8,8 +8,9 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/gojp/goreportcard/Godeps/_workspace/src/github.com/boltdb/bolt"
 	"github.com/gojp/goreportcard/handlers"
+
+	"github.com/boltdb/bolt"
 )
 
 func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
