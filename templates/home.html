@@ -99,6 +99,10 @@
     .results-details .wrapper {
         margin-bottom: 20px;
     }
+    .results-details .perfect {
+        margin-top: 1em;
+        font-weight: 600;
+    }
     nav.results.stickytop {
         position:fixed;
         top:0;
@@ -172,6 +176,42 @@
         </form>
       </div>
     </div>
+  </section>
+  <section class="section container-suggestions">
+      <div class="container">
+          <div class="columns">
+              <div class="column is-quarter">
+              </div>
+              <div class="column is-half">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Popular Report Cards</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="table-link"><a href="/report/github.com/golang/crypto">github.com/golang/crypto</a></td>
+                        </tr>
+                        <tr>
+                            <td class="table-link"><a href="/report/github.com/cockroachdb/cockroach">github.com/cockroachdb/cockroach</a></td>
+                        </tr>
+                        <tr>
+                            <td class="table-link"><a href="/report/github.com/gojp/goreportcard">github.com/gojp/goreportcard</a></td>
+                        </tr>
+                        <tr>
+                            <td class="table-link"><a href="/report/github.com/boltdb/bolt">github.com/boltdb/bolt</a></td>
+                        </tr>
+                        <tr>
+                            <td class="table-link"><a href="/report/github.com/docker/docker">github.com/docker/docker</a></td>
+                        </tr>
+                    </tbody>
+                  </table>
+              </div>
+              <div class="column is-quarter">
+              </div>
+          </div>
+      </div>
   </section>
 
   <section class="section container-results hidden">
@@ -254,6 +294,7 @@
       </ul>
     {{/each}}
     </div>
+    <hr>
   </script>
   <script id="template-lastrefresh" type="text/x-handlebars-template">
   <p>Last refresh: {{last_refresh}}</p>
@@ -329,6 +370,7 @@
             var $details = $(templates.details(checks[i]));
             $details.appendTo($resultsDetails);
         }
+        $(".container-suggestions").addClass('hidden');
         $(".container-results").removeClass('hidden').slideDown();
 
         $lastRefresh = $(templates.lastrefresh(data));
@@ -396,7 +438,7 @@
 
       // sticky menu
       $(window).scroll(function() {
-          if ($(this).scrollTop() >= 180) {
+          if ($(this).scrollTop() >= 240) {
               $('nav.results').addClass('stickytop');
           }
           else {
