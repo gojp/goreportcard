@@ -68,9 +68,11 @@
     }
     .results-text .badge-col {
         text-align: right;
+        position: relative;
     }
-    .results-text .badge-col img {
+    .results-text .badge-col .badge {
         margin-top: 10px;
+        cursor: pointer;
     }
     .menu-block.is-active {
         font-weight: bold;
@@ -102,6 +104,26 @@
     .results-details .perfect {
         margin-top: 1em;
         font-weight: 600;
+    }
+    #badge_dropdown {
+        position: absolute;
+        top: 32px;
+        right: 0;
+        width: 100%;
+        max-width: 400px;
+        padding: 10px;
+        border: 3px solid #dddddd;
+        background: white;
+    }
+    #badge_dropdown label {
+        clear: left;
+        float: left;
+        font-size: 0.8em;
+    }
+    #badge_dropdown input {
+        float: left;
+        font-size: 0.8em;
+        width: 100%;
     }
     nav.results.stickytop {
         position:fixed;
@@ -264,13 +286,23 @@
           <h1 class="title">Report for <strong>{{repo}}</strong></h1>
         <p><span class="huge">{{grade}}</span> &nbsp;&nbsp; {{gradeMessage grade}} &emsp;&emsp; Found <strong>{{issues}}</strong> issues across <strong>{{files}}</strong> files</p>
       </div>
-      <div class="column is-quarter badge-col"><img src="http://goreportcard.com/badge/{{repo}}"/></div>
+      <div class="column is-quarter badge-col"><img class="badge" tag="{{repo}}" src="/badge/{{repo}}"/></div>
   </script>
   <script id="template-check" type="text/x-handlebars-template">
       <a class="menu-block" href="#{{{name}}}">
         {{{name}}}
         <span class="percentage {{color percentage}}">{{percentage}}%</span>
       </a>
+  </script>
+  <script id="template-badgedropdown" type="text/x-handlebars-template">
+      <div id="badge_dropdown" class="hidden">
+          <div>
+              <label>Image URL</label><input value="{{{image_url}}}">
+          </div>
+          <div>
+              <label>Markdown</label><input value="[![Go Report Card]({{{image_url}}})]({{{url}}})">
+          </div>
+      </div>
   </script>
   <script id="template-details" type="text/x-handlebars-template">
     <div class="wrapper">
@@ -379,6 +411,19 @@
           loadData.call($("form#check_form")[0], false);
           $(this).addClass('is-loading');
           return false;
+        });
+
+        var badgeData = {
+            url: "https://goreportcard.com/report/" + data.repo,
+            image_url: "https://goreportcard.com/badge/" + data.repo,
+        }
+        var $badgeDropdown = $(templates.badgedropdown(badgeData));
+        $badgeDropdown.find("input").on("click", function(){
+            $(this).select();
+        });
+        $(".badge-col").append($badgeDropdown);
+        $(".badge-col .badge").on("click", function(){
+            $(this).closest(".badge-col").find("#badge_dropdown").toggleClass("hidden");
         });
     };
 
