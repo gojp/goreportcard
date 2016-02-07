@@ -73,7 +73,7 @@ type checksResp struct {
 }
 
 func goGet(repo string) error {
-	log.Println("Go getting", repo, "...")
+	log.Printf("Go getting %q...", repo)
 	dir := dirName(repo)
 	if err := os.Mkdir("repos", 0755); err != nil && !os.IsExist(err) {
 		return fmt.Errorf("could not create dir: %v", err)
