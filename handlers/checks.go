@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -85,8 +87,24 @@ func goGet(repo string) error {
 	if os.IsNotExist(err) {
 		cmd := exec.Command("go", "get", "-d", repo)
 		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
+		stderr, err := cmd.StderrPipe()
+		if err != nil {
+			return fmt.Errorf("could not get stderr pipe: %v", err)
+		}
+
+		err = cmd.Start()
+		if err != nil {
+			return fmt.Errorf("could not start command: %v", err)
+		}
+
+		b, err := ioutil.ReadAll(stderr)
+		if err != nil {
+			return fmt.Errorf("could not read stderr: %v", err)
+		}
+
+		err = cmd.Wait()
+		// we don't care if there are no buildable Go source files, we just need the source on disk
+		if err != nil && !strings.Contains(string(b), "no buildable Go source files") {
 			return fmt.Errorf("could not run go get: %v", err)
 		}
 		return nil
