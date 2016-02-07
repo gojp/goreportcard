@@ -4,15 +4,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/gojp/goreportcard/check"
 )
+
+func dirName(repo string) string {
+	return fmt.Sprintf("repos/src/%s", repo)
+}
 
 func getFromCache(repo string) (checksResp, error) {
 	// try and fetch from boltdb
@@ -66,58 +72,51 @@ type checksResp struct {
 	LastRefresh time.Time `json:"last_refresh"`
 }
 
-func orgRepoNames(url string) (string, string) {
-	dir := strings.TrimSuffix(url, ".git")
-	split := strings.Split(dir, "/")
-	org := split[len(split)-2]
-	repoName := split[len(split)-1]
-
-	return org, repoName
-}
-
-func dirName(url string) string {
-	org, repoName := orgRepoNames(url)
-
-	return fmt.Sprintf("repos/src/github.com/%s/%s", org, repoName)
-}
-
-func clone(url string) error {
-	org, _ := orgRepoNames(url)
-	if err := os.Mkdir(fmt.Sprintf("repos/src/github.com/%s", org), 0755); err != nil && !os.IsExist(err) {
+func goGet(repo string) error {
+	log.Println("Go getting", repo, "...")
+	dir := dirName(repo)
+	if err := os.Mkdir("repos", 0755); err != nil && !os.IsExist(err) {
 		return fmt.Errorf("could not create dir: %v", err)
 	}
-	dir := dirName(url)
-	_, err := os.Stat(dir)
+	d, err := filepath.Abs("repos")
+	if err != nil {
+		return fmt.Errorf("could not fetch absolute path: %v", err)
+	}
+	os.Setenv("GOPATH", d)
+	_, err = os.Stat(dir)
 	if os.IsNotExist(err) {
-		cmd := exec.Command("git", "clone", "--depth", "1", "--single-branch", url, dir)
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("could not run git clone: %v", err)
+		cmd := exec.Command("go", "get", "-d", repo)
+		cmd.Stdout = os.Stdout
+		stderr, err := cmd.StderrPipe()
+		if err != nil {
+			return fmt.Errorf("could not get stderr pipe: %v", err)
 		}
 
+		err = cmd.Start()
+		if err != nil {
+			return fmt.Errorf("could not start command: %v", err)
+		}
+
+		b, err := ioutil.ReadAll(stderr)
+		if err != nil {
+			return fmt.Errorf("could not read stderr: %v", err)
+		}
+
+		err = cmd.Wait()
+		// we don't care if there are no buildable Go source files, we just need the source on disk
+		if err != nil && !strings.Contains(string(b), "no buildable Go source files") {
+			return fmt.Errorf("could not run go get: %v", err)
+		}
 		return nil
 	}
 	if err != nil {
 		return fmt.Errorf("could not stat dir: %v", err)
 	}
 
-	cmd := exec.Command("git", "-C", dir, "fetch", "origin", "master")
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("could not fetch master branch: %v", err)
-	}
-	cmd = exec.Command("git", "-C", dir, "reset", "--hard", "origin/master")
-	if err = cmd.Run(); err != nil {
-		return fmt.Errorf("could not reset origin/master: %v", err)
-	}
-
 	return nil
 }
 
 func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
-	url := repo
-	if !strings.HasPrefix(url, "https://gojp:gojp@github.com/") {
-		url = "https://gojp:gojp@github.com/" + url
-	}
-
 	if !forceRefresh {
 		resp, err := getFromCache(repo)
 		if err != nil {
@@ -130,12 +129,12 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	}
 
 	// fetch the repo and grade it
-	err := clone(url)
+	err := goGet(repo)
 	if err != nil {
 		return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
 	}
 
-	dir := dirName(url)
+	dir := dirName(repo)
 	filenames, err := check.GoFiles(dir)
 	if err != nil {
 		return checksResp{}, fmt.Errorf("could not get filenames: %v", err)

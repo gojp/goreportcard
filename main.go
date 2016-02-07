@@ -12,9 +12,9 @@ import (
 	"github.com/gojp/goreportcard/handlers"
 )
 
-func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string, string)) http.HandlerFunc {
+func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		validPath := regexp.MustCompile(fmt.Sprintf(`^/%s/([a-zA-Z0-9\-_]+)/([a-zA-Z0-9\-_.]+)$`, name))
+		validPath := regexp.MustCompile(fmt.Sprintf(`^/%s/([a-zA-Z0-9\-_\/\.]+)$`, name))
 
 		m := validPath.FindStringSubmatch(r.URL.Path)
 
@@ -22,14 +22,30 @@ func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string
 			http.NotFound(w, r)
 			return
 		}
-
-		// catch the special period cases that github does not allow for repos
-		if m[2] == "." || m[2] == ".." {
-			http.NotFound(w, r)
+		if len(m) < 1 || m[1] == "" {
+			http.Error(w, "Please enter a repository", http.StatusBadRequest)
 			return
 		}
 
-		fn(w, r, m[1], m[2])
+		repo := m[1]
+
+		// for backwards-compatibility, we must support URLs formatted as
+		//   /report/[org]/[repo]
+		// and they will be assumed to be github.com URLs. This is because
+		// at first Go Report Card only supported github.com URLs, and assumed
+		// took only the org name and repo name as parameters. This is no longer the
+		// case, but we do not want external links to break.
+		oldFormat := regexp.MustCompile(fmt.Sprintf(`^/%s/([a-zA-Z0-9\-_]+)/([a-zA-Z0-9\-_]+)$`, name))
+		m2 := oldFormat.FindStringSubmatch(r.URL.Path)
+		if m2 != nil {
+			// old format is being used
+			repo = "github.com/" + repo
+			log.Printf("Assuming intended repo is %q, redirecting", repo)
+			http.Redirect(w, r, fmt.Sprintf("/%s/%s", name, repo), http.StatusMovedPermanently)
+			return
+		}
+
+		fn(w, r, repo)
 	}
 }
 
@@ -68,6 +84,7 @@ func main() {
 	http.HandleFunc("/report/", makeHandler("report", handlers.ReportHandler))
 	http.HandleFunc("/badge/", makeHandler("badge", handlers.BadgeHandler))
 	http.HandleFunc("/high_scores/", handlers.HighScoresHandler)
+	http.HandleFunc("/about/", handlers.AboutHandler)
 	http.HandleFunc("/", handlers.HomeHandler)
 
 	fmt.Println("Running on 127.0.0.1:8080...")

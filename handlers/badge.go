@@ -57,8 +57,8 @@ func badgeURL(grade Grade) string {
 }
 
 // BadgeHandler handles fetching the badge images
-func BadgeHandler(w http.ResponseWriter, r *http.Request, org, repo string) {
-	name := fmt.Sprintf("%s/%s", org, repo)
+func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string) {
+	name := fmt.Sprintf("%s", repo)
 	resp, err := newChecksResp(name, false)
 	if err != nil {
 		log.Printf("ERROR: fetching badge for %s: %v", name, err)

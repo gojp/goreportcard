@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"time"
+
+	"golang.org/x/tools/go/vcs"
 
 	"github.com/boltdb/bolt"
 )
@@ -29,18 +30,30 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	repo := r.FormValue("repo")
-	log.Printf("Checking repo %s...", repo)
-	if strings.ToLower(repo) == "golang/go" {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("We've decided to omit results for the Go repository because it has lots of test files that (purposely) don't pass our checks. Go gets an A+ in our books though!"))
+
+	repoRoot, err := vcs.RepoRootForImportPath(repo, true)
+	if err != nil || repoRoot.Root == "" || repoRoot.Repo == "" {
+		log.Println("Failed to create repoRoot:", repoRoot, err)
+		b, marshalErr := json.Marshal("Please enter a valid 'go get'-able package name")
+		if marshalErr != nil {
+			log.Println("JSON marshal error:", marshalErr)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(b)
 		return
 	}
+
+	log.Printf("Checking repo %q...", repo)
+
 	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in boltdb first
 	resp, err := newChecksResp(repo, forceRefresh)
 	if err != nil {
-		log.Println("ERROR: ", err)
-		b, _ := json.Marshal(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		log.Println("ERROR: from newChecksResp:", err)
+		b, marshalErr := json.Marshal("Could not go get the repository.")
+		if marshalErr != nil {
+			log.Println("JSON marshal error:", marshalErr)
+		}
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write(b)
 		return
 	}

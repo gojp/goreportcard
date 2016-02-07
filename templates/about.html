@@ -41,13 +41,13 @@
 
           <!-- Right side -->
           <div class="header-right header-menu">
-            <span class="header-item is-active">
+            <span class="header-item">
               <a href="/high_scores">High Scores</a>
             </span>
             <span class="header-item">
               <a href="https://github.com/gojp/goreportcard">Github</a>
             </span>
-            <span class="header-item">
+            <span class="header-item is-active">
               <a href="/about">About</a>
             </span>
           </div>
@@ -55,31 +55,11 @@
     </header>
     <section class="section">
         <div class="container">
-            <h1 class="title">High Scores</h1>
-            <table class="table">
-              <thead>
-                <tr>
-                <th>Rank</th>
-                <th>Name</th>
-                <th>Go Files</th>
-                <th>Score</th>
-                </tr>
-              </thead>
-            <tbody>
-            {{ range $index, $highScore := .HighScores }}
-              <tr>
-              <td><a href="/report/{{ $highScore.Repo}}">{{ add $index 1 }}</td></a>
-              <td><a href="https://{{ $highScore.Repo }}" rel="nofollow">{{ $highScore.Repo }}</a></td>
-              <td>{{ $highScore.Files }}</td>
-              <td>{{ formatScore $highScore.Score }}</td>
-              </tr>
-            {{end}}
-            </tbody>
-            </table>
+            <h1 class="title">About</h1>
+            <p>Go Report Card was initially developed during <a href="http://gophergala.com/blog/gopher/gala/2015/02/03/winners/">Gopher Gala 2015</a>. It is free, open source and run by volunteers. If you feel like there is something that could be improved, we encourage you to <a href="https://github.com/gojp/goreportcard">open an issue or contribute on Github</a>!</p>
             <hr>
-            <p>
-                Reports generated for <strong>{{ .Count }}</strong> unique repos so far.
-            </p>
+            <h3 class="subtitle">Credits</h3>
+            <p>The Go gopher on the home page was designed by <a href="http://reneefrench.blogspot.com/">Renée French</a>.</p>
         </div>
     </section>
     <footer class="footer">
