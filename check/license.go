@@ -21,16 +21,32 @@ func (g License) Weight() float64 {
 	return .10
 }
 
+// thank you https://github.com/ryanuber/go-license
+var licenses = []string{
+	"license", "license.txt", "license.md",
+	"copying", "copying.txt", "copying.md",
+	"unlicense",
+}
+
 // Percentage returns 0 if no LICENSE, 1 if LICENSE
 func (g License) Percentage() (float64, []FileSummary, error) {
-	cmd := exec.Command("find", g.Dir, "-maxdepth", "1", "-type", "f", "-name", "LICENSE*")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		return 0.0, []FileSummary{}, err
+	var exists bool
+	for _, license := range licenses {
+		cmd := exec.Command("find", g.Dir, "-maxdepth", "1", "-type", "f", "-iname", license)
+		var out bytes.Buffer
+		cmd.Stdout = &out
+		err := cmd.Run()
+		if err != nil {
+			return 0.0, []FileSummary{}, err
+		}
+		if out.String() == "" {
+			continue
+		}
+		exists = true
+		break
 	}
-	if out.String() == "" {
+
+	if !exists {
 		return 0.0, []FileSummary{{"", "http://choosealicense.com/", []Error{}}}, nil
 	}
 
