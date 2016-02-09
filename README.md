@@ -1,8 +1,8 @@
-[![Go Report Card](http://goreportcard.com/badge/gojp/goreportcard)](http://goreportcard.com/report/gojp/goreportcard) [![Build Status](https://travis-ci.org/gojp/goreportcard.svg?branch=master)](https://travis-ci.org/gojp/goreportcard)
+[![Go Report Card](https://goreportcard.com/badge/gojp/goreportcard)](https://goreportcard.com/report/gojp/goreportcard) [![Build Status](https://travis-ci.org/gojp/goreportcard.svg?branch=master)](https://travis-ci.org/gojp/goreportcard)
 
 # Go Report Card
 
-A web application that generates a report on the quality of an open source go project. It uses several measures, including `gofmt`, `go vet`, `go lint` and `gocyclo`. To get a report on your own project, try using the hosted version of this code running at [goreportcard.com](http://goreportcard.com). Currently this is limited to projects hosted on GitHub, but there is an [open issue](https://github.com/gojp/goreportcard/issues/51) to support all publicly hosted repos.
+A web application that generates a report on the quality of an open source go project. It uses several measures, including `gofmt`, `go vet`, `go lint` and `gocyclo`. To get a report on your own project, try using the hosted version of this code running at [goreportcard.com](https://goreportcard.com). Currently this is limited to projects hosted on GitHub, but there is an [open issue](https://github.com/gojp/goreportcard/issues/51) to support all publicly hosted repos.
 
 ### Installation
 
