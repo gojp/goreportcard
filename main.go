@@ -81,6 +81,7 @@ func main() {
 	}
 
 	http.HandleFunc("/assets/", handlers.AssetsHandler)
+	http.HandleFunc("/favicon.ico", handlers.FaviconHandler)
 	http.HandleFunc("/checks", handlers.CheckHandler)
 	http.HandleFunc("/report/", makeHandler("report", handlers.ReportHandler))
 	http.HandleFunc("/badge/", makeHandler("badge", handlers.BadgeHandler))
