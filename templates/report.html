@@ -1,0 +1,332 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Go Report Card | Go project code quality report cards</title>
+    <link rel="stylesheet" href="https://cdn.rawgit.com/jgthms/bulma/master/css/bulma.min.css">
+    <link rel="stylesheet" href="/assets/goreportcard.css">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-58936835-1', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+</head>
+<body>
+  <div id="notifications">
+  </div>
+  <header class="header">
+  <div class="container">
+        <!-- Left side -->
+        <div class="header-left">
+          <a class="header-item" href="/">
+            <h3 class="title">Go Report Card</h3>
+          </a>
+          <div class="header-item">
+              <form method="POST" action="/checks" id="check_form">
+                <input name="repo" type="text" class="input-box" value="[[ .repo ]]" placeholder="[[ .repo ]]"/>
+              </form>
+          </div>
+        </div>
+
+        <!-- Hamburger menu (on mobile) -->
+        <span class="header-toggle">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+
+        <!-- Right side -->
+        <div class="header-right header-menu">
+          <span class="header-item">
+            <a href="/high_scores">High Scores</a>
+          </span>
+          <span class="header-item">
+            <a href="https://github.com/gojp/goreportcard">GitHub</a>
+          </span>
+          <span class="header-item">
+            <a href="/about">About</a>
+          </span>
+        </div>
+      </div>
+  </header>
+  <section class="section container-loading">
+      <div class="container loading">
+          <div class="columns">
+              <div class="column is-centered">
+                  <h3 class="subtitle">Preparing report...</h3>
+                  <button class="button is-loading is-large" style="border: none;">
+              </div>
+          </div>
+      </div>
+  </section>
+
+  <section class="section container-results [[if .loading]]hidden[[end]]">
+    <div class="container">
+        <div class="columns results-text">
+        </div>
+        <div class="columns">
+          <div class="column is-quarter">
+            <nav class="menu results">
+            </nav>
+            <div class="container-update">
+            </div>
+          </div>
+          <div class="column">
+              <div class="results-details">
+              </div>
+          </div>
+        </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="content is-centered">
+        <p>
+            <strong>Go Report Card</strong> by
+              <a href="https://twitter.com/shawnps">Shawn Smith</a> and
+              <a href="https://twitter.com/ironzeb">Herman Schaaf</a>.
+        </p>
+        <p>
+            <a href="https://www.digitalocean.com/" class="dolink">
+                <img width="15%" src="/assets/do-proudly-hosted.png">
+            </a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0/handlebars.js"></script>
+  <script id="template-alert" type="text/x-handlebars-template">
+      <div class="notification is-warning">
+          <button class="delete"></button>
+          {{{message}}}
+      </div>
+    </div>
+  </script>
+  <script id="template-grade" type="text/x-handlebars-template">
+      <div class="column">
+          <h1 class="title">Report for <strong>{{repo}}</strong></h1>
+        <p><span class="huge">{{grade}}</span> &nbsp;&nbsp; {{gradeMessage grade}} &emsp;&emsp; Found <strong>{{issues}}</strong> issues across <strong>{{files}}</strong> files</p>
+      </div>
+      <div class="column is-quarter badge-col"><img class="badge" tag="{{repo}}" src="/badge/{{repo}}"/></div>
+  </script>
+  <script id="template-check" type="text/x-handlebars-template">
+      <a class="menu-block" href="#{{{name}}}">
+        {{{name}}}
+        <span class="percentage {{color percentage}}">{{percentage}}%</span>
+      </a>
+  </script>
+  <script id="template-badgedropdown" type="text/x-handlebars-template">
+      <div id="badge_dropdown" class="hidden">
+          <div>
+              <label>Image URL</label><input value="{{{image_url}}}">
+          </div>
+          <div>
+              <label>Markdown</label><input value="[![Go Report Card]({{{image_url}}})]({{{url}}})">
+          </div>
+      </div>
+  </script>
+  <script id="template-details" type="text/x-handlebars-template">
+    <div class="wrapper">
+      <a name="{{{name}}}"></a><h1 class="tool-title">{{{name}}}<span class="percentage {{color percentage}}">{{percentage}}%</span></h1>
+      <p class="tool-description">{{{description}}}</p>
+    {{^file_summaries}}
+      <p class="perfect">No problems detected. Good job!</p>
+    {{/file_summaries}}
+    {{#each file_summaries}}
+      <ul class="files">
+        <li class="file">
+          <ul class="errors">
+          <a href="{{this.file_url}}">{{this.filename}}</a>
+          {{#each this.errors}}
+            {{#if line_number}}
+            <li class="error"><a href="{{../../file_url}}#L{{this.line_number}}">Line {{this.line_number}}</a>: {{this.error_string}}</li>
+            {{/if}}
+          {{/each}}
+          </ul>
+        </li>
+      </ul>
+    {{/each}}
+    </div>
+    <hr>
+  </script>
+  <script id="template-lastrefresh" type="text/x-handlebars-template">
+  <p>Last refresh: {{last_refresh}}</p>
+  <br>
+  <p><a class="refresh-button button" href=""><strong>Refresh now</strong></a></p>
+  </script>
+  <script>
+  var loading = [[if .loading]] true [[ else ]] false [[end]];
+  var response = [[if .loading]] false [[else]] [[.response]] [[end]];
+  </script>
+  <script type="text/javascript">
+    Handlebars.registerHelper('gradeMessage', function(grade, options) {
+      var gradeMessages = {
+        "A+": "Excellent!",
+        "A": "Great!",
+        "B": "Not bad!",
+        "C": "Needs some work",
+        "D": "Needs lots of improvement",
+        "E": "Urgent improvement needed",
+        "F": "... is for lots of things to Fix!"
+      };
+      return gradeMessages[grade];
+    });
+
+    // add a helper for picking the progress bar colors
+    Handlebars.registerHelper('color', function(percentage, options) {
+      switch(true){
+        case percentage < 30:
+          return 'danger';
+        case percentage < 50:
+          return 'warning';
+        case percentage < 80:
+          return 'info';
+        default:
+          return 'success';
+      };
+    });
+
+    Handlebars.registerHelper('isfalse', function(percentage, options) {
+      return percentage == false;
+    });
+
+    // initialize handlebars templates
+    var templates = {};
+    $("script[id^=template]").each(function(){
+      var name = $(this).attr("id").substring(9);
+      var source   = $(this).html();
+      templates[name] = Handlebars.compile(source);
+    });
+
+    var shrinkHeader = function(){
+      var $hero = $("section.hero");
+      $hero.slideUp();
+    }
+
+    var populateResults = function(data){
+        var checks = data.checks;
+        var $resultsText = $(".results-text");
+        var $resultsDetails = $('.results-details').empty();
+        $resultsText.html($(templates.grade(data)));
+        var $table = $(".results");
+        $table.html('<p class="menu-heading">Results</p>');
+        for (var i = 0; i < checks.length; i++) {
+            checks[i].percentage = parseInt(checks[i].percentage * 100.0);
+            var $headRow = $(templates.check(checks[i]));
+            $headRow.on("click", function(){
+            $(this).closest("nav").find(".is-active").removeClass("is-active");
+              $(this).toggleClass("is-active");
+            });
+            $headRow.appendTo($table);
+            if (i == 0) {
+                $headRow.toggleClass("is-active");
+            }
+
+            var $details = $(templates.details(checks[i]));
+            $details.appendTo($resultsDetails);
+        }
+        $(".container-suggestions").addClass('hidden');
+        $(".container-results").removeClass('hidden').slideDown();
+
+        $lastRefresh = $(templates.lastrefresh(data));
+        $div = $(".container-update").html($lastRefresh);
+        $div.find("a.refresh-button").on("click", function(e){
+          loadData.call($("form#check_form")[0], false);
+          $(this).addClass('is-loading');
+          return false;
+        });
+
+        var badgeData = {
+            url: "https://goreportcard.com/report/" + data.repo,
+            image_url: "https://goreportcard.com/badge/" + data.repo,
+        }
+        var $badgeDropdown = $(templates.badgedropdown(badgeData));
+        $badgeDropdown.find("input").on("click", function(){
+            $(this).select();
+        });
+        $(".badge-col").append($badgeDropdown);
+        $(".badge-col .badge").on("click", function(){
+            $(this).closest(".badge-col").find("#badge_dropdown").toggleClass("hidden");
+        });
+    };
+
+    function alertMessage(msg){
+      var html = templates.alert({message: msg});
+      var $alert = $(html);
+      $alert.find(".delete").on("click", function(){
+          $(this).closest(".notification").remove();
+      })
+      $alert.hide();
+      $alert.appendTo("#notifications");
+      $alert.slideDown();
+    }
+
+    var loadData = function(getRequest){
+      loading = true;
+      var $form = $(this),
+          url = $form.attr("action"),
+          method = $form.attr("method"),
+          data = {};
+      $("#check_form .button").addClass("is-loading");
+      $form.serializeArray().map(function(x){data[x.name] = x.value;});
+      $.ajax({
+          type: getRequest ? "GET" : "POST",
+          url: url,
+          data: data,
+          dataType: "json"
+      }).fail(function(xhr, status, err){
+          alertMessage("There was an error processing your request: " + xhr.responseText);
+      }).done(function(data, textStatus, jqXHR){
+          if (data.redirect) {
+              location.replace(data.redirect);
+          }
+      }).always(function(){
+          loading = false;
+          $("a.refresh-button").removeClass("is-loading");
+          $("#check_form .button").removeClass("is-loading");
+          $(".container-loading").slideUp();
+      });
+      return false;
+    };
+
+    var hideResults = function(){
+      $(".container-results").hide();
+    };
+
+    // on ready
+    $(function(){
+
+      if (loading) {
+          // we need to load the results
+          loadData.call($("form#check_form")[0], true);
+      } else {
+          populateResults(response);
+          $(".container-loading").slideUp();
+      }
+
+      // handle form submission
+      $("form#check_form").submit(loadData);
+
+      // sticky menu
+      $(window).scroll(function() {
+          if ($(this).scrollTop() >= 240) {
+              $('nav.results').addClass('stickytop');
+          }
+          else {
+              $('nav.results').removeClass('stickytop');
+          }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -64,7 +64,6 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	w.Write(respBytes)
 
 	// write to boltdb
 	db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
@@ -126,6 +125,12 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	b, marshalErr := json.Marshal(map[string]string{"redirect": "/report/" + repo})
+	if marshalErr != nil {
+		log.Println("JSON marshal error:", marshalErr)
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(b)
 	return
 }
 

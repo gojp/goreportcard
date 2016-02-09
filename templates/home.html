@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Go Report Card | Go project code quality report cards</title>
     <link rel="stylesheet" href="https://cdn.rawgit.com/jgthms/bulma/master/css/bulma.min.css">
+    <link rel="stylesheet" href="/assets/goreportcard.css">
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -16,139 +17,6 @@
       ga('send', 'pageview');
 
     </script>
-    <style>
-    .header .is-active {
-        font-weight: bold;
-    }
-    .header .title {
-        font-size: 1.5em;
-    }
-    .hero-content .subtitle {
-        font-size: 1.5em;
-        font-weight: 300;
-        color: rgb(255, 255, 255) !important;
-        text-shadow: 0px 0px 4px rgba(150, 150, 150, 1);
-    }
-    #check_form {
-        font-size: 1.5em;
-    }
-    #check_form .input-box {
-        padding: 0.5em;
-        min-width: 350px;
-    }
-    #check_form .btn-test {
-        margin-top: 1em;
-        font-weight: 200;
-    }
-
-    .hidden {
-        display: none;
-    }
-
-    .menu.results .percentage {
-        float: right;
-    }
-    .percentage.danger {
-        color: #C61E1E;
-    }
-    .percentage.info {
-    }
-    .percentage.warning {
-        color: #C6761E;
-    }
-    .percentage.success {
-        color: #4CC61E;
-    }
-    .results-text {
-        font-size: 1.4em;
-    }
-    .results-text .huge {
-        font-size: 2em;
-        color: black;
-    }
-    .results-text .badge-col {
-        text-align: right;
-        position: relative;
-    }
-    .results-text .badge-col .badge {
-        margin-top: 10px;
-        cursor: pointer;
-    }
-    .menu-block.is-active {
-        font-weight: bold;
-        background: #f0f0f0;
-    }
-    .results-details {
-      word-break: break-word;
-    }
-    .results-details .files, .results .errors {
-      padding-left: 0;
-    }
-    .results-details .files .file {
-      list-style-type: none;
-      padding-left: 0;
-    }
-    .results-details .files .errors .error {
-      list-style-type: none;
-      padding-left: 4em;
-      margin: 1em 0;
-    }
-    .results-details .tool-title {
-        font-size: 1.8em;
-        color: #050505;
-        margin-bottom: 10px;
-    }
-    .results-details .percentage {
-        float: right;
-    }
-    .results-details .wrapper {
-        margin-bottom: 20px;
-    }
-    .results-details .perfect {
-        margin-top: 1em;
-        font-weight: 600;
-    }
-    #badge_dropdown {
-        position: absolute;
-        top: 32px;
-        right: 0;
-        width: 100%;
-        max-width: 400px;
-        padding: 10px;
-        border: 3px solid #dddddd;
-        background: white;
-    }
-    #badge_dropdown label {
-        clear: left;
-        float: left;
-        font-size: 0.8em;
-    }
-    #badge_dropdown input {
-        float: left;
-        font-size: 0.8em;
-        width: 100%;
-    }
-    nav.results.stickytop {
-        position:fixed;
-        top:0;
-        width: auto;
-        min-width: 200px;
-    }
-
-    @media (max-width: 800px) {
-        nav.results.stickytop {
-            display: none;
-        }
-    }
-    @media (min-width: 600px) {
-        .hero.gopher {
-            background-image: url(/assets/biggopher.png);
-            background-repeat: no-repeat;
-            background-position: left middle;
-            background-size: cover;
-        }
-    }
-    </style>
 </head>
 <body>
   <div id="notifications">
@@ -189,7 +57,7 @@
         <h2 class="subtitle">
           Enter the <strong>go get</strong> path to the project below:
         </h2>
-        <form method="GET" action="/checks" id="check_form">
+        <form method="POST" action="/checks" id="check_form">
           <div>
             <p class="url">
               <input name="repo" type="text" class="input-box" placeholder="github.com/gojp/goreportcard"/>
@@ -284,91 +152,8 @@
       </div>
     </div>
   </script>
-  <script id="template-grade" type="text/x-handlebars-template">
-      <div class="column">
-          <h1 class="title">Report for <strong>{{repo}}</strong></h1>
-        <p><span class="huge">{{grade}}</span> &nbsp;&nbsp; {{gradeMessage grade}} &emsp;&emsp; Found <strong>{{issues}}</strong> issues across <strong>{{files}}</strong> files</p>
-      </div>
-      <div class="column is-quarter badge-col"><img class="badge" tag="{{repo}}" src="/badge/{{repo}}"/></div>
-  </script>
-  <script id="template-check" type="text/x-handlebars-template">
-      <a class="menu-block" href="#{{{name}}}">
-        {{{name}}}
-        <span class="percentage {{color percentage}}">{{percentage}}%</span>
-      </a>
-  </script>
-  <script id="template-badgedropdown" type="text/x-handlebars-template">
-      <div id="badge_dropdown" class="hidden">
-          <div>
-              <label>Image URL</label><input value="{{{image_url}}}">
-          </div>
-          <div>
-              <label>Markdown</label><input value="[![Go Report Card]({{{image_url}}})]({{{url}}})">
-          </div>
-      </div>
-  </script>
-  <script id="template-details" type="text/x-handlebars-template">
-    <div class="wrapper">
-      <a name="{{{name}}}"></a><h1 class="tool-title">{{{name}}}<span class="percentage {{color percentage}}">{{percentage}}%</span></h1>
-      <p class="tool-description">{{{description}}}</p>
-    {{^file_summaries}}
-      <p class="perfect">No problems detected. Good job!</p>
-    {{/file_summaries}}
-    {{#each file_summaries}}
-      <ul class="files">
-        <li class="file">
-          <ul class="errors">
-          <a href="{{this.file_url}}">{{this.filename}}</a>
-          {{#each this.errors}}
-            {{#if line_number}}
-            <li class="error"><a href="{{../../file_url}}#L{{this.line_number}}">Line {{this.line_number}}</a>: {{this.error_string}}</li>
-            {{/if}}
-          {{/each}}
-          </ul>
-        </li>
-      </ul>
-    {{/each}}
-    </div>
-    <hr>
-  </script>
-  <script id="template-lastrefresh" type="text/x-handlebars-template">
-  <p>Last refresh: {{last_refresh}}</p>
-  <br>
-  <p><a class="refresh-button button" href=""><strong>Refresh now</strong></a></p>
-  </script>
   <script type="text/javascript">
     var loading = false;
-
-    Handlebars.registerHelper('gradeMessage', function(grade, options) {
-      var gradeMessages = {
-        "A+": "Excellent!",
-        "A": "Great!",
-        "B": "Not bad!",
-        "C": "Needs some work",
-        "D": "Needs lots of improvement",
-        "E": "Urgent improvement needed",
-        "F": "... is for lots of things to Fix!"
-      };
-      return gradeMessages[grade];
-    });
-
-    // add a helper for picking the progress bar colors
-    Handlebars.registerHelper('color', function(percentage, options) {
-      switch(true){
-        case percentage < 30:
-          return 'danger';
-        case percentage < 50:
-          return 'warning';
-        case percentage < 80:
-          return 'info';
-        default:
-          return 'success';
-      };
-    });
-
-    Handlebars.registerHelper('isfalse', function(percentage, options) {
-      return percentage == false;
-    });
 
     // initialize handlebars templates
     var templates = {};
@@ -377,58 +162,6 @@
       var source   = $(this).html();
       templates[name] = Handlebars.compile(source);
     });
-
-    var shrinkHeader = function(){
-      var $hero = $("section.hero");
-      $hero.slideUp();
-    }
-
-    var populateResults = function(data){
-        var checks = data.checks;
-        var $resultsText = $(".results-text");
-        var $resultsDetails = $('.results-details').empty();
-        $resultsText.html($(templates.grade(data)));
-        var $table = $(".results");
-        $table.html('<p class="menu-heading">Results</p>');
-        for (var i = 0; i < checks.length; i++) {
-            checks[i].percentage = parseInt(checks[i].percentage * 100.0);
-            var $headRow = $(templates.check(checks[i]));
-            $headRow.on("click", function(){
-            $(this).closest("nav").find(".is-active").removeClass("is-active");
-              $(this).toggleClass("is-active");
-            });
-            $headRow.appendTo($table);
-            if (i == 0) {
-                $headRow.toggleClass("is-active");
-            }
-
-            var $details = $(templates.details(checks[i]));
-            $details.appendTo($resultsDetails);
-        }
-        $(".container-suggestions").addClass('hidden');
-        $(".container-results").removeClass('hidden').slideDown();
-
-        $lastRefresh = $(templates.lastrefresh(data));
-        $div = $(".container-update").html($lastRefresh);
-        $div.find("a.refresh-button").on("click", function(e){
-          loadData.call($("form#check_form")[0], false);
-          $(this).addClass('is-loading');
-          return false;
-        });
-
-        var badgeData = {
-            url: "https://goreportcard.com/report/" + data.repo,
-            image_url: "https://goreportcard.com/badge/" + data.repo,
-        }
-        var $badgeDropdown = $(templates.badgedropdown(badgeData));
-        $badgeDropdown.find("input").on("click", function(){
-            $(this).select();
-        });
-        $(".badge-col").append($badgeDropdown);
-        $(".badge-col .badge").on("click", function(){
-            $(this).closest(".badge-col").find("#badge_dropdown").toggleClass("hidden");
-        });
-    };
 
     function alertMessage(msg){
       var html = templates.alert({message: msg});
@@ -457,13 +190,9 @@
       }).fail(function(xhr, status, err){
           alertMessage("There was an error processing your request: " + xhr.responseText);
       }).done(function(data, textStatus, jqXHR){
-          shrinkHeader();
-          populateResults(data);
-          var atPreviousURL = location.pathname != "/report/" + data.repo;
-          var isCorrectedName = location.pathname == "/report/github.com/" + data.repo;
-          if (atPreviousURL && !isCorrectedName) {
-            history.pushState('', "Go Report Card for " + data.repo + "", "/report/" + data.repo);
-          }
+        if (data.redirect) {
+            window.location.href = data.redirect;
+        }
       }).always(function(){
           loading = false;
           $("a.refresh-button").removeClass("is-loading");
@@ -472,36 +201,11 @@
       return false;
     };
 
-    var hideResults = function(){
-      $(".container-results").hide();
-    };
-
     // on ready
     $(function(){
 
       // handle form submission
       $("form#check_form").submit(loadData);
-
-      var path = window.location.pathname;
-      if (path.indexOf("/report/") == 0) {
-        repo = path.replace(/^\/report\//, "");
-        $("form#check_form").find("input").val(repo);
-        loadData.call($("form#check_form")[0], true);
-      }
-
-      // sticky menu
-      $(window).scroll(function() {
-          if ($(this).scrollTop() >= 240) {
-              $('nav.results').addClass('stickytop');
-          }
-          else {
-              $('nav.results').removeClass('stickytop');
-          }
-      });
-
-      $(window).on("popstate", function(){
-          location.reload();
-      })
     });
   </script>
 </body>

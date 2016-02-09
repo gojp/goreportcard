@@ -1,0 +1,135 @@
+.header .is-active {
+    font-weight: bold;
+}
+.header .title {
+    font-size: 1.5em;
+}
+.hero-content .subtitle {
+    font-size: 1.5em;
+    font-weight: 300;
+    color: rgb(255, 255, 255) !important;
+    text-shadow: 0px 0px 4px rgba(150, 150, 150, 1);
+}
+#check_form {
+    font-size: 1.5em;
+}
+#check_form .input-box {
+    padding: 0.5em;
+    min-width: 350px;
+}
+#check_form .btn-test {
+    margin-top: 1em;
+    font-weight: 200;
+}
+.header-item #check_form .input-box {
+    padding: 3px;
+    font-size: 0.9em;
+}
+
+.hidden {
+    display: none;
+}
+
+.menu.results .percentage {
+    float: right;
+}
+.percentage.danger {
+    color: #C61E1E;
+}
+.percentage.info {
+}
+.percentage.warning {
+    color: #C6761E;
+}
+.percentage.success {
+    color: #4CC61E;
+}
+.results-text {
+    font-size: 1.4em;
+}
+.results-text .huge {
+    font-size: 2em;
+    color: black;
+}
+.results-text .badge-col {
+    text-align: right;
+    position: relative;
+}
+.results-text .badge-col .badge {
+    margin-top: 10px;
+    cursor: pointer;
+}
+.menu-block.is-active {
+    font-weight: bold;
+    background: #f0f0f0;
+}
+.results-details {
+  word-break: break-word;
+}
+.results-details .files, .results .errors {
+  padding-left: 0;
+}
+.results-details .files .file {
+  list-style-type: none;
+  padding-left: 0;
+}
+.results-details .files .errors .error {
+  list-style-type: none;
+  padding-left: 4em;
+  margin: 1em 0;
+}
+.results-details .tool-title {
+    font-size: 1.8em;
+    color: #050505;
+    margin-bottom: 10px;
+}
+.results-details .percentage {
+    float: right;
+}
+.results-details .wrapper {
+    margin-bottom: 20px;
+}
+.results-details .perfect {
+    margin-top: 1em;
+    font-weight: 600;
+}
+#badge_dropdown {
+    position: absolute;
+    top: 32px;
+    right: 0;
+    width: 100%;
+    max-width: 400px;
+    padding: 10px;
+    border: 3px solid #dddddd;
+    background: white;
+}
+#badge_dropdown label {
+    clear: left;
+    float: left;
+    font-size: 0.8em;
+}
+#badge_dropdown input {
+    float: left;
+    font-size: 0.8em;
+    width: 100%;
+}
+nav.results.stickytop {
+    position:fixed;
+    top:0;
+    width: auto;
+    min-width: 200px;
+}
+
+@media (max-width: 800px) {
+    nav.results.stickytop {
+        display: none;
+    }
+}
+@media (min-width: 600px) {
+    .hero.gopher {
+        background-image: url(/assets/biggopher.png);
+        background-repeat: no-repeat;
+        background-position: left middle;
+        background-size: cover;
+    }
+}
