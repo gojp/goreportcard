@@ -386,7 +386,7 @@
     var populateResults = function(data){
         var checks = data.checks;
         var $resultsText = $(".results-text");
-        var $resultsDetails = $('.results-details');
+        var $resultsDetails = $('.results-details').empty();
         $resultsText.html($(templates.grade(data)));
         var $table = $(".results");
         $table.html('<p class="menu-heading">Results</p>');
@@ -459,12 +459,16 @@
       }).done(function(data, textStatus, jqXHR){
           shrinkHeader();
           populateResults(data);
+          var atPreviousURL = location.pathname != "/report/" + data.repo;
+          var isCorrectedName = location.pathname == "/report/github.com/" + data.repo;
+          if (atPreviousURL && !isCorrectedName) {
+            history.pushState('', "Go Report Card for " + data.repo + "", "/report/" + data.repo);
+          }
       }).always(function(){
           loading = false;
           $("a.refresh-button").removeClass("is-loading");
           $("#check_form .button").removeClass("is-loading");
       });
-      history.pushState('', "Go Report Card for " + data.repo + "", "/report/" + data.repo);
       return false;
     };
 
@@ -494,6 +498,10 @@
               $('nav.results').removeClass('stickytop');
           }
       });
+
+      $(window).on("popstate", function(){
+          location.reload();
+      })
     });
   </script>
 </body>
