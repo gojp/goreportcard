@@ -4,9 +4,9 @@ import (
 	"container/heap"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
-	"text/template"
 	"time"
 
 	"github.com/boltdb/bolt"

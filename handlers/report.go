@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/alecthomas/template"
+	"html/template"
 )
 
 // ReportHandler handles the report page
