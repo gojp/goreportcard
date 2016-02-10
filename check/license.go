@@ -23,7 +23,7 @@ func (g License) Weight() float64 {
 
 // thank you https://github.com/ryanuber/go-license
 var licenses = []string{
-	"license", "license.txt", "license.md",
+	"license", "license.txt", "license.md", "license.code",
 	"copying", "copying.txt", "copying.md",
 	"unlicense",
 }
