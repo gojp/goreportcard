@@ -83,7 +83,7 @@ func goGet(repo string) error {
 	}
 
 	os.Setenv("GOPATH", d)
-	cmd := exec.Command("go", "get", "-d", repo)
+	cmd := exec.Command("go", "get", "-d", "-u", repo)
 	cmd.Stdout = os.Stdout
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
