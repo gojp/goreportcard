@@ -74,7 +74,6 @@ type checksResp struct {
 
 func goGet(repo string) error {
 	log.Printf("Go getting %q...", repo)
-	dir := dirName(repo)
 	if err := os.Mkdir("repos", 0755); err != nil && !os.IsExist(err) {
 		return fmt.Errorf("could not create dir: %v", err)
 	}
@@ -82,37 +81,30 @@ func goGet(repo string) error {
 	if err != nil {
 		return fmt.Errorf("could not fetch absolute path: %v", err)
 	}
+
 	os.Setenv("GOPATH", d)
-	_, err = os.Stat(dir)
-	if os.IsNotExist(err) {
-		cmd := exec.Command("go", "get", "-d", repo)
-		cmd.Stdout = os.Stdout
-		stderr, err := cmd.StderrPipe()
-		if err != nil {
-			return fmt.Errorf("could not get stderr pipe: %v", err)
-		}
-
-		err = cmd.Start()
-		if err != nil {
-			return fmt.Errorf("could not start command: %v", err)
-		}
-
-		b, err := ioutil.ReadAll(stderr)
-		if err != nil {
-			return fmt.Errorf("could not read stderr: %v", err)
-		}
-
-		err = cmd.Wait()
-		// we don't care if there are no buildable Go source files, we just need the source on disk
-		if err != nil && !strings.Contains(string(b), "no buildable Go source files") {
-			return fmt.Errorf("could not run go get: %v", err)
-		}
-		return nil
-	}
+	cmd := exec.Command("go", "get", "-d", repo)
+	cmd.Stdout = os.Stdout
+	stderr, err := cmd.StderrPipe()
 	if err != nil {
-		return fmt.Errorf("could not stat dir: %v", err)
+		return fmt.Errorf("could not get stderr pipe: %v", err)
 	}
 
+	err = cmd.Start()
+	if err != nil {
+		return fmt.Errorf("could not start command: %v", err)
+	}
+
+	b, err := ioutil.ReadAll(stderr)
+	if err != nil {
+		return fmt.Errorf("could not read stderr: %v", err)
+	}
+
+	err = cmd.Wait()
+	// we don't care if there are no buildable Go source files, we just need the source on disk
+	if err != nil && !strings.Contains(string(b), "no buildable Go source files") {
+		return fmt.Errorf("could not run go get: %v", err)
+	}
 	return nil
 }
 
