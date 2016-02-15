@@ -39,7 +39,10 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		scoreBytes := hsb.Get([]byte("scores"))
 		if scoreBytes == nil {
-			scoreBytes, _ = json.Marshal([]scoreHeap{})
+			scoreBytes, err = json.Marshal([]scoreHeap{})
+			if err != nil {
+				return err
+			}
 		}
 		json.Unmarshal(scoreBytes, scores)
 
@@ -48,10 +51,9 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 		total := hsb.Get([]byte("total_repos"))
 		if total == nil {
 			count = 0
-		} else {
-			json.Unmarshal(total, &count)
+			return nil
 		}
-		return nil
+		return json.Unmarshal(total, &count)
 	})
 
 	if err != nil {

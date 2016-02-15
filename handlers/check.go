@@ -125,9 +125,9 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	b, marshalErr := json.Marshal(map[string]string{"redirect": "/report/" + repo})
-	if marshalErr != nil {
-		log.Println("JSON marshal error:", marshalErr)
+	b, err := json.Marshal(map[string]string{"redirect": "/report/" + repo})
+	if err != nil {
+		log.Println("JSON marshal error:", err)
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(b)
