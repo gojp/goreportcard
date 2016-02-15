@@ -72,7 +72,7 @@ type checksResp struct {
 	LastRefresh time.Time `json:"last_refresh"`
 }
 
-func goGet(repo string) error {
+func goGet(repo string, firstAttempt bool) error {
 	log.Printf("Go getting %q...", repo)
 	if err := os.Mkdir("repos", 0755); err != nil && !os.IsExist(err) {
 		return fmt.Errorf("could not create dir: %v", err)
@@ -103,6 +103,17 @@ func goGet(repo string) error {
 	err = cmd.Wait()
 	// we don't care if there are no buildable Go source files, we just need the source on disk
 	if err != nil && !strings.Contains(string(b), "no buildable Go source files") {
+		log.Println("Go get error log:", string(b))
+		if firstAttempt {
+			// try one more time, this time deleting the cached directory first,
+			// in case our cache is stale (remote repository was force-pushed, replaced, etc)
+			err = os.RemoveAll(filepath.Join(d, "src", repo))
+			if err != nil {
+				return fmt.Errorf("could not delete repo: %v", err)
+			}
+			return goGet(repo, false)
+		}
+
 		return fmt.Errorf("could not run go get: %v", err)
 	}
 	return nil
@@ -121,7 +132,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	}
 
 	// fetch the repo and grade it
-	err := goGet(repo)
+	err := goGet(repo, true)
 	if err != nil {
 		return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
 	}
