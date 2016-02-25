@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/boltdb/bolt"
 )
+
+var addr = flag.String("http", ":8000", "HTTP listen address")
 
 func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -71,6 +74,7 @@ func initDB() error {
 }
 
 func main() {
+	flag.Parse()
 	if err := os.MkdirAll("repos/src/github.com", 0755); err != nil && !os.IsExist(err) {
 		log.Fatal("ERROR: could not create repos dir: ", err)
 	}
@@ -89,6 +93,6 @@ func main() {
 	http.HandleFunc("/about/", handlers.AboutHandler)
 	http.HandleFunc("/", handlers.HomeHandler)
 
-	fmt.Println("Running on :8080...")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Printf("Running on %s ...", *addr)
+	log.Fatal(http.ListenAndServe(*addr, nil))
 }
