@@ -21,11 +21,11 @@ func (g License) Weight() float64 {
 	return .10
 }
 
-// thank you https://github.com/ryanuber/go-license
+// thank you https://github.com/ryanuber/go-license and client9
 var licenses = []string{
 	"license", "license.txt", "license.md", "license.code",
 	"copying", "copying.txt", "copying.md",
-	"unlicense",
+	"unlicense", "licence", "copyleft", "copyright",
 }
 
 // Percentage returns 0 if no LICENSE, 1 if LICENSE
