@@ -215,29 +215,23 @@ func updateReposCount(mb *bolt.Bucket, resp checksResp, repo string) (err error)
 	return nil
 }
 
+type recentItem struct {
+	Repo string
+}
+
 func updateRecentlyViewed(mb *bolt.Bucket, repo string) error {
 	b := mb.Get([]byte("recent"))
 	if b == nil {
-		b, _ = json.Marshal([]recentHeap{})
+		b, _ = json.Marshal([]recentItem{})
 	}
-	recent := &recentHeap{}
-	json.Unmarshal(b, recent)
+	recent := []recentItem{}
+	json.Unmarshal(b, &recent)
 
-	heap.Init(recent)
-	// if this repo is already in the list, remove the original entry:
-	for i := range *recent {
-		if (*recent)[i].Repo == repo {
-			heap.Remove(recent, i)
-			break
-		}
-	}
 	// now we can safely push it onto the heap
-	heap.Push(recent, recentItem{
-		Repo: repo,
-	})
-	if len(*recent) > 5 {
-		// trim heap if it's grown to over 5
-		*recent = (*recent)[1:6]
+	recent = append(recent, recentItem{Repo: repo})
+	if len(recent) > 5 {
+		// trim recent if it's grown to over 5
+		recent = (recent)[1:6]
 	}
 	b, err := json.Marshal(&recent)
 	if err != nil {

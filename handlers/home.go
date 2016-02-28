@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"container/heap"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -24,7 +23,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		defer db.Close()
 
-		recent := &recentHeap{}
+		recent := &[]recentItem{}
 		err = db.View(func(tx *bolt.Tx) error {
 			rb := tx.Bucket([]byte(MetaBucket))
 			if rb == nil {
@@ -32,21 +31,21 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			b := rb.Get([]byte("recent"))
 			if b == nil {
-				b, err = json.Marshal([]recentHeap{})
+				b, err = json.Marshal([]recentItem{})
 				if err != nil {
 					return err
 				}
 			}
 			json.Unmarshal(b, recent)
 
-			heap.Init(recent)
-
 			return nil
 		})
 
-		var recentRepos []string
+		var recentRepos = make([]string, len(*recent))
+		var j = len(*recent) - 1
 		for _, r := range *recent {
-			recentRepos = append(recentRepos, r.Repo)
+			recentRepos[j] = r.Repo
+			j--
 		}
 
 		t := template.Must(template.New("home.html").Delims("[[", "]]").ParseFiles("templates/home.html"))
