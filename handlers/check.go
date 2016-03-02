@@ -130,7 +130,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 		// fetch meta-bucket
 		mb := tx.Bucket([]byte(MetaBucket))
 		if mb == nil {
-			return fmt.Errorf("high score bucket not found")
+			return fmt.Errorf("meta bucket not found")
 		}
 
 		return updateRecentlyViewed(mb, repo)
@@ -227,7 +227,13 @@ func updateRecentlyViewed(mb *bolt.Bucket, repo string) error {
 	recent := []recentItem{}
 	json.Unmarshal(b, &recent)
 
-	// now we can safely push it onto the heap
+	// add it to the slice, if it is not in there already
+	for i := range recent {
+		if recent[i].Repo == repo {
+			return nil
+		}
+	}
+
 	recent = append(recent, recentItem{Repo: repo})
 	if len(recent) > 5 {
 		// trim recent if it's grown to over 5
