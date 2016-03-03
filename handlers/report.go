@@ -10,7 +10,7 @@ import (
 
 // ReportHandler handles the report page
 func ReportHandler(w http.ResponseWriter, r *http.Request, repo string) {
-	log.Println("report", repo)
+	log.Printf("Displaying report: %q", repo)
 	t := template.Must(template.New("report.html").Delims("[[", "]]").ParseFiles("templates/report.html"))
 	resp, err := getFromCache(repo)
 	needToLoad := false
