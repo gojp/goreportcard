@@ -146,6 +146,13 @@ outer:
 		fs := fsMap[filename]
 		if fs.Filename == "" {
 			fs.Filename = filename
+			if strings.HasPrefix(filename, "/github.com") {
+				sp := strings.Split(filename, "/")
+				if len(sp) > 3 {
+					fs.Filename = strings.Join(sp[3:len(sp)], "/")
+				}
+
+			}
 			fs.FileURL = fileURL
 		}
 		err = fs.AddError(out.Text())
