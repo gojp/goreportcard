@@ -149,7 +149,7 @@ outer:
 			if strings.HasPrefix(filename, "/github.com") {
 				sp := strings.Split(filename, "/")
 				if len(sp) > 3 {
-					fs.Filename = strings.Join(sp[3:len(sp)], "/")
+					fs.Filename = strings.Join(sp[3:], "/")
 				}
 
 			}

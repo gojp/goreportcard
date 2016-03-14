@@ -5,8 +5,12 @@ import (
 	"log"
 	"net/http"
 
+	"flag"
 	"html/template"
 )
+
+var domain = flag.String("domain", "", "HTTP listen address")
+var googleAnalyticsKey = flag.String("google_analytics_key", "UA-58936835-1", "Google Analytics Account Id")
 
 // ReportHandler handles the report page
 func ReportHandler(w http.ResponseWriter, r *http.Request, repo string) {
@@ -26,5 +30,11 @@ func ReportHandler(w http.ResponseWriter, r *http.Request, repo string) {
 		return
 	}
 
-	t.Execute(w, map[string]interface{}{"repo": repo, "response": string(respBytes), "loading": needToLoad})
+	t.Execute(w, map[string]interface{}{
+		"repo":                 repo,
+		"response":             string(respBytes),
+		"loading":              needToLoad,
+		"domain":               domain,
+		"google_analytics_key": googleAnalyticsKey,
+	})
 }
