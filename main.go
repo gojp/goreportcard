@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/YotpoLtd/goreportcard/handlers"
+	"github.com/gojp/goreportcard/handlers"
 
 	"github.com/boltdb/bolt"
 )
