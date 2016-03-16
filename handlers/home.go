@@ -55,7 +55,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		})
 
 		return
-	} else {
-		http.NotFound(w, r)
 	}
+
+	http.NotFound(w, r)
 }

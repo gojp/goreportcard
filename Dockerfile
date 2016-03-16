@@ -1,7 +1,6 @@
-FROM golang:1.5
+FROM golang:1.6
 
-RUN go get github.com/tools/godep && \
-	go get golang.org/x/tools/go/vcs
+RUN go get golang.org/x/tools/go/vcs
 
 COPY . $GOPATH/src/github.com/gojp/goreportcard
 
