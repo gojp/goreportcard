@@ -19,7 +19,7 @@ import (
 	"unicode/utf8"
 	"unsafe"
 
-	"github.com/gojp/goreportcard/Godeps/_workspace/src/github.com/boltdb/bolt"
+	"github.com/boltdb/bolt"
 )
 
 var (

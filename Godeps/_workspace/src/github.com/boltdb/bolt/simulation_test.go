@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/gojp/goreportcard/Godeps/_workspace/src/github.com/boltdb/bolt"
+	"github.com/boltdb/bolt"
 )
 
 func TestSimulate_1op_1p(t *testing.T)     { testSimulate(t, 1, 1) }

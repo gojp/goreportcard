@@ -20,7 +20,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/gojp/goreportcard/Godeps/_workspace/src/github.com/boltdb/bolt"
+	"github.com/boltdb/bolt"
 )
 
 var statsFlag = flag.Bool("stats", false, "show performance stats")

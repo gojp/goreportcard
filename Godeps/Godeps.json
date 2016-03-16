@@ -1,6 +1,10 @@
 {
 	"ImportPath": "github.com/gojp/goreportcard",
 	"GoVersion": "devel +fd9fd4c Fri Feb 5 17:06:51 2016 +0000",
+	"GodepVersion": "v58",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/boltdb/bolt",
@@ -10,6 +14,14 @@
 		{
 			"ImportPath": "github.com/dustin/go-humanize",
 			"Rev": "8929fe90cee4b2cb9deb468b51fb34eba64d1bf0"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "9d4e42a20653790449273b3c85e67d6d8bae6e2e"
+		},
+		{
+			"ImportPath": "golang.org/x/tools/go/vcs",
+			"Rev": "d8da78068eea9df0dcd05d05e201dfd65c2f35e9"
 		}
 	]
 }
