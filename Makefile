@@ -4,8 +4,7 @@ install:
 	./scripts/make-install.sh
 
 lint:
-	golint ./...
-	go vet ./...
+	gometalinter --debug --exclude=vendor --disable-all --enable=lint,vet ./...
 	find . -name '*.go' | xargs gofmt -w -s
 
 test: 
