@@ -1,10 +1,10 @@
 language: go
 
-go: 1.5
+go: 1.6
 
 install:
   - make install
 
 script:
   - make lint
-  - godep go test -cover ./...
+  - go test -cover ./...

@@ -9,7 +9,7 @@ lint:
 	find . -name '*.go' | xargs gofmt -w -s
 
 test: 
-	godep go test -cover ./...
+	 go test -cover ./...
 
 start:
-	godep go run main.go
+	 go run main.go
