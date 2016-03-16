@@ -49,7 +49,10 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		t := template.Must(template.New("home.html").Delims("[[", "]]").ParseFiles("templates/home.html"))
-		t.Execute(w, map[string]interface{}{"Recent": recentRepos})
+		t.Execute(w, map[string]interface{}{
+			"Recent":               recentRepos,
+			"google_analytics_key": googleAnalyticsKey,
+		})
 
 		return
 	} else {

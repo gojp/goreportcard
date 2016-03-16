@@ -66,19 +66,19 @@
                 </tr>
               </thead>
             <tbody>
-            {{ range $index, $highScore := .HighScores }}
+            [[ range $index, $highScore := .HighScores ]]
               <tr>
-              <td><a href="/report/{{ $highScore.Repo}}">{{ add $index 1 }}</td></a>
-              <td><a href="https://{{ $highScore.Repo }}" rel="nofollow">{{ $highScore.Repo }}</a></td>
-              <td>{{ $highScore.Files }}</td>
-              <td>{{ formatScore $highScore.Score }}</td>
+              <td><a href="/report/[[ $highScore.Repo]]">[[ add $index 1 ]]</td></a>
+              <td><a href="https://[[ $highScore.Repo ]]" rel="nofollow">[[ $highScore.Repo ]]</a></td>
+              <td>[[ $highScore.Files ]]</td>
+              <td>[[ formatScore $highScore.Score ]]</td>
               </tr>
-            {{end}}
+            [[end]]
             </tbody>
             </table>
             <hr>
             <p>
-                Reports generated for <strong>{{ .Count }}</strong> unique repos so far.
+                Reports generated for <strong>[[ .Count ]]</strong> unique repos so far.
             </p>
         </div>
     </section>
