@@ -52,7 +52,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		t.Execute(w, map[string]interface{}{"Recent": recentRepos})
 
 		return
-	} else {
-		http.NotFound(w, r)
 	}
+
+	http.NotFound(w, r)
 }
