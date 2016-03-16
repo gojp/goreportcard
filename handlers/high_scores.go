@@ -63,12 +63,16 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	funcs := template.FuncMap{"add": add, "formatScore": formatScore}
-	t := template.Must(template.New("high_scores.html").Funcs(funcs).ParseFiles("templates/high_scores.html"))
+	t := template.Must(template.New("high_scores.html").Delims("[[", "]]").Funcs(funcs).ParseFiles("templates/high_scores.html"))
 
 	sortedScores := make([]scoreItem, len(*scores))
 	for i := range sortedScores {
 		sortedScores[len(sortedScores)-i-1] = heap.Pop(scores).(scoreItem)
 	}
 
-	t.Execute(w, map[string]interface{}{"HighScores": sortedScores, "Count": humanize.Comma(int64(count))})
+	t.Execute(w, map[string]interface{}{
+		"HighScores":           sortedScores,
+		"Count":                humanize.Comma(int64(count)),
+		"google_analytics_key": googleAnalyticsKey,
+	})
 }

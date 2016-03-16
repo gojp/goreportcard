@@ -13,7 +13,7 @@
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-      ga('create', 'UA-58936835-1', 'auto');
+      ga('create', '[[ .google_analytics_key ]]', 'auto');
       ga('send', 'pageview');
 
     </script>
@@ -73,8 +73,6 @@
   <section class="section container-suggestions">
       <div class="container">
           <div class="columns">
-              <div class="column is-quarter">
-              </div>
               <div class="column is-half">
                   <table class="table">
                     <thead>
@@ -101,7 +99,21 @@
                     </tbody>
                   </table>
               </div>
-              <div class="column is-quarter">
+              <div class="column is-half">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Recently Generated</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        [[ range .Recent ]]
+                        <tr>
+                            <td class="table-link"><a href="/report/[[ . ]]">[[ . ]]</td>
+                        </tr>
+                        [[ end ]]
+                    </tbody>
+                  </table>
               </div>
           </div>
       </div>

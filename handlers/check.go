@@ -123,7 +123,18 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println("Bolt writing error:", err)
 		}
+
 	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		// fetch meta-bucket
+		mb := tx.Bucket([]byte(MetaBucket))
+		if mb == nil {
+			return fmt.Errorf("meta bucket not found")
+		}
+
+		return updateRecentlyViewed(mb, repo)
+	})
 
 	b, err := json.Marshal(map[string]string{"redirect": "/report/" + repo})
 	if err != nil {
@@ -201,5 +212,41 @@ func updateReposCount(mb *bolt.Bucket, resp checksResp, repo string) (err error)
 	}
 	mb.Put([]byte("total_repos"), total)
 	log.Println("Repo count is now", totalInt)
+	return nil
+}
+
+type recentItem struct {
+	Repo string
+}
+
+func updateRecentlyViewed(mb *bolt.Bucket, repo string) error {
+	b := mb.Get([]byte("recent"))
+	if b == nil {
+		b, _ = json.Marshal([]recentItem{})
+	}
+	recent := []recentItem{}
+	json.Unmarshal(b, &recent)
+
+	// add it to the slice, if it is not in there already
+	for i := range recent {
+		if recent[i].Repo == repo {
+			return nil
+		}
+	}
+
+	recent = append(recent, recentItem{Repo: repo})
+	if len(recent) > 5 {
+		// trim recent if it's grown to over 5
+		recent = (recent)[1:6]
+	}
+	b, err := json.Marshal(&recent)
+	if err != nil {
+		return err
+	}
+	err = mb.Put([]byte("recent"), b)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
