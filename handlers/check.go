@@ -34,12 +34,8 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	repoRoot, err := vcs.RepoRootForImportPath(repo, true)
 	if err != nil || repoRoot.Root == "" || repoRoot.Repo == "" {
 		log.Println("Failed to create repoRoot:", repoRoot, err)
-		b, marshalErr := json.Marshal("Please enter a valid 'go get'-able package name")
-		if marshalErr != nil {
-			log.Println("JSON marshal error:", marshalErr)
-		}
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write(b)
+		w.Write([]byte(`Please enter a valid 'go get'-able package name`))
 		return
 	}
 
@@ -49,12 +45,8 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := newChecksResp(repo, forceRefresh)
 	if err != nil {
 		log.Println("ERROR: from newChecksResp:", err)
-		b, marshalErr := json.Marshal("Could not go get the repository.")
-		if marshalErr != nil {
-			log.Println("JSON marshal error:", marshalErr)
-		}
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write(b)
+		w.Write([]byte(`Could not go get the repository.`))
 		return
 	}
 
