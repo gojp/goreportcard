@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/tools/go/vcs"
@@ -25,11 +26,23 @@ const (
 	MetaBucket string = "meta"
 )
 
+// trimScheme removes a scheme (e.g. https://) from the URL for more
+// convenient pasting from browsers.
+func trimScheme(repo string) string {
+	schemeSep := "://"
+	schemeSepIdx := strings.Index(repo, schemeSep)
+	if schemeSepIdx > -1 {
+		return repo[schemeSepIdx+len(schemeSep):]
+	}
+
+	return repo
+}
+
 // CheckHandler handles the request for checking a repo
 func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	repo := r.FormValue("repo")
+	repo := trimScheme(r.FormValue("repo"))
 
 	repoRoot, err := vcs.RepoRootForImportPath(repo, true)
 	if err != nil || repoRoot.Root == "" || repoRoot.Repo == "" {
