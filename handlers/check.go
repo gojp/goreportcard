@@ -67,16 +67,30 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 
 	// is this a new repo? if so, increase the count in the high scores bucket later
 	isNewRepo := false
+	var oldRepoBytes []byte
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(RepoBucket))
 		if b == nil {
 			return fmt.Errorf("repo bucket not found")
 		}
-		isNewRepo = b.Get([]byte(repo)) == nil
+		oldRepoBytes = b.Get([]byte(repo))
 		return nil
 	})
 	if err != nil {
 		log.Println(err)
+	}
+
+	// get the old score and store it for stats updating
+	var oldScore *float64
+	if isNewRepo = oldRepoBytes == nil; !isNewRepo {
+		oldRepo := checksResp{}
+		err = json.Unmarshal(oldRepoBytes, &oldRepo)
+		if err != nil {
+			log.Println("ERROR: could not unmarshal json:", err)
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		oldScore = &oldRepo.Average
 	}
 
 	// if this is a new repo, or the user force-refreshed, update the cache
@@ -114,7 +128,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 
-			return updateStats(mb, resp, repo)
+			return updateStats(mb, resp, repo, oldScore)
 		})
 
 		if err != nil {
@@ -192,7 +206,7 @@ func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
 	return nil
 }
 
-func updateStats(mb *bolt.Bucket, resp checksResp, repo string) error {
+func updateStats(mb *bolt.Bucket, resp checksResp, repo string, oldScore *float64) error {
 	scores := make([]int, 101, 101)
 	statsBytes := mb.Get([]byte("stats"))
 	if statsBytes == nil {
@@ -203,6 +217,9 @@ func updateStats(mb *bolt.Bucket, resp checksResp, repo string) error {
 		return err
 	}
 	scores[int(resp.Average*100)]++
+	if oldScore != nil {
+		scores[int(*oldScore*100)]--
+	}
 	newStats, err := json.Marshal(scores)
 	if err != nil {
 		return err
