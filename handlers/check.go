@@ -109,7 +109,12 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
-			return updateHighScores(mb, resp, repo)
+			err = updateHighScores(mb, resp, repo)
+			if err != nil {
+				return err
+			}
+
+			return updateStats(mb, resp, repo)
 		})
 
 		if err != nil {
@@ -184,6 +189,28 @@ func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
 		return err
 	}
 
+	return nil
+}
+
+func updateStats(mb *bolt.Bucket, resp checksResp, repo string) error {
+	scores := make([]int, 101, 101)
+	statsBytes := mb.Get([]byte("stats"))
+	if statsBytes == nil {
+		statsBytes, _ = json.Marshal(scores)
+	}
+	err := json.Unmarshal(statsBytes, &scores)
+	if err != nil {
+		return err
+	}
+	scores[int(resp.Average*100)]++
+	newStats, err := json.Marshal(scores)
+	if err != nil {
+		return err
+	}
+	err = mb.Put([]byte("stats"), newStats)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
