@@ -73,7 +73,7 @@
         </div>
         <div class="columns">
           <div class="column is-quarter">
-            <nav class="menu results">
+            <nav class="panel results">
             </nav>
             <div class="container-update">
             </div>
@@ -120,7 +120,7 @@
       <div class="column is-quarter badge-col"><img class="badge" tag="{{repo}}" src="/badge/{{repo}}"/></div>
   </script>
   <script id="template-check" type="text/x-handlebars-template">
-      <a class="menu-block" href="#{{{name}}}">
+      <a class="panel-block" href="#{{{name}}}">
         {{{name}}}
         <span class="percentage {{color percentage}}">{{percentage}}%</span>
       </a>
@@ -219,7 +219,7 @@
         var $resultsDetails = $('.results-details').empty();
         $resultsText.html($(templates.grade(data)));
         var $table = $(".results");
-        $table.html('<p class="menu-heading">Results</p>');
+        $table.html('<p class="panel-heading">Results</p>');
         for (var i = 0; i < checks.length; i++) {
             checks[i].percentage = parseInt(checks[i].percentage * 100.0);
             var $headRow = $(templates.check(checks[i]));
