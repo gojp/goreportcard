@@ -42,7 +42,7 @@ func grade(percentage float64) Grade {
 	}
 }
 
-func badgeURL(grade Grade) string {
+func badgeURL(grade Grade, style string) string {
 	colorMap := map[Grade]string{
 		GradeAPlus: "brightgreen",
 		GradeA:     "brightgreen",
@@ -52,7 +52,7 @@ func badgeURL(grade Grade) string {
 		GradeE:     "red",
 		GradeF:     "red",
 	}
-	url := fmt.Sprintf("https://img.shields.io/badge/go_report-%s-%s.svg", grade, colorMap[grade])
+	url := fmt.Sprintf("https://img.shields.io/badge/go_report-%s-%s.svg?style=%s", grade, colorMap[grade], style)
 	return url
 }
 
@@ -60,11 +60,19 @@ func badgeURL(grade Grade) string {
 func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string) {
 	name := fmt.Sprintf("%s", repo)
 	resp, err := newChecksResp(name, false)
+
+	// See: http://shields.io/#styles
+	style := r.URL.Query().Get("style")
+	if style == "" {
+		style = "flat"
+	}
+
 	if err != nil {
 		log.Printf("ERROR: fetching badge for %s: %v", name, err)
-		http.Redirect(w, r, "https://img.shields.io/badge/go%20report-error-lightgrey.svg", http.StatusTemporaryRedirect)
+		url := fmt.Sprintf("https://img.shields.io/badge/go%20report-error-lightgrey.svg?style=%s", style)
+		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 		return
 	}
 
-	http.Redirect(w, r, badgeURL(resp.Grade), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, badgeURL(resp.Grade, style), http.StatusTemporaryRedirect)
 }
