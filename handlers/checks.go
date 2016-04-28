@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -17,6 +18,8 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/gojp/goreportcard/check"
 )
+
+var reBadRepo = regexp.MustCompile(`package\s([\w\/\.]+)\: exit status \d+`)
 
 func dirName(repo string) string {
 	return fmt.Sprintf("repos/src/%s", repo)
@@ -77,7 +80,7 @@ type checksResp struct {
 	HumanizedLastRefresh string    `json:"humanized_last_refresh"`
 }
 
-func goGet(repo string, firstAttempt bool) error {
+func goGet(repo string, prevError string) error {
 	log.Printf("Go getting %q...", repo)
 	if err := os.Mkdir("repos", 0755); err != nil && !os.IsExist(err) {
 		return fmt.Errorf("could not create dir: %v", err)
@@ -106,17 +109,41 @@ func goGet(repo string, firstAttempt bool) error {
 	}
 
 	err = cmd.Wait()
+	errStr := string(b)
+
 	// we don't care if there are no buildable Go source files, we just need the source on disk
-	if err != nil && !strings.Contains(string(b), "no buildable Go source files") {
+	hadError := err != nil && !strings.Contains(errStr, "no buildable Go source files")
+
+	if hadError {
 		log.Println("Go get error log:", string(b))
-		if firstAttempt {
-			// try one more time, this time deleting the cached directory first,
-			// in case our cache is stale (remote repository was force-pushed, replaced, etc)
+		if errStr != prevError {
+			// try again, this time deleting the cached directory, and also the
+			// package that caused the error in case our cache is stale
+			// (remote repository or one of its dependencices was force-pushed,
+			// replaced, etc)
 			err = os.RemoveAll(filepath.Join(d, "src", repo))
 			if err != nil {
 				return fmt.Errorf("could not delete repo: %v", err)
 			}
-			return goGet(repo, false)
+
+			packageNames := reBadRepo.FindStringSubmatch(errStr)
+			if len(packageNames) >= 2 {
+				pkg := packageNames[1]
+				fp := filepath.Clean(filepath.Join(d, "src", pkg))
+				if strings.HasPrefix(fp, filepath.Join(d, "src")) {
+					// if the path is prefixed with the path to our
+					// cached repos, then it's safe to delete it.
+					// These precautions are here so that someone can't
+					// craft a malicious package name with .. in it
+					// and cause us to delete our server's root directory.
+					log.Println("Cleaning out rebased dependency:", fp)
+					err = os.RemoveAll(fp)
+					if err != nil {
+						return err
+					}
+				}
+			}
+			return goGet(repo, errStr)
 		}
 
 		return fmt.Errorf("could not run go get: %v", err)
@@ -137,7 +164,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	}
 
 	// fetch the repo and grade it
-	err := goGet(repo, true)
+	err := goGet(repo, "")
 	if err != nil {
 		return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
 	}
