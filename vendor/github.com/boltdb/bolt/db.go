@@ -94,7 +94,7 @@ type DB struct {
 	path     string
 	file     *os.File
 	lockfile *os.File // windows only
-	dataref  []byte // mmap'ed readonly, write throws SEGV
+	dataref  []byte   // mmap'ed readonly, write throws SEGV
 	data     *[maxMapSize]byte
 	datasz   int
 	filesz   int // current on disk file size
@@ -383,7 +383,7 @@ func (db *DB) close() error {
 	if !db.opened {
 		return nil
 	}
-	
+
 	db.opened = false
 
 	db.freelist = nil
