@@ -42,7 +42,7 @@ func trimScheme(repo string) string {
 func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	repo := trimScheme(r.FormValue("repo"))
+	repo := trimScheme(strings.ToLower(r.FormValue("repo")))
 
 	repoRoot, err := vcs.RepoRootForImportPath(repo, true)
 	if err != nil || repoRoot.Root == "" || repoRoot.Repo == "" {
