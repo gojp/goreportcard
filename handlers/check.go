@@ -42,7 +42,7 @@ func trimScheme(repo string) string {
 func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	repo := trimScheme(strings.ToLower(r.FormValue("repo")))
+	repo := trimScheme(r.FormValue("repo"))
 
 	repoRoot, err := vcs.RepoRootForImportPath(repo, true)
 	if err != nil || repoRoot.Root == "" || repoRoot.Repo == "" {
@@ -192,7 +192,7 @@ func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
 	}
 	// if this repo is already in the list, remove the original entry:
 	for i := range *scores {
-		if (*scores)[i].Repo == repo {
+		if strings.ToLower((*scores)[i].Repo) == strings.ToLower(repo) {
 			heap.Remove(scores, i)
 			break
 		}
