@@ -1,8 +1,9 @@
 package check
 
 import (
-	"bytes"
-	"os/exec"
+	"io/ioutil"
+	"path/filepath"
+	"strings"
 )
 
 // License is the check for the existence of a license file
@@ -23,34 +24,36 @@ func (g License) Weight() float64 {
 
 // thank you https://github.com/ryanuber/go-license and client9
 var licenses = []string{
-	"license", "license.txt", "license.md", "license.code",
-	"copying", "copying.txt", "copying.md",
-	"unlicense", "licence", "copyleft", "copyright",
+	"license",
+	"copying",
+	"copyright",
+	"licence",
+	"unlicense",
+	"copyleft",
 }
 
 // Percentage returns 0 if no LICENSE, 1 if LICENSE
 func (g License) Percentage() (float64, []FileSummary, error) {
-	var exists bool
-	for _, license := range licenses {
-		cmd := exec.Command("find", g.Dir, "-maxdepth", "1", "-type", "f", "-iname", license)
-		var out bytes.Buffer
-		cmd.Stdout = &out
-		err := cmd.Run()
-		if err != nil {
-			return 0.0, []FileSummary{}, err
-		}
-		if out.String() == "" {
+	files, err := ioutil.ReadDir(g.Dir)
+	if err != nil {
+		return 0.0, []FileSummary{}, err
+	}
+
+	for _, file := range files {
+		name := strings.ToLower(file.Name())
+
+		if filepath.Ext(name) == "go" {
 			continue
 		}
-		exists = true
-		break
+
+		for i := range licenses {
+			if strings.HasPrefix(name, licenses[i]) {
+				return 1.0, []FileSummary{}, nil
+			}
+		}
 	}
 
-	if !exists {
-		return 0.0, []FileSummary{{"", "http://choosealicense.com/", []Error{}}}, nil
-	}
-
-	return 1.0, []FileSummary{}, nil
+	return 0.0, []FileSummary{{"", "http://choosealicense.com/", []Error{}}}, nil
 }
 
 // Description returns the description of License
