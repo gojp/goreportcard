@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	skipDirs     = []string{"Godeps", "vendor", "third_party"}
+	skipDirs     = []string{"/Godeps/", "/vendor/", "/third_party/"}
 	skipSuffixes = []string{".pb.go", ".pb.gw.go", ".generated.go", "bindata.go"}
 )
 
