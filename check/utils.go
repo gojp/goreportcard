@@ -29,7 +29,7 @@ func GoFiles(dir string) ([]string, error) {
 	var filenames []string
 	visit := func(fp string, fi os.FileInfo, err error) error {
 		for _, skip := range skipDirs {
-			if strings.Contains(fp, skip) {
+			if strings.Contains(fp, fmt.Sprintf("/%s/", skip)) {
 				return nil
 			}
 		}
