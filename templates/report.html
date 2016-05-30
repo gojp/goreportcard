@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Go Report Card | Go project code quality report cards</title>
     <link rel="stylesheet" href="https://cdn.rawgit.com/jgthms/bulma/master/css/bulma.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="/assets/goreportcard.css">
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -117,7 +118,16 @@
           <h1 class="title">Report for {{#if link}}<a href="{{ link }}">{{/if}}<strong>{{repo}}</strong>{{#if link}}</a>{{/if}}</h1>
         <p><span class="huge">{{grade}}</span> &nbsp;&nbsp; {{gradeMessage grade}} &emsp;&emsp; Found <strong>{{issues}}</strong> issues across <strong>{{files}}</strong> files</p>
       </div>
-      <div class="column is-one-quarter badge-col"><img class="badge" tag="{{repo}}" src="/badge/{{repo}}"/></div>
+      <div class="column is-one-quarter badge-col">
+        <img class="badge" tag="{{repo}}" src="/badge/{{repo}}"/>
+        <a class="button is-info is-small tweet-button"
+          href="https://twitter.com/intent/tweet?text={{ repo }} gets {{#if use_an}}an{{else}}a{{/if}} {{ grade }} on GoReportCard.com #golang">
+            <span class="icon is-small">
+              <i class="fa fa-twitter"></i>
+            </span>
+            <span>Tweet</span>
+        </a>
+      </div>
   </script>
   <script id="template-check" type="text/x-handlebars-template">
       <a class="panel-block" href="#{{{name}}}">
@@ -225,6 +235,7 @@
             data.link = "https://" + data.repo;
           }
         }
+        data.use_an = data.grade == "A" || data.grade == "A+";
         $resultsText.html($(templates.grade(data)));
         var $table = $(".results");
         $table.html('<p class="panel-heading">Results</p>');
