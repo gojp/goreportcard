@@ -121,7 +121,7 @@
       <div class="column is-one-quarter badge-col">
         <img class="badge" tag="{{repo}}" src="/badge/{{repo}}"/>
         <a class="button is-info is-small tweet-button"
-          href="https://twitter.com/intent/tweet?text={{ repo }} gets {{#if use_an}}an{{else}}a{{/if}} {{ grade }} on GoReportCard.com #golang">
+          href="https://twitter.com/intent/tweet?text={{ repo }} gets {{#if use_an}}an{{else}}a{{/if}} {{ grade_encoded }} on goreportcard.com! #golang">
             <span class="icon is-small">
               <i class="fa fa-twitter"></i>
             </span>
@@ -236,6 +236,7 @@
           }
         }
         data.use_an = data.grade == "A" || data.grade == "A+";
+        data.grade_encoded = encodeURIComponent(data.grade);
         $resultsText.html($(templates.grade(data)));
         var $table = $(".results");
         $table.html('<p class="panel-heading">Results</p>');
