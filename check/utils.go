@@ -148,9 +148,9 @@ outer:
 			if len(strings.Split(base, "/")) >= 3 {
 				pkg = strings.Split(base, "/")[2]
 			}
-			fileURL = "https://" + fmt.Sprintf("github.com/golang/%s", pkg) + "/blob/master" + strings.TrimPrefix(filename, "/"+base)
+			fileURL = fmt.Sprintf("https://github.com/golang/%s/blob/master%s", pkg, strings.TrimPrefix(filename, "/"+base))
 		default:
-			fileURL = "https://" + base + "/blob/master" + strings.TrimPrefix(filename, "/"+base)
+			fileURL = fmt.Sprintf("https://%s/blob/master%s", base, strings.TrimPrefix(filename, "/"+base))
 		}
 		fs := fsMap[filename]
 		if fs.Filename == "" {
