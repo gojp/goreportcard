@@ -8,7 +8,7 @@ lint:
 	find . -name '*.go' | xargs gofmt -w -s
 
 test: 
-	 go test -cover ./...
+	 go test -cover ./check ./handlers
 
 start:
 	 go run main.go
