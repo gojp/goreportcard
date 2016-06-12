@@ -126,8 +126,6 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 
 	out := bufio.NewScanner(stdout)
 
-	githubLink := strings.TrimPrefix(dir, "repos/src")
-
 	// the same file can appear multiple times out of order
 	// in the output, so we can't go line by line, have to store
 	// a map of filename to FileSummary
@@ -150,9 +148,9 @@ outer:
 			if len(strings.Split(base, "/")) >= 3 {
 				pkg = strings.Split(base, "/")[2]
 			}
-			fileURL = "https://" + fmt.Sprintf("github.com/golang/%s", pkg) + "/blob/master" + strings.TrimPrefix(filename, githubLink)
+			fileURL = "https://" + fmt.Sprintf("github.com/golang/%s", pkg) + "/blob/master" + strings.TrimPrefix(filename, "/"+base)
 		default:
-			fileURL = "https://" + strings.TrimPrefix(dir, "repos/src/") + "/blob/master" + strings.TrimPrefix(filename, githubLink)
+			fileURL = "https://" + base + "/blob/master" + strings.TrimPrefix(filename, "/"+base)
 		}
 		fs := fsMap[filename]
 		if fs.Filename == "" {
