@@ -142,7 +142,18 @@ outer:
 				continue outer
 			}
 		}
-		fileURL := "https://" + strings.TrimPrefix(dir, "repos/src/") + "/blob/master" + strings.TrimPrefix(filename, githubLink)
+		var fileURL string
+		base := strings.TrimPrefix(dir, "repos/src/")
+		switch {
+		case strings.HasPrefix(base, "golang.org/x/"):
+			var pkg string
+			if len(strings.Split(base, "/")) >= 3 {
+				pkg = strings.Split(base, "/")[2]
+			}
+			fileURL = "https://" + fmt.Sprintf("github.com/golang/%s", pkg) + "/blob/master" + strings.TrimPrefix(filename, githubLink)
+		default:
+			fileURL = "https://" + strings.TrimPrefix(dir, "repos/src/") + "/blob/master" + strings.TrimPrefix(filename, githubLink)
+		}
 		fs := fsMap[filename]
 		if fs.Filename == "" {
 			fs.Filename = filename
