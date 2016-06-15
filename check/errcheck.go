@@ -1,13 +1,13 @@
 package check
 
-// Errcheck is the check for the errcheck command
-type Errcheck struct {
+// ErrCheck is the check for the errcheck command
+type ErrCheck struct {
 	Dir       string
 	Filenames []string
 }
 
 // Name returns the name of the display name of the command
-func (e Errcheck) Name() string {
+func (c ErrCheck) Name() string {
 	return "errcheck"
 }
 
