@@ -1,13 +1,13 @@
 package check
 
-// ErrCheck is the check for the go fmt command
-type ErrCheck struct {
+// Errcheck is the check for the errcheck command
+type Errcheck struct {
 	Dir       string
 	Filenames []string
 }
 
 // Name returns the name of the display name of the command
-func (c ErrCheck) Name() string {
+func (e Errcheck) Name() string {
 	return "errcheck"
 }
 
