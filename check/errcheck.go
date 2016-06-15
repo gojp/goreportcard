@@ -1,6 +1,6 @@
 package check
 
-// errcheck is the check for the errcheck command
+// Errcheck is the check for the errcheck command
 type Errcheck struct {
 	Dir       string
 	Filenames []string
