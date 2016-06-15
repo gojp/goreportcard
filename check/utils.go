@@ -149,7 +149,10 @@ outer:
 				pkg = strings.Split(base, "/")[2]
 			}
 			fileURL = fmt.Sprintf("https://github.com/golang/%s/blob/master%s", pkg, strings.TrimPrefix(filename, "/"+base))
-		default:
+		case strings.HasPrefix(base, "github.com/"):
+			if len(strings.Split(base, "/")) == 4 {
+				base = strings.Join(strings.Split(base, "/")[0:3], "/")
+			}
 			fileURL = fmt.Sprintf("https://%s/blob/master%s", base, strings.TrimPrefix(filename, "/"+base))
 		}
 		fs := fsMap[filename]
