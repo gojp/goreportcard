@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/dustin/go-humanize"
+	humanize "github.com/dustin/go-humanize"
 	"github.com/gojp/goreportcard/check"
 )
 
@@ -185,6 +185,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		check.License{Dir: dir, Filenames: []string{}},
 		check.Misspell{Dir: dir, Filenames: filenames},
 		check.IneffAssign{Dir: dir, Filenames: filenames},
+		check.ErrCheck{Dir: dir, Filenames: filenames},
 	}
 
 	ch := make(chan score)
@@ -213,17 +214,20 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	}
 
 	var total float64
+	var totalWeight float64
 	var issues = make(map[string]bool)
 	for i := 0; i < len(checks); i++ {
 		s := <-ch
 		resp.Checks = append(resp.Checks, s)
 		total += s.Percentage * s.Weight
+		totalWeight += s.Weight
 		for _, fs := range s.FileSummaries {
 			issues[fs.Filename] = true
 		}
 	}
+	total /= totalWeight
 
-	sort.Sort(ByName(resp.Checks))
+	sort.Sort(ByWeight(resp.Checks))
 	resp.Average = total
 	resp.Issues = len(issues)
 	resp.Grade = grade(total * 100)
@@ -231,9 +235,9 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	return resp, nil
 }
 
-// ByName implements sorting for checks alphabetically by name
-type ByName []score
+// ByWeight implements sorting for checks by weight descending
+type ByWeight []score
 
-func (a ByName) Len() int           { return len(a) }
-func (a ByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByName) Less(i, j int) bool { return a[i].Name < a[j].Name }
+func (a ByWeight) Len() int           { return len(a) }
+func (a ByWeight) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByWeight) Less(i, j int) bool { return a[i].Weight > a[j].Weight }

@@ -19,7 +19,7 @@ func (g License) Name() string {
 
 // Weight returns the weight this check has in the overall average
 func (g License) Weight() float64 {
-	return .10
+	return .05
 }
 
 // thank you https://github.com/ryanuber/go-license and client9
