@@ -1,6 +1,6 @@
 package check
 
-// ErrCheck is the check for the go fmt command
+// ErrCheck is the check for the errcheck command
 type ErrCheck struct {
 	Dir       string
 	Filenames []string
