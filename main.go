@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gojp/goreportcard/handlers"
+	"github.com/hermanschaaf/autocomplete"
 
 	"github.com/boltdb/bolt"
 )
@@ -53,14 +54,61 @@ func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string
 	}
 }
 
+// context handles startup initialization steps, and implements the handlers.Context
+// interface so that it can be passed as an extra argument to certain endpoints.
+type context struct {
+	completionModel *autocomplete.Model
+}
+
+func newContext() (ctxt context, err error) {
+	// initialize database
+	var db *bolt.DB
+	if db, err = initDB(); err != nil {
+		return ctxt, fmt.Errorf("ERROR: could not open bolt db: %v", err)
+	}
+
+	var words []string // instantiate autocomplete
+	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(handlers.RepoBucket))
+		if err := b.ForEach(func(k, v []byte) error {
+			words = append(words, string(k))
+			return nil
+		}); err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return ctxt, err
+	}
+
+	ctxt = context{
+		completionModel: autocomplete.New(),
+	}
+	ctxt.completionModel.Train(words)
+
+	return ctxt, nil
+}
+
+// Suggest returns autocomplete suggestions for the given string.
+func (c context) Suggest(s string) []string {
+	return c.completionModel.Complete(s, 10)
+}
+
+func (c context) wrap(fn func(http.ResponseWriter, *http.Request, handlers.Context)) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fn(w, r, c)
+	}
+}
+
 // initDB opens the bolt database file (or creates it if it does not exist), and creates
 // a bucket for saving the repos, also only if it does not exist.
-func initDB() error {
+func initDB() (*bolt.DB, error) {
 	db, err := bolt.Open(handlers.DBPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer db.Close()
 
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(handlers.RepoBucket))
@@ -70,7 +118,7 @@ func initDB() error {
 		_, err = tx.CreateBucketIfNotExists([]byte(handlers.MetaBucket))
 		return err
 	})
-	return err
+	return db, err
 }
 
 func main() {
@@ -79,9 +127,9 @@ func main() {
 		log.Fatal("ERROR: could not create repos dir: ", err)
 	}
 
-	// initialize database
-	if err := initDB(); err != nil {
-		log.Fatal("ERROR: could not open bolt db: ", err)
+	ctxt, err := newContext()
+	if err != nil {
+		log.Fatal("ERROR: could not create context: ", err)
 	}
 
 	http.HandleFunc("/assets/", handlers.AssetsHandler)
@@ -91,6 +139,7 @@ func main() {
 	http.HandleFunc("/badge/", makeHandler("badge", handlers.BadgeHandler))
 	http.HandleFunc("/high_scores/", handlers.HighScoresHandler)
 	http.HandleFunc("/about/", handlers.AboutHandler)
+	http.HandleFunc("/suggest/", ctxt.wrap(handlers.SuggestionHandler))
 	http.HandleFunc("/", handlers.HomeHandler)
 
 	log.Printf("Running on %s ...", *addr)
