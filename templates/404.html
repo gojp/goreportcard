@@ -55,12 +55,16 @@
     </header>
     <section class="section">
         <div class="container">
-            <h1 class="title">About</h1>
-            <p>Go Report Card was initially developed during <a href="http://gophergala.com/blog/gopher/gala/2015/02/03/winners/">Gopher Gala 2015</a>. It is free, open source and run by volunteers. If you feel like there is something that could be improved, we encourage you to <a href="https://github.com/gojp/goreportcard">open an issue or contribute on GitHub</a>!</p>
-            <hr>
-            <h3 class="subtitle">Credits</h3>
-            <p>The Go gopher on the home page was designed by <a href="http://reneefrench.blogspot.com/">Renée French</a>.</p>
-            <p>Go Report Card relies on the excellent <a href="https://github.com/alecthomas/gometalinter">Go Meta Linter</a> tool.</p>
+          <div class="columns">
+            <div class="column is-4 is-hidden-mobile has-text-centered">
+              <img id="gopherimage" src="/assets/gopherhat.jpg">
+            </div>
+            <div class="column is-8 content">
+              <br>
+              <h1 class="title">Page not found!</h1>
+              <p>It seems like the page you are looking for is no longer here. Check the URL for typos, or click below to return to the homepage. If you think this is a mistake, please <a href="https://github.com/gojp/goreportcard/issues">open an issue on Github</a>.</p>
+              <p><h3 class="subtitle"><a href="/">Back to grading Go repos</a></h3></p>
+            </div>
         </div>
     </section>
     <footer class="footer">
@@ -79,5 +83,17 @@
         </div>
       </div>
     </footer>
+    <style>
+    #gopherimage {
+        width: 200px;
+        margin: 0;
+        -webkit-animation:spin 2s linear infinite;
+        -moz-animation:spin 2s linear infinite;
+        animation:spin 2s linear infinite;
+    }
+    @-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+    @-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+    @keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+    </style>
 </body>
 </html>

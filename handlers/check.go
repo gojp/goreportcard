@@ -192,7 +192,7 @@ func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
 	}
 	// if this repo is already in the list, remove the original entry:
 	for i := range *scores {
-		if (*scores)[i].Repo == repo {
+		if strings.ToLower((*scores)[i].Repo) == strings.ToLower(repo) {
 			heap.Remove(scores, i)
 			break
 		}

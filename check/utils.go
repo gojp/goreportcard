@@ -29,7 +29,7 @@ func GoFiles(dir string) ([]string, error) {
 	var filenames []string
 	visit := func(fp string, fi os.FileInfo, err error) error {
 		for _, skip := range skipDirs {
-			if strings.Contains(fp, skip) {
+			if strings.Contains(fp, fmt.Sprintf("/%s/", skip)) {
 				return nil
 			}
 		}
@@ -126,8 +126,6 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 
 	out := bufio.NewScanner(stdout)
 
-	githubLink := strings.TrimPrefix(dir, "repos/src")
-
 	// the same file can appear multiple times out of order
 	// in the output, so we can't go line by line, have to store
 	// a map of filename to FileSummary
@@ -142,7 +140,21 @@ outer:
 				continue outer
 			}
 		}
-		fileURL := "https://" + strings.TrimPrefix(dir, "repos/src/") + "/blob/master" + strings.TrimPrefix(filename, githubLink)
+		var fileURL string
+		base := strings.TrimPrefix(dir, "repos/src/")
+		switch {
+		case strings.HasPrefix(base, "golang.org/x/"):
+			var pkg string
+			if len(strings.Split(base, "/")) >= 3 {
+				pkg = strings.Split(base, "/")[2]
+			}
+			fileURL = fmt.Sprintf("https://github.com/golang/%s/blob/master%s", pkg, strings.TrimPrefix(filename, "/"+base))
+		case strings.HasPrefix(base, "github.com/"):
+			if len(strings.Split(base, "/")) == 4 {
+				base = strings.Join(strings.Split(base, "/")[0:3], "/")
+			}
+			fileURL = fmt.Sprintf("https://%s/blob/master%s", base, strings.TrimPrefix(filename, "/"+base))
+		}
 		fs := fsMap[filename]
 		if fs.Filename == "" {
 			fs.Filename = filename

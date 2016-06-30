@@ -57,5 +57,5 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.NotFound(w, r)
+	errorHandler(w, r, http.StatusNotFound)
 }

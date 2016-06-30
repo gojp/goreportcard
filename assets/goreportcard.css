@@ -59,6 +59,10 @@
     margin-top: 10px;
     cursor: pointer;
 }
+.results-text .badge-col .tweet-button {
+    margin-top: 10px;
+    height: 20px;
+}
 .menu-block.is-active {
     font-weight: bold;
     background: #f0f0f0;
@@ -95,7 +99,7 @@
 }
 #badge_dropdown {
     position: absolute;
-    top: 32px;
+    top: 40px;
     right: 0;
     width: 100%;
     max-width: 400px;
