@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gojp/goreportcard/handlers"
-	"github.com/hermanschaaf/autocomplete"
 
 	"github.com/boltdb/bolt"
 )
@@ -56,44 +56,33 @@ func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string
 
 // context handles startup initialization steps, and implements the handlers.Context
 // interface so that it can be passed as an extra argument to certain endpoints.
-type context struct {
-	completionModel *autocomplete.Model
-}
+type context struct{}
 
 func newContext() (ctxt context, err error) {
-	// initialize database
-	var db *bolt.DB
-	if db, err = initDB(); err != nil {
-		return ctxt, fmt.Errorf("ERROR: could not open bolt db: %v", err)
-	}
-
-	var words []string // instantiate autocomplete
-	err = db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(handlers.RepoBucket))
-		if err := b.ForEach(func(k, v []byte) error {
-			words = append(words, string(k))
-			return nil
-		}); err != nil {
-			return err
-		}
-		return nil
-	})
-
-	if err != nil {
-		return ctxt, err
-	}
-
-	ctxt = context{
-		completionModel: autocomplete.New(),
-	}
-	ctxt.completionModel.Train(words)
-
+	// can add initialization here at a later stage
 	return ctxt, nil
 }
 
 // Suggest returns autocomplete suggestions for the given string.
-func (c context) Suggest(s string) []string {
-	return c.completionModel.Complete(s, 10)
+func (c context) Suggest(s string) (words []string, err error) {
+	// initialize database
+	var db *bolt.DB
+	if db, err = initDB(); err != nil {
+		return words, fmt.Errorf("ERROR: could not open bolt db: %v", err)
+	}
+	defer db.Close()
+
+	err = db.View(func(tx *bolt.Tx) error {
+		c := tx.Bucket([]byte(handlers.RepoBucket)).Cursor()
+
+		prefix := []byte(s)
+		for k, _ := c.Seek(prefix); bytes.HasPrefix(k, prefix); k, _ = c.Next() {
+			words = append(words, string(k))
+		}
+		return nil
+	})
+
+	return words, err
 }
 
 func (c context) wrap(fn func(http.ResponseWriter, *http.Request, handlers.Context)) func(w http.ResponseWriter, r *http.Request) {
