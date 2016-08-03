@@ -149,23 +149,27 @@
     <div class="wrapper">
       <a name="{{{name}}}"></a><h1 class="tool-title">{{{name}}}<span class="percentage {{color percentage}}">{{percentage}}%</span></h1>
       <p class="tool-description">{{{description}}}</p>
-    {{^file_summaries}}
-      <p class="perfect">No problems detected. Good job!</p>
-    {{/file_summaries}}
-    {{#each file_summaries}}
-      <ul class="files">
-        <li class="file">
-          <ul class="errors">
-          <a href="{{this.file_url}}">{{this.filename}}</a>
-          {{#each this.errors}}
-            {{#if line_number}}
-            <li class="error"><a href="{{../../file_url}}#L{{this.line_number}}">Line {{this.line_number}}</a>: {{this.error_string}}</li>
-            {{/if}}
-          {{/each}}
-          </ul>
-        </li>
-      </ul>
-    {{/each}}
+    {{#if error}}
+        <p class="error-msg">An error occurred while running this test ({{error}})</p>
+    {{else}}
+      {{^file_summaries}}
+        <p class="perfect">No problems detected. Good job!</p>
+      {{/file_summaries}}
+      {{#each file_summaries}}
+        <ul class="files">
+          <li class="file">
+            <ul class="errors">
+            <a href="{{this.file_url}}">{{this.filename}}</a>
+            {{#each this.errors}}
+              {{#if line_number}}
+              <li class="error"><a href="{{../../file_url}}#L{{this.line_number}}">Line {{this.line_number}}</a>: {{this.error_string}}</li>
+              {{/if}}
+            {{/each}}
+            </ul>
+          </li>
+        </ul>
+      {{/each}}
+    {{/if}}
     </div>
     <hr>
   </script>

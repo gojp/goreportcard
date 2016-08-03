@@ -18,7 +18,7 @@ func (c ErrCheck) Weight() float64 {
 
 // Percentage returns the percentage of .go files that pass gofmt
 func (c ErrCheck) Percentage() (float64, []FileSummary, error) {
-	return GoTool(c.Dir, c.Filenames, []string{"gometalinter", "--deadline=180s", "--disable-all", "--enable=errcheck"})
+	return GoTool(c.Dir, c.Filenames, []string{"gometalinter", "--deadline=180s", "--disable-all", "--linter='errch:errcheck {path}:PATH:LINE:MESSAGE'", "--enable=errch"})
 }
 
 // Description returns the description of gofmt

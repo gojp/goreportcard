@@ -67,6 +67,7 @@ type score struct {
 	FileSummaries []check.FileSummary `json:"file_summaries"`
 	Weight        float64             `json:"weight"`
 	Percentage    float64             `json:"percentage"`
+	Error         string              `json:"error"`
 }
 
 type checksResp struct {
@@ -185,15 +186,17 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		check.License{Dir: dir, Filenames: []string{}},
 		check.Misspell{Dir: dir, Filenames: filenames},
 		check.IneffAssign{Dir: dir, Filenames: filenames},
-		check.ErrCheck{Dir: dir, Filenames: filenames},
+		// check.ErrCheck{Dir: dir, Filenames: filenames}, // disable errcheck for now, too slow and not finalized
 	}
 
 	ch := make(chan score)
 	for _, c := range checks {
 		go func(c check.Check) {
 			p, summaries, err := c.Percentage()
+			errMsg := ""
 			if err != nil {
 				log.Printf("ERROR: (%s) %v", c.Name(), err)
+				errMsg = err.Error()
 			}
 			s := score{
 				Name:          c.Name(),
@@ -201,6 +204,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 				FileSummaries: summaries,
 				Weight:        c.Weight(),
 				Percentage:    p,
+				Error:         errMsg,
 			}
 			ch <- s
 		}(c)

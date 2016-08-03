@@ -97,6 +97,11 @@
     margin-top: 1em;
     font-weight: 600;
 }
+.results-details .error-msg {
+    margin-top: 1em;
+    font-weight: 600;
+    color: #C6761E;
+}
 #badge_dropdown {
     position: absolute;
     top: 40px;
