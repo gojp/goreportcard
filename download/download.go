@@ -77,7 +77,10 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 func Clean(path string) (string, error) {
 	importPath := trimUsername(trimScheme(path))
 	root, err := vcs.RepoRootForImportPath(importPath, true)
-	if root.Root == "" || root.Repo == "" {
+	if err != nil {
+		return "", err
+	}
+	if root != nil && (root.Root == "" || root.Repo == "") {
 		return root.Root, errors.New("Empty repo root")
 	}
 	return root.Root, err
