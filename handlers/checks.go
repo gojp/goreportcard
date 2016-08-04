@@ -4,19 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"regexp"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
 	humanize "github.com/dustin/go-humanize"
 	"github.com/gojp/goreportcard/check"
+	"github.com/gojp/goreportcard/download"
 )
 
 var reBadRepo = regexp.MustCompile(`package\s([\w\/\.]+)\: exit status \d+`)
@@ -81,77 +77,6 @@ type checksResp struct {
 	HumanizedLastRefresh string    `json:"humanized_last_refresh"`
 }
 
-func goGet(repo string, prevError string) error {
-	log.Printf("Go getting %q...", repo)
-	if err := os.Mkdir("repos", 0755); err != nil && !os.IsExist(err) {
-		return fmt.Errorf("could not create dir: %v", err)
-	}
-	d, err := filepath.Abs("repos")
-	if err != nil {
-		return fmt.Errorf("could not fetch absolute path: %v", err)
-	}
-
-	os.Setenv("GOPATH", d)
-	cmd := exec.Command("go", "get", "-d", "-u", repo)
-	cmd.Stdout = os.Stdout
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return fmt.Errorf("could not get stderr pipe: %v", err)
-	}
-
-	err = cmd.Start()
-	if err != nil {
-		return fmt.Errorf("could not start command: %v", err)
-	}
-
-	b, err := ioutil.ReadAll(stderr)
-	if err != nil {
-		return fmt.Errorf("could not read stderr: %v", err)
-	}
-
-	err = cmd.Wait()
-	errStr := string(b)
-
-	// we don't care if there are no buildable Go source files, we just need the source on disk
-	hadError := err != nil && !strings.Contains(errStr, "no buildable Go source files")
-
-	if hadError {
-		log.Println("Go get error log:", string(b))
-		if errStr != prevError {
-			// try again, this time deleting the cached directory, and also the
-			// package that caused the error in case our cache is stale
-			// (remote repository or one of its dependencices was force-pushed,
-			// replaced, etc)
-			err = os.RemoveAll(filepath.Join(d, "src", repo))
-			if err != nil {
-				return fmt.Errorf("could not delete repo: %v", err)
-			}
-
-			packageNames := reBadRepo.FindStringSubmatch(errStr)
-			if len(packageNames) >= 2 {
-				pkg := packageNames[1]
-				fp := filepath.Clean(filepath.Join(d, "src", pkg))
-				if strings.HasPrefix(fp, filepath.Join(d, "src")) {
-					// if the path is prefixed with the path to our
-					// cached repos, then it's safe to delete it.
-					// These precautions are here so that someone can't
-					// craft a malicious package name with .. in it
-					// and cause us to delete our server's root directory.
-					log.Println("Cleaning out rebased dependency:", fp)
-					err = os.RemoveAll(fp)
-					if err != nil {
-						return err
-					}
-				}
-			}
-			return goGet(repo, errStr)
-		}
-
-		return fmt.Errorf("could not run go get: %v", err)
-	}
-	return nil
-}
-
 func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	if !forceRefresh {
 		resp, err := getFromCache(repo)
@@ -165,10 +90,12 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	}
 
 	// fetch the repo and grade it
-	err := goGet(repo, "")
+	repoRoot, err := download.Download(repo, "repos/src")
 	if err != nil {
 		return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
 	}
+
+	repo = repoRoot.Root
 
 	dir := dirName(repo)
 	filenames, err := check.GoFiles(dir)

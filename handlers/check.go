@@ -9,9 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/tools/go/vcs"
-
 	"github.com/boltdb/bolt"
+	"github.com/gojp/goreportcard/download"
 )
 
 const (
@@ -26,29 +25,15 @@ const (
 	MetaBucket string = "meta"
 )
 
-// trimScheme removes a scheme (e.g. https://) from the URL for more
-// convenient pasting from browsers.
-func trimScheme(repo string) string {
-	schemeSep := "://"
-	schemeSepIdx := strings.Index(repo, schemeSep)
-	if schemeSepIdx > -1 {
-		return repo[schemeSepIdx+len(schemeSep):]
-	}
-
-	return repo
-}
-
 // CheckHandler handles the request for checking a repo
 func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	repo := trimScheme(r.FormValue("repo"))
-
-	repoRoot, err := vcs.RepoRootForImportPath(repo, true)
-	if err != nil || repoRoot.Root == "" || repoRoot.Repo == "" {
-		log.Println("Failed to create repoRoot:", repoRoot, err)
+	repo, err := download.Clean(r.FormValue("repo"))
+	if err != nil {
+		log.Println("ERROR: from download.Clean:", err)
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`Please enter a valid 'go get'-able package name`))
+		w.Write([]byte(`Could not download the repository: ` + err.Error()))
 		return
 	}
 
@@ -59,7 +44,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("ERROR: from newChecksResp:", err)
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`Could not go get the repository.`))
+		w.Write([]byte(`Could not download the repository.`))
 		return
 	}
 
