@@ -15,3 +15,6 @@ test:
 
 start:
 	 go run main.go
+
+misspell:
+	find . -name '*.go' | xargs misspell -error
