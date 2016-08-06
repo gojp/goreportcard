@@ -81,7 +81,7 @@ func Clean(path string) (string, error) {
 		return "", err
 	}
 	if root != nil && (root.Root == "" || root.Repo == "") {
-		return root.Root, errors.New("Empty repo root")
+		return root.Root, errors.New("empty repo root")
 	}
 	return root.Root, err
 }
