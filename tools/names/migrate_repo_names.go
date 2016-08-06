@@ -12,7 +12,6 @@ import (
 )
 
 const (
-	dbPath     string = "goreportcard.db"
 	repoBucket string = "repos"
 	metaBucket string = "meta"
 )
