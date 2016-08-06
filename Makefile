@@ -1,4 +1,7 @@
-all: lint test
+all: lint build test
+
+build:
+	go build ./...
 
 install: 
 	./scripts/make-install.sh
