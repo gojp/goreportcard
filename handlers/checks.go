@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"time"
 
@@ -14,8 +13,6 @@ import (
 	"github.com/gojp/goreportcard/check"
 	"github.com/gojp/goreportcard/download"
 )
-
-var reBadRepo = regexp.MustCompile(`package\s([\w\/\.]+)\: exit status \d+`)
 
 func dirName(repo string) string {
 	return fmt.Sprintf("repos/src/%s", repo)
