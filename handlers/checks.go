@@ -102,6 +102,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	if len(filenames) == 0 {
 		return checksResp{}, fmt.Errorf("no .go files found")
 	}
+
 	checks := []check.Check{
 		check.GoFmt{Dir: dir, Filenames: filenames},
 		check.GoVet{Dir: dir, Filenames: filenames},
