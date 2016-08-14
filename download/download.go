@@ -15,7 +15,7 @@ import (
 // It is forgiving in terms of the exact path given: the path may have
 // a scheme or username, which will be trimmed.
 func Download(path, dest string) (root *vcs.RepoRoot, err error) {
-	return download(path, dest, false)
+	return download(path, dest, true)
 }
 
 func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err error) {
