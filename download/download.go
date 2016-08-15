@@ -49,7 +49,10 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 		if err != nil && firstAttempt {
 			// may have been rebased; we delete the directory, then try one more time:
 			log.Printf("Failed to download %q (%v), trying again...", root.Repo, err.Error())
-			err = os.Remove(fullLocalPath)
+			err = os.RemoveAll(fullLocalPath)
+			if err != nil {
+				log.Println("Failed to delete path:", fullLocalPath, err)
+			}
 			return download(path, dest, false)
 		} else if err != nil {
 			return root, err
@@ -66,7 +69,7 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 	if err != nil && firstAttempt {
 		// may have been rebased; we delete the directory, then try one more time:
 		log.Printf("Failed to update %q (%v), trying again...", root.Repo, err.Error())
-		err = os.Remove(fullLocalPath)
+		err = os.RemoveAll(fullLocalPath)
 		return download(path, dest, false)
 	}
 	return root, err
