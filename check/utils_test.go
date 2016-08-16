@@ -6,13 +6,18 @@ import (
 )
 
 func TestGoFiles(t *testing.T) {
-	files, err := GoFiles("testfiles/")
+	files, skipped, err := GoFiles("testfiles/")
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := []string{"testfiles/a.go", "testfiles/b.go", "testfiles/c.go"}
 	if !reflect.DeepEqual(files, want) {
 		t.Errorf("GoFiles(%q) = %v, want %v", "testfiles/", files, want)
+	}
+
+	wantSkipped := []string{"testfiles/a.pb.go", "testfiles/a.pb.gw.go", "testfiles/d.go"}
+	if !reflect.DeepEqual(skipped, wantSkipped) {
+		t.Errorf("GoFiles(%q) skipped = %v, want %v", "testfiles/", skipped, wantSkipped)
 	}
 }
 

@@ -95,13 +95,19 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	repo = repoRoot.Root
 
 	dir := dirName(repo)
-	filenames, err := check.GoFiles(dir)
+	filenames, skipped, err := check.GoFiles(dir)
 	if err != nil {
 		return checksResp{}, fmt.Errorf("could not get filenames: %v", err)
 	}
 	if len(filenames) == 0 {
 		return checksResp{}, fmt.Errorf("no .go files found")
 	}
+
+	err = check.RenameFiles(skipped)
+	if err != nil {
+		log.Println("Could not remove files:", err)
+	}
+	defer check.RevertFiles(skipped)
 
 	checks := []check.Check{
 		check.GoFmt{Dir: dir, Filenames: filenames},
