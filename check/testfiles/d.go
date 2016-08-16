@@ -1,2 +1,0 @@
-// generated code
-package testfiles

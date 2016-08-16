@@ -15,7 +15,7 @@ func TestGoFiles(t *testing.T) {
 		t.Errorf("GoFiles(%q) = %v, want %v", "testfiles/", files, want)
 	}
 
-	wantSkipped := []string{"testfiles/a.pb.go", "testfiles/a.pb.gw.go", "testfiles/d.go"}
+	wantSkipped := []string{"testfiles/a.pb.go", "testfiles/a.pb.gw.go"}
 	if !reflect.DeepEqual(skipped, wantSkipped) {
 		t.Errorf("GoFiles(%q) skipped = %v, want %v", "testfiles/", skipped, wantSkipped)
 	}
