@@ -20,4 +20,4 @@ start-dev:
 	 go run main.go -dev
 
 misspell:
-	find . -name '*.go' | xargs misspell -error
+	find . -name '*.go' -not -path './vendor/*' | xargs misspell -error
