@@ -68,5 +68,7 @@ func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string, dev bool)
 		return
 	}
 
+	w.Header().Set("Cache-control", "no-store, no-cache, must-revalidate")
+
 	http.Redirect(w, r, badgeURL(resp.Grade, style, dev), http.StatusTemporaryRedirect)
 }
