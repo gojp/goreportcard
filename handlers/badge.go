@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 // Grade represents a grade returned by the server, which is normally
@@ -43,7 +44,7 @@ func grade(percentage float64) Grade {
 }
 
 func badgeURL(grade Grade, style string) string {
-	return fmt.Sprintf("https://goreportcard.com/assets/badges/%s_%s.svg", grade, style)
+	return fmt.Sprintf("https://goreportcard.com/assets/badges/%s_%s.svg", strings.ToLower(string(grade)), strings.ToLower(style))
 }
 
 // BadgeHandler handles fetching the badge images
