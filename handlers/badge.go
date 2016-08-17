@@ -43,12 +43,15 @@ func grade(percentage float64) Grade {
 	}
 }
 
-func badgeURL(grade Grade, style string) string {
+func badgeURL(grade Grade, style string, dev bool) string {
+	if dev {
+		return fmt.Sprintf("http://localhost:8000/assets/badges/%s_%s.svg", strings.ToLower(string(grade)), strings.ToLower(style))
+	}
 	return fmt.Sprintf("https://goreportcard.com/assets/badges/%s_%s.svg", strings.ToLower(string(grade)), strings.ToLower(style))
 }
 
 // BadgeHandler handles fetching the badge images
-func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string) {
+func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string, dev bool) {
 	name := fmt.Sprintf("%s", repo)
 	resp, err := newChecksResp(name, false)
 
@@ -65,5 +68,5 @@ func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string) {
 		return
 	}
 
-	http.Redirect(w, r, badgeURL(resp.Grade, style), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, badgeURL(resp.Grade, style, dev), http.StatusTemporaryRedirect)
 }
