@@ -43,17 +43,7 @@ func grade(percentage float64) Grade {
 }
 
 func badgeURL(grade Grade, style string) string {
-	colorMap := map[Grade]string{
-		GradeAPlus: "brightgreen",
-		GradeA:     "brightgreen",
-		GradeB:     "yellowgreen",
-		GradeC:     "yellow",
-		GradeD:     "orange",
-		GradeE:     "red",
-		GradeF:     "red",
-	}
-	url := fmt.Sprintf("https://img.shields.io/badge/go_report-%s-%s.svg?style=%s", grade, colorMap[grade], style)
-	return url
+	return fmt.Sprintf("https://goreportcard.com/assets/badges/%s_%s.svg", grade, style)
 }
 
 // BadgeHandler handles fetching the badge images
