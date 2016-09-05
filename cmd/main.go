@@ -8,16 +8,7 @@ import (
 	"github.com/gojp/goreportcard/handlers"
 )
 
-type score struct {
-	Name          string              `json:"name"`
-	Description   string              `json:"description"`
-	FileSummaries []check.FileSummary `json:"file_summaries"`
-	Weight        float64             `json:"weight"`
-	Percentage    float64             `json:"percentage"`
-	Error         string              `json:"error"`
-}
-
-var allScores []score
+var allScores []handlers.Score
 
 func main() {
 	dir := "."
@@ -45,7 +36,7 @@ func main() {
 		check.IneffAssign{Dir: dir, Filenames: filenames},
 	}
 
-	ch := make(chan score)
+	ch := make(chan handlers.Score)
 	for _, c := range checks {
 		go func(c check.Check) {
 			p, summaries, err := c.Percentage()
@@ -54,7 +45,7 @@ func main() {
 				log.Printf("ERROR: (%s) %v", c.Name(), err)
 				errMsg = err.Error()
 			}
-			s := score{
+			s := handlers.Score{
 				Name:          c.Name(),
 				Description:   c.Description(),
 				FileSummaries: summaries,
