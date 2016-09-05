@@ -19,6 +19,7 @@ func (g GoFmt) Weight() float64 {
 // Percentage returns the percentage of .go files that pass gofmt
 func (g GoFmt) Percentage() (float64, []FileSummary, error) {
 	return GoTool(g.Dir, g.Filenames, []string{"gometalinter", "--deadline=180s", "--disable-all", "--enable=gofmt"})
+	// return GoFmtNative(g.Dir, g.Filenames)
 }
 
 // Description returns the description of gofmt
