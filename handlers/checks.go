@@ -54,6 +54,7 @@ func getFromCache(repo string) (checksResp, error) {
 	return resp, nil
 }
 
+// Score is the overall score for a given check
 type Score struct {
 	Name          string              `json:"name"`
 	Description   string              `json:"description"`
