@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go/format"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -193,6 +194,13 @@ func fileURL(dir, filename string) string {
 // GoTool runs a given go command (for example gofmt, go tool vet)
 // on a directory
 func GoTool(dir string, filenames, command []string) (float64, []FileSummary, error) {
+	// started := time.Now()
+	// temporary disabling of misspell as it's the slowest
+	// command right now
+	if strings.Contains(command[len(command)-1], "misspell") && len(filenames) > 1000 {
+		log.Println("disabling misspell on large repo...")
+		return 1, []FileSummary{}, nil
+	}
 	params := command[1:]
 	params = addSkipDirs(params)
 	params = append(params, dir+"/...")
@@ -283,6 +291,7 @@ outer:
 		return float64(lc-errors) / float64(lc), failed, nil
 	}
 
+	// log.Println("END: ", command, time.Now().Sub(started))
 	return float64(len(filenames)-len(failed)) / float64(len(filenames)), failed, nil
 }
 
