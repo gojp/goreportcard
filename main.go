@@ -92,7 +92,6 @@ func main() {
 	http.HandleFunc("/checks", handlers.CheckHandler)
 	http.HandleFunc("/report/", makeHandler("report", *dev, handlers.ReportHandler))
 	http.HandleFunc("/badge/", makeHandler("badge", *dev, handlers.BadgeHandler))
-	http.HandleFunc("/high_scores/", handlers.HighScoresHandler)
 	http.HandleFunc("/about/", handlers.AboutHandler)
 	http.HandleFunc("/", handlers.HomeHandler)
 
