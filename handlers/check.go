@@ -29,7 +29,9 @@ const (
 func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
+	ghost := r.FormValue("ghost") == "true"
 	repo, err := download.Clean(r.FormValue("repo"))
+
 	if err != nil {
 		log.Println("ERROR: from download.Clean:", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -142,7 +144,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 			return fmt.Errorf("meta bucket not found")
 		}
 
-		return updateRecentlyViewed(mb, repo)
+		return updateRecentlyViewed(mb, repo, ghost)
 	})
 
 	b, err := json.Marshal(map[string]string{"redirect": "/report/" + repo})
@@ -253,7 +255,19 @@ type recentItem struct {
 	Repo string
 }
 
-func updateRecentlyViewed(mb *bolt.Bucket, repo string) error {
+func updateRecentlyViewed(mb *bolt.Bucket, repo string, ghost bool) error {
+	if ghost {
+		/**
+		 * Hide repository from the recently generated list
+		 *
+		 * Allow the users to decide if a repository will be displayed in
+		 * the "Recently Generated" box. People might want to use the web
+		 * service to check their semi-private or experimental projects
+		 * but keep their existence in private.
+		 */
+		return nil
+	}
+
 	b := mb.Get([]byte("recent"))
 	if b == nil {
 		b, _ = json.Marshal([]recentItem{})
