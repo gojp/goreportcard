@@ -148,8 +148,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		HumanizedLastRefresh: humanize.Time(time.Now().UTC()),
 	}
 
-	var total float64
-	var totalWeight float64
+	var total, totalWeight float64
 	var issues = make(map[string]bool)
 	for i := 0; i < len(checks); i++ {
 		s := <-ch
