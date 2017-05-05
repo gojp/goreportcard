@@ -28,5 +28,7 @@ func (g GoCyclo) Description() string {
 The cyclomatic complexity of a function is calculated according to the following rules:
 
 1 is the base complexity of a function
-+1 for each 'if', 'for', 'case', '&&' or '||'`
++1 for each 'if', 'for', 'case', '&&' or '||'
+
+Go Report Card warns on functions with cyclomatic complexity > 15.`
 }
