@@ -191,6 +191,22 @@ func fileURL(dir, filename string) string {
 	return fileURL
 }
 
+func makeFilename(fn string) string {
+	sp := strings.Split(fn, "/")
+	switch {
+	case strings.HasPrefix(fn, "/github.com"):
+		if len(sp) > 3 {
+			return strings.Join(sp[3:], "/")
+		}
+	case strings.HasPrefix(fn, "/golang.org/x"):
+		if len(sp) > 3 {
+			return strings.Join(sp[3:], "/")
+		}
+	}
+
+	return fn
+}
+
 // GoTool runs a given go command (for example gofmt, go tool vet)
 // on a directory
 func GoTool(dir string, filenames, command []string) (float64, []FileSummary, error) {
@@ -240,14 +256,7 @@ outer:
 		fu := fileURL(dir, filename)
 		fs := fsMap[filename]
 		if fs.Filename == "" {
-			fs.Filename = filename
-			if strings.HasPrefix(filename, "/github.com") {
-				sp := strings.Split(filename, "/")
-				if len(sp) > 3 {
-					fs.Filename = strings.Join(sp[3:], "/")
-				}
-
-			}
+			fs.Filename = makeFilename(filename)
 			fs.FileURL = fu
 		}
 		err = fs.AddError(out.Text())
@@ -324,13 +333,7 @@ func GoFmtNative(dir string, filenames []string) (float64, []FileSummary, error)
 				if !bytes.Equal(b, g) {
 					filename := strings.TrimPrefix(f, "repos/src")
 					fs := FileSummary{}
-					fs.Filename = filename
-					if strings.HasPrefix(filename, "/github.com") {
-						sp := strings.Split(filename, "/")
-						if len(sp) > 3 {
-							fs.Filename = strings.Join(sp[3:], "/")
-						}
-					}
+					fs.Filename = makeFilename(filename)
 					fu := fileURL(dir, strings.TrimPrefix(f, "repos/src"))
 					fs.FileURL = fu
 					fs.Errors = append(fs.Errors, Error{1, "file is not gofmted"})
