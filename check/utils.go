@@ -171,6 +171,49 @@ func (fs *FileSummary) AddError(out string) error {
 	return nil
 }
 
+// borrowed from github.com/client9/gosupplychain
+// MIT LICENSE: https://github.com/client9/gosupplychain/blob/master/LICENSE
+func goPkgInToGitHub(name string) string {
+	dir := ""
+	var pkgversion string
+	var user string
+	parts := strings.Split(name, "/")
+	if len(parts) < 2 {
+		return ""
+	}
+	if parts[0] != "gopkg.in" {
+		return ""
+	}
+
+	idx := strings.Index(parts[1], ".")
+	if idx != -1 {
+		pkgversion = parts[1]
+		if len(parts) > 2 {
+			dir = "/" + strings.Join(parts[2:], "/")
+		}
+	} else {
+		user = parts[1]
+		pkgversion = parts[2]
+		if len(parts) > 3 {
+			dir = "/" + strings.Join(parts[3:], "/")
+		}
+	}
+	idx = strings.Index(pkgversion, ".")
+	if idx == -1 {
+		return ""
+	}
+	pkg := pkgversion[:idx]
+	if user == "" {
+		user = "go-" + pkg
+	}
+	version := pkgversion[idx+1:]
+	if version == "v0" {
+		version = "master"
+	}
+
+	return "https://github.com/" + user + "/" + pkg + "/blob/" + version + dir
+}
+
 func fileURL(dir, filename string) string {
 	var fileURL string
 	base := strings.TrimPrefix(dir, "repos/src/")
@@ -186,6 +229,10 @@ func fileURL(dir, filename string) string {
 			base = strings.Join(strings.Split(base, "/")[0:3], "/")
 		}
 		return fmt.Sprintf("https://%s/blob/master%s", base, strings.TrimPrefix(filename, "/"+base))
+	case strings.HasPrefix(base, "gopkg.in/"):
+		fmt.Println(goPkgInToGitHub(base))
+		fmt.Println(strings.TrimPrefix(filename, "/"+base))
+		return goPkgInToGitHub(base) + strings.TrimPrefix(filename, "/"+base)
 	}
 
 	return fileURL
@@ -199,6 +246,10 @@ func makeFilename(fn string) string {
 			return strings.Join(sp[3:], "/")
 		}
 	case strings.HasPrefix(fn, "/golang.org/x"):
+		if len(sp) > 3 {
+			return strings.Join(sp[3:], "/")
+		}
+	case strings.HasPrefix(fn, "/gopkg.in"):
 		if len(sp) > 3 {
 			return strings.Join(sp[3:], "/")
 		}
