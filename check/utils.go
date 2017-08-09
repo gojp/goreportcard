@@ -258,7 +258,8 @@ func makeFilename(fn string) string {
 	return fn
 }
 
-func generateFileSummaryMap(out *bufio.Scanner, dir string, fsMap map[string]FileSummary) error {
+func getFileSummaryMap(out *bufio.Scanner, dir string) (map[string]FileSummary, error) {
+	fsMap := make(map[string]FileSummary)
 outer:
 	for out.Scan() {
 		filename := strings.Split(out.Text(), ":")[0]
@@ -281,11 +282,11 @@ outer:
 		}
 		err := fs.AddError(out.Text())
 		if err != nil {
-			return err
+			return nil, err
 		}
 		fsMap[filename] = fs
 	}
-	return nil
+	return fsMap, nil
 }
 
 // GoTool runs a given go command (for example gofmt, go tool vet)
@@ -318,10 +319,9 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 	// the same file can appear multiple times out of order
 	// in the output, so we can't go line by line, have to store
 	// a map of filename to FileSummary
-	fsMap := map[string]FileSummary{}
 	var failed = []FileSummary{}
 
-	err = generateFileSummaryMap(out, dir, fsMap)
+	fsMap, err := getFileSummaryMap(out, dir)
 	if err != nil {
 		return 0, []FileSummary{}, err
 	}
