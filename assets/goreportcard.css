@@ -1,3 +1,16 @@
+.clearfix:before, .clearfix:after {
+    content: ' ';
+    display: table;
+}
+.clearfix:after {
+    clear: both;
+}
+.pull-left {
+    float: left;
+}
+.pull-right {
+    float: right;
+}
 .header .is-active {
     font-weight: bold;
 }
@@ -18,8 +31,22 @@
     min-width: 350px;
 }
 #check_form .btn-test {
-    margin-top: 1em;
+    margin-top: 0.5em;
     font-weight: 200;
+}
+.ghost-mode {
+    display: table;
+    font-size: 11px;
+    margin: 0 auto;
+    margin-top: 0.7em;
+}
+.ghost-mode input {
+    vertical-align: middle;
+}
+.ghost-mode span {
+    display: inline-block;
+    padding-left: 6px;
+    padding-top: 1px;
 }
 .header-item #check_form .input-box {
     padding: 3px;
