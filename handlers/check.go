@@ -59,6 +59,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		log.Println("Failed to open bolt database: ", err)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 	defer db.Close()
@@ -106,27 +107,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				return err
 			}
-
-			// fetch meta-bucket
-			mb := tx.Bucket([]byte(MetaBucket))
-			if mb == nil {
-				return fmt.Errorf("high score bucket not found")
-			}
-
-			// update total repos count
-			if isNewRepo {
-				err = updateReposCount(mb, resp, repo)
-				if err != nil {
-					return err
-				}
-			}
-
-			err = updateHighScores(mb, resp, repo)
-			if err != nil {
-				return err
-			}
-
-			return updateStats(mb, resp, repo, oldScore)
+			return updateMetadata(tx, resp, repo, isNewRepo, oldScore)
 		})
 
 		if err != nil {
@@ -135,13 +116,9 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	err = db.Update(func(tx *bolt.Tx) error {
+	db.Update(func(tx *bolt.Tx) error {
 		// fetch meta-bucket
 		mb := tx.Bucket([]byte(MetaBucket))
-		if mb == nil {
-			return fmt.Errorf("meta bucket not found")
-		}
-
 		return updateRecentlyViewed(mb, repo)
 	})
 
@@ -204,7 +181,7 @@ func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
 	return nil
 }
 
-func updateStats(mb *bolt.Bucket, resp checksResp, repo string, oldScore *float64) error {
+func updateStats(mb *bolt.Bucket, resp checksResp, oldScore *float64) error {
 	scores := make([]int, 101, 101)
 	statsBytes := mb.Get([]byte("stats"))
 	if statsBytes == nil {
@@ -254,6 +231,9 @@ type recentItem struct {
 }
 
 func updateRecentlyViewed(mb *bolt.Bucket, repo string) error {
+	if mb == nil {
+		return fmt.Errorf("meta bucket not found")
+	}
 	b := mb.Get([]byte("recent"))
 	if b == nil {
 		b, _ = json.Marshal([]recentItem{})
@@ -283,4 +263,24 @@ func updateRecentlyViewed(mb *bolt.Bucket, repo string) error {
 	}
 
 	return nil
+}
+
+func updateMetadata(tx *bolt.Tx, resp checksResp, repo string, isNewRepo bool, oldScore *float64) error {
+	// fetch meta-bucket
+	mb := tx.Bucket([]byte(MetaBucket))
+	if mb == nil {
+		return fmt.Errorf("high score bucket not found")
+	}
+	// update total repos count
+	if isNewRepo {
+		err := updateReposCount(mb, resp, repo)
+		if err != nil {
+			return err
+		}
+	}
+	err := updateHighScores(mb, resp, repo)
+	if err != nil {
+		return err
+	}
+	return updateStats(mb, resp, oldScore)
 }
