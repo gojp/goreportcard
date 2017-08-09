@@ -54,7 +54,8 @@ func getFromCache(repo string) (checksResp, error) {
 	return resp, nil
 }
 
-type score struct {
+// Score is the overall score for a given check
+type Score struct {
 	Name          string              `json:"name"`
 	Description   string              `json:"description"`
 	FileSummaries []check.FileSummary `json:"file_summaries"`
@@ -64,7 +65,7 @@ type score struct {
 }
 
 type checksResp struct {
-	Checks               []score   `json:"checks"`
+	Checks               []Score   `json:"checks"`
 	Average              float64   `json:"average"`
 	Grade                Grade     `json:"grade"`
 	Files                int       `json:"files"`
@@ -81,7 +82,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 			// just log the error and continue
 			log.Println(err)
 		} else {
-			resp.Grade = grade(resp.Average * 100) // grade is not stored for some repos, yet
+			resp.Grade = PercentToGrade(resp.Average * 100) // grade is not stored for some repos, yet
 			return resp, nil
 		}
 	}
@@ -120,7 +121,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		// check.ErrCheck{Dir: dir, Filenames: filenames}, // disable errcheck for now, too slow and not finalized
 	}
 
-	ch := make(chan score)
+	ch := make(chan Score)
 	for _, c := range checks {
 		go func(c check.Check) {
 			p, summaries, err := c.Percentage()
@@ -129,7 +130,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 				log.Printf("ERROR: (%s) %v", c.Name(), err)
 				errMsg = err.Error()
 			}
-			s := score{
+			s := Score{
 				Name:          c.Name(),
 				Description:   c.Description(),
 				FileSummaries: summaries,
@@ -164,13 +165,13 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	sort.Sort(ByWeight(resp.Checks))
 	resp.Average = total
 	resp.Issues = len(issues)
-	resp.Grade = grade(total * 100)
+	resp.Grade = PercentToGrade(total * 100)
 
 	return resp, nil
 }
 
 // ByWeight implements sorting for checks by weight descending
-type ByWeight []score
+type ByWeight []Score
 
 func (a ByWeight) Len() int           { return len(a) }
 func (a ByWeight) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
