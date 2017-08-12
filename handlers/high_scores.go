@@ -31,7 +31,7 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	count, scores, stats := 0, &scoreHeap{}, make([]int, 101, 101)
+	count, scores, stats := 0, &ScoreHeap{}, make([]int, 101, 101)
 	err = db.View(func(tx *bolt.Tx) error {
 		hsb := tx.Bucket([]byte(MetaBucket))
 		if hsb == nil {
@@ -39,7 +39,7 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		scoreBytes := hsb.Get([]byte("scores"))
 		if scoreBytes == nil {
-			scoreBytes, err = json.Marshal([]scoreHeap{})
+			scoreBytes, err = json.Marshal([]ScoreHeap{})
 			if err != nil {
 				return err
 			}

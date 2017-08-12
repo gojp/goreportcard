@@ -6,20 +6,20 @@ type scoreItem struct {
 	Files int     `json:"files"`
 }
 
-// An scoreHeap is a min-heap of ints.
-type scoreHeap []scoreItem
+// An ScoreHeap is a min-heap of ints.
+type ScoreHeap []scoreItem
 
-func (h scoreHeap) Len() int           { return len(h) }
-func (h scoreHeap) Less(i, j int) bool { return h[i].Score < h[j].Score }
-func (h scoreHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+func (h ScoreHeap) Len() int           { return len(h) }
+func (h ScoreHeap) Less(i, j int) bool { return h[i].Score < h[j].Score }
+func (h ScoreHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 
-func (h *scoreHeap) Push(x interface{}) {
+func (h *ScoreHeap) Push(x interface{}) {
 	// Push and Pop use pointer receivers because they modify the slice's length,
 	// not just its contents.
 	*h = append(*h, x.(scoreItem))
 }
 
-func (h *scoreHeap) Pop() interface{} {
+func (h *ScoreHeap) Pop() interface{} {
 	old := *h
 	n := len(old)
 	x := old[n-1]

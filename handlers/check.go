@@ -141,9 +141,9 @@ func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
 	// start updating high score list
 	scoreBytes := mb.Get([]byte("scores"))
 	if scoreBytes == nil {
-		scoreBytes, _ = json.Marshal([]scoreHeap{})
+		scoreBytes, _ = json.Marshal([]ScoreHeap{})
 	}
-	scores := &scoreHeap{}
+	scores := &ScoreHeap{}
 	json.Unmarshal(scoreBytes, scores)
 
 	heap.Init(scores)
