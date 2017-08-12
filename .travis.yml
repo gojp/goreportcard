@@ -9,4 +9,4 @@ install:
 
 script:
   - make lint
-  - go test -cover ./...
+  - make test
