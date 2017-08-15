@@ -180,7 +180,8 @@
       var $alert = $(html);
       $alert.find(".delete").on("click", function(){
           $(this).closest(".notification").remove();
-      })
+      });
+      $("#notifications").children().remove();
       $alert.hide();
       $alert.appendTo("#notifications");
       $alert.slideDown();
@@ -192,9 +193,15 @@
           url = $form.attr("action"),
           method = $form.attr("method"),
           data = {};
-      $("#check_form .button").addClass("is-loading");
-      $form.serializeArray().map(function(x){data[x.name] = x.value;});
-      $.ajax({
+        $form.serializeArray().map(function(x){data[x.name] = x.value;});
+
+        if(!data["repo"]) {
+            alertMessage("Input cannot be empty. Please enter a valid repository path");
+            return false;
+        }
+        $("#check_form .button").addClass("is-loading");
+
+        $.ajax({
           type: getRequest ? "GET" : "POST",
           url: url,
           data: data,
