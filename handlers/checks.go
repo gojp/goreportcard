@@ -15,7 +15,7 @@ import (
 )
 
 func dirName(repo string) string {
-	return fmt.Sprintf("repos/src/%s", repo)
+	return fmt.Sprintf("_repos/src/%s", repo)
 }
 
 func getFromCache(repo string) (checksResp, error) {
@@ -87,7 +87,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	}
 
 	// fetch the repo and grade it
-	repoRoot, err := download.Download(repo, "repos/src")
+	repoRoot, err := download.Download(repo, "_repos/src")
 	if err != nil {
 		return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
 	}
