@@ -48,7 +48,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 			j--
 		}
 
-		t := template.Must(template.New("home.html").Delims("[[", "]]").ParseFiles("templates/home.html"))
+		t := template.Must(template.New("home.html").Delims("[[", "]]").ParseFiles("templates/home.html", "templates/footer.html"))
 		t.Execute(w, map[string]interface{}{
 			"Recent":               recentRepos,
 			"google_analytics_key": googleAnalyticsKey,
