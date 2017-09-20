@@ -60,6 +60,9 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 	} else {
 		log.Println("Create", root.Repo)
 
+		if root.VCS.Name == "Git" {
+			root.VCS.CreateCmd = "clone --depth 1 {repo} {dir}"
+		}
 		err = root.VCS.Create(fullLocalPath, root.Repo)
 		if err != nil {
 			return root, err
