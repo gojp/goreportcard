@@ -199,7 +199,8 @@
       return percentage == false;
     });
 
-    var allowedLinkDomains = ["github.com/", "bitbucket.org/", "golang.org/"];
+    var allowedLinkDomains = ["https://github.com/", "https://bitbucket.org/",
+      "https://golang.org/", "https://go.googlesource.com/"];
 
     // initialize handlebars templates
     var templates = {};
@@ -220,8 +221,8 @@
         var $resultsDetails = $('.results-details').empty();
 
         for (var i = 0; i < allowedLinkDomains.length; i++) {
-          if (data.repo.indexOf(allowedLinkDomains[i]) == 0) {
-            data.link = "https://" + data.repo;
+          if (data.resolvedRepo.indexOf(allowedLinkDomains[i]) == 0) {
+            data.link = data.resolvedRepo;
           }
         }
         data.use_an = data.grade == "A" || data.grade == "A+";

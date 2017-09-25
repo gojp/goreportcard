@@ -70,6 +70,7 @@ type checksResp struct {
 	Files                int       `json:"files"`
 	Issues               int       `json:"issues"`
 	Repo                 string    `json:"repo"`
+	ResolvedRepo         string    `json:"resolvedRepo"`
 	LastRefresh          time.Time `json:"last_refresh"`
 	HumanizedLastRefresh string    `json:"humanized_last_refresh"`
 }
@@ -143,6 +144,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 
 	resp := checksResp{
 		Repo:                 repo,
+		ResolvedRepo:         repoRoot.Repo,
 		Files:                len(filenames),
 		LastRefresh:          time.Now().UTC(),
 		HumanizedLastRefresh: humanize.Time(time.Now().UTC()),
