@@ -17,8 +17,10 @@ import (
 )
 
 var (
-	addr = flag.String("http", ":8000", "HTTP listen address")
-	dev  = flag.Bool("dev", false, "dev mode")
+	addr        = flag.String("http", ":8000", "HTTP listen address")
+	metricsAddr = flag.String("metrics", ":8001", "The address to listen on for metric-related HTTP requests.")
+
+	dev = flag.Bool("dev", false, "dev mode")
 )
 
 func makeHandler(name string, dev bool, fn func(http.ResponseWriter, *http.Request, string, bool)) http.HandlerFunc {
