@@ -309,6 +309,16 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 		return 0, []FileSummary{}, err
 	}
 
+	const goPATH = "GOPATH"
+	wd, err := os.Getwd()
+	if err == nil {
+		oldpath := os.Getenv(goPATH)
+		defer os.Setenv(goPATH, oldpath)
+		os.Setenv(goPATH, filepath.Join(wd, "_repos"))
+	} else {
+		log.Fatal("ERROR: could not obtain current work directory: ", err)
+	}
+
 	err = cmd.Start()
 	if err != nil {
 		return 0, []FileSummary{}, err
