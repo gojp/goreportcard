@@ -9,8 +9,8 @@ import (
 )
 
 func main() {
-	repoSrc := filepath.Join("_repos","src")
-	files, err := ioutil.ReadDir(repoSrc")
+	repoSrc := filepath.Join("_repos", "src")
+	files, err := ioutil.ReadDir(repoSrc)
 	if err != nil {
 		log.Fatal(err)
 	}
