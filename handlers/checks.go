@@ -49,7 +49,8 @@ func getFromCache(repo string) (checksResp, error) {
 	}
 
 	resp.LastRefresh = resp.LastRefresh.UTC()
-	resp.HumanizedLastRefresh = humanize.Time(resp.LastRefresh.UTC())
+	resp.LastRefreshFormatted = resp.LastRefresh.Format(time.UnixDate)
+	resp.LastRefreshHumanized = humanize.Time(resp.LastRefresh.UTC())
 
 	return resp, nil
 }
@@ -72,7 +73,8 @@ type checksResp struct {
 	Repo                 string    `json:"repo"`
 	ResolvedRepo         string    `json:"resolvedRepo"`
 	LastRefresh          time.Time `json:"last_refresh"`
-	HumanizedLastRefresh string    `json:"humanized_last_refresh"`
+	LastRefreshFormatted string    `json:"formatted_last_refresh"`
+	LastRefreshHumanized string    `json:"humanized_last_refresh"`
 }
 
 func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
@@ -142,12 +144,14 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		}(c)
 	}
 
+	t := time.Now().UTC()
 	resp := checksResp{
 		Repo:                 repo,
 		ResolvedRepo:         repoRoot.Repo,
 		Files:                len(filenames),
-		LastRefresh:          time.Now().UTC(),
-		HumanizedLastRefresh: humanize.Time(time.Now().UTC()),
+		LastRefresh:          t,
+		LastRefreshFormatted: t.Format(time.UnixDate),
+		LastRefreshHumanized: humanize.Time(t),
 	}
 
 	var total, totalWeight float64
