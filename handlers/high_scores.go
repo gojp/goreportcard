@@ -4,7 +4,6 @@ import (
 	"container/heap"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"time"
@@ -71,8 +70,11 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	funcs := template.FuncMap{"add": add, "formatScore": formatScore}
-	t := template.Must(template.New("high_scores.html").Delims("[[", "]]").Funcs(funcs).ParseFiles("templates/high_scores.html", "templates/footer.html"))
+	t := parse(tmplScores,
+		map[string]interface{}{ // template.FuncMap
+			"add":         add,
+			"formatScore": formatScore,
+		})
 
 	sortedScores := make([]scoreItem, len(*scores))
 	for i := range sortedScores {

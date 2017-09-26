@@ -47,6 +47,27 @@ Go Report Card is an open source project run by volunteers, and contributions ar
 
 The code is licensed under the permissive Apache v2.0 licence. This means you can do what you like with the software, as long as you include the required notices. [Read this](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)) for a summary.
 
-### Notes
+### MS Windows
 
-We don't support this on Windows since we have no way to test it on Windows.
+Our users reported: Go Report Card works very well on Windows.
+You just run it is as usual (no need for the scripts).
+
+- You ***must*** have [`gometalinter`]() installed and available in Your `%path%`
+
+```
+go get github.com/alecthomas/gometalinter
+go install github.com/alecthomas/gometalinter
+```
+
+- You *may* have the `wc` word count unix tool installed and available in Your `%path%` (e.g. from GnuWin)
+
+- You ***must*** have the subdiretories `assets` and `templates` directly below Your `goreportcard.exe` (use `xcopy` or `mklink /D`)
+
+- Note: The database file `goreportcard.db` and the subdirectory `_repos` for the repository cache are created upon first start.
+
+- You ***must*** start `goreportcard.exe` from it's directory as current directory, so he can find his data.
+
+If You have any [severe issue](https://github.com/gojp/goreportcard/issues), members of our community such as [`@GoLangsam`](https://github.com/GoLangsam) will try to help.
+
+Note: As we (the original authors) have no way to test it on Windows, we do not support this OS personally.
+

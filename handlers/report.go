@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"flag"
-	"html/template"
 )
 
 var domain = flag.String("domain", "goreportcard.com", "Domain used for your goreportcard installation")
@@ -15,7 +14,7 @@ var googleAnalyticsKey = flag.String("google_analytics_key", "UA-58936835-1", "G
 // ReportHandler handles the report page
 func ReportHandler(w http.ResponseWriter, r *http.Request, repo string, dev bool) {
 	log.Printf("Displaying report: %q", repo)
-	t := template.Must(template.New("report.html").Delims("[[", "]]").ParseFiles("templates/report.html", "templates/footer.html"))
+
 	resp, err := getFromCache(repo)
 	needToLoad := false
 	if err != nil {
@@ -30,6 +29,7 @@ func ReportHandler(w http.ResponseWriter, r *http.Request, repo string, dev bool
 		return
 	}
 
+	t := parse(tmplReport)
 	t.Execute(w, map[string]interface{}{
 		"repo":                 repo,
 		"response":             string(respBytes),

@@ -78,8 +78,9 @@ func initDB() error {
 
 func main() {
 	flag.Parse()
-	if err := os.MkdirAll("_repos/src/github.com", 0755); err != nil && !os.IsExist(err) {
-		log.Fatal("ERROR: could not create repos dir: ", err)
+	repoRoot := handlers.DirName("github.com")
+	if err := os.MkdirAll(repoRoot, 0755); err != nil && !os.IsExist(err) {
+		log.Fatal("ERROR: could not create repos dir: ", repoRoot, err)
 	}
 
 	// initialize database

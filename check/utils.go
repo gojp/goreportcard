@@ -66,7 +66,7 @@ func GoFiles(dir string) (filenames, skipped []string, err error) {
 		return nil
 	}
 
-	err = filepath.Walk(dir, visit)
+	err = filepath.Walk(filepath.FromSlash(dir), visit)
 
 	return filenames, skipped, err
 }

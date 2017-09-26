@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"path/filepath"
 	"sort"
 	"time"
 
@@ -14,8 +15,12 @@ import (
 	"github.com/gojp/goreportcard/download"
 )
 
-func dirName(repo string) string {
-	return fmt.Sprintf("_repos/src/%s", repo)
+// RepoRoot - the (relative) filepath for the repositories
+const RepoRoot = "_repos"
+
+// DirName - the (relative) filepath to the sources of a given repository path
+func DirName(repo string) string {
+	return filepath.Join(RepoRoot, "src", filepath.FromSlash(repo))
 }
 
 func getFromCache(repo string) (checksResp, error) {
@@ -88,14 +93,14 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	}
 
 	// fetch the repo and grade it
-	repoRoot, err := download.Download(repo, "_repos/src")
+	repoRoot, err := download.Download(repo, DirName(""))
 	if err != nil {
 		return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
 	}
 
 	repo = repoRoot.Root
 
-	dir := dirName(repo)
+	dir := DirName(repo)
 	filenames, skipped, err := check.GoFiles(dir)
 	if err != nil {
 		return checksResp{}, fmt.Errorf("could not get filenames: %v", err)
