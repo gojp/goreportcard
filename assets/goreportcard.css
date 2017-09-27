@@ -1,3 +1,8 @@
+time {
+    border-bottom: 1px dashed;
+    line-height: 1.5em;
+    cursor: pointer;
+}
 .header .is-active {
     font-weight: bold;
 }

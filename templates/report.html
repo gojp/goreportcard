@@ -159,7 +159,10 @@
     <hr>
   </script>
   <script id="template-lastrefresh" type="text/x-handlebars-template">
-  <p>Last refresh: <span title={{last_refresh}}>{{humanized_last_refresh}}</span></p>
+  <div title="{{formatted_last_refresh}}">
+    Last refresh:
+    <time datetime="{{last_refresh}}">{{humanized_last_refresh}}</time>
+  </div>
   <br>
   <p><a class="refresh-button button" href=""><strong>Refresh now</strong></a></p>
   </script>
