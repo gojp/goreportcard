@@ -49,25 +49,6 @@ The code is licensed under the permissive Apache v2.0 licence. This means you ca
 
 ### MS Windows
 
-Our users reported: Go Report Card works very well on Windows.
-You just run it is as usual (no need for the scripts).
-
-- You ***must*** have [`gometalinter`]() installed and available in Your `%path%`
-
-```
-go get github.com/alecthomas/gometalinter
-go install github.com/alecthomas/gometalinter
-```
-
-- You *may* have the `wc` word count unix tool installed and available in Your `%path%` (e.g. from GnuWin)
-
-- You ***must*** have the subdiretories `assets` and `templates` directly below Your `goreportcard.exe` (use `xcopy` or `mklink /D`)
-
-- Note: The database file `goreportcard.db` and the subdirectory `_repos` for the repository cache are created upon first start.
-
-- You ***must*** start `goreportcard.exe` from it's directory as current directory, so he can find his data.
-
-If You have any [severe issue](https://github.com/gojp/goreportcard/issues), members of our community such as [`@GoLangsam`](https://github.com/GoLangsam) will try to help.
+Our users reported: Go Report Card operates very well on Windows. See [here](windows.md) for details.
 
 Note: As we (the original authors) have no way to test it on Windows, we do not support this OS personally.
-
