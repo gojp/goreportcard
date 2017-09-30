@@ -6,6 +6,38 @@ import (
 	"testing"
 )
 
+func TestMakeFilename(t *testing.T) {
+	makeFilenameTests := [...][2]string{
+		{"", ""}, // this should be "." - let's use filepath.Clean()
+
+		{".", "."},
+		{"..", ".."},
+		{"/", ""}, // this should be "/" - I'm confused!
+
+		{"./", "."},
+		{"./..", ".."},
+		{"./...", "..."},
+
+		{"a/b", "a/b"},
+		{"/a/b", "a/b"}, // this should be "/a/b" - I'm confused!
+
+		{"github.com/a/b", "github.com/a/b"},
+		{"golang.org/x/a/b", "golang.org/x/a/b"},
+		{"gopkg.in/a/b", "gopkg.in/a/b"},
+
+		{"/github.com/a/b", "a/b"},
+		{"/golang.org/x/a/b", "x/a/b"},
+		{"/gopkg.in/a/b", "a/b"},
+	}
+	for _, tt := range makeFilenameTests {
+		have := makeFilename(tt[0])
+		want := filepath.FromSlash(tt[1])
+		if have != want {
+			t.Errorf("makeFilename(%v): got %v, want %v", tt[0], have, want)
+		}
+	}
+}
+
 func TestGoFiles(t *testing.T) {
 	files, skipped, err := GoFiles(filepath.Join("testfiles", filepath.Clean("")))
 	if err != nil {
