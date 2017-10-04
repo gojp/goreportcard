@@ -7,6 +7,12 @@
 			"path": "github.com/boltdb/bolt",
 			"revision": "fa5367d20c994db73282594be0146ab221657943",
 			"revisionTime": "2017-09-07T20:20:52Z"
+		},
+		{
+			"checksumSHA1": "//chYfEE+It/PSs2tDubu+QLud0=",
+			"path": "github.com/dustin/go-humanize",
+			"revision": "79e699ccd02f240a1f1fbbdcee7e64c1c12e41aa",
+			"revisionTime": "2017-08-28T03:59:35Z"
 		}
 	],
 	"rootPath": "github.com/gojp/goreportcard"
