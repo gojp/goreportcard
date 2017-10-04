@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/gojp/goreportcard/check"
 	"github.com/gojp/goreportcard/handlers"
 
 	"github.com/boltdb/bolt"
@@ -18,6 +19,19 @@ var (
 	addr = flag.String("http", ":8000", "HTTP listen address")
 	dev  = flag.Bool("dev", false, "dev mode")
 )
+
+func createChecks(dir string, filenames []string) []check.Check {
+	return []check.Check{
+		check.GoFmt{Dir: dir, Filenames: filenames},
+		check.GoVet{Dir: dir, Filenames: filenames},
+		check.GoLint{Dir: dir, Filenames: filenames},
+		check.GoCyclo{Dir: dir, Filenames: filenames},
+		check.License{Dir: dir, Filenames: []string{}},
+		check.Misspell{Dir: dir, Filenames: filenames},
+		check.IneffAssign{Dir: dir, Filenames: filenames},
+		// check.ErrCheck{Dir: dir, Filenames: filenames}, // disable errcheck for now, too slow and not finalized
+	}
+}
 
 func makeHandler(name string, dev bool, fn func(http.ResponseWriter, *http.Request, string, bool)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -89,7 +103,7 @@ func main() {
 
 	http.HandleFunc("/assets/", handlers.AssetsHandler)
 	http.HandleFunc("/favicon.ico", handlers.FaviconHandler)
-	http.HandleFunc("/checks", handlers.CheckHandler)
+	http.HandleFunc("/checks", handlers.NewCheckHandler(createChecks))
 	http.HandleFunc("/report/", makeHandler("report", *dev, handlers.ReportHandler))
 	http.HandleFunc("/badge/", makeHandler("badge", *dev, handlers.BadgeHandler))
 	http.HandleFunc("/high_scores/", handlers.HighScoresHandler)

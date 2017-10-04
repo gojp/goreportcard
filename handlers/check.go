@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+	"github.com/gojp/goreportcard/check"
 	"github.com/gojp/goreportcard/download"
 )
 
@@ -25,8 +26,24 @@ const (
 	MetaBucket string = "meta"
 )
 
+var createChecks func(string, []string) []check.Check
+
+func createNoChecks(string, []string) []check.Check {
+	return []check.Check{}
+}
+
+// NewCheckHandler registers a callback function for creating checks on a per request basis
+// and returns the checkHandler function which handles the http check request
+func NewCheckHandler(createChecksCallback func(string, []string) []check.Check) func(http.ResponseWriter, *http.Request) {
+	createChecks = createChecksCallback
+	if createChecks == nil {
+		createChecks = createNoChecks
+	}
+	return checkHandler
+}
+
 // CheckHandler handles the request for checking a repo
-func CheckHandler(w http.ResponseWriter, r *http.Request) {
+func checkHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	repo, err := download.Clean(r.FormValue("repo"))

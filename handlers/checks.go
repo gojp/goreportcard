@@ -112,16 +112,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	}
 	defer check.RevertFiles(skipped)
 
-	checks := []check.Check{
-		check.GoFmt{Dir: dir, Filenames: filenames},
-		check.GoVet{Dir: dir, Filenames: filenames},
-		check.GoLint{Dir: dir, Filenames: filenames},
-		check.GoCyclo{Dir: dir, Filenames: filenames},
-		check.License{Dir: dir, Filenames: []string{}},
-		check.Misspell{Dir: dir, Filenames: filenames},
-		check.IneffAssign{Dir: dir, Filenames: filenames},
-		// check.ErrCheck{Dir: dir, Filenames: filenames}, // disable errcheck for now, too slow and not finalized
-	}
+	checks := createChecks(dir, filenames)
 
 	ch := make(chan score)
 	for _, c := range checks {
