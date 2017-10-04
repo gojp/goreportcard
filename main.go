@@ -12,6 +12,8 @@ import (
 	"github.com/gojp/goreportcard/handlers"
 
 	"github.com/boltdb/bolt"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -76,6 +78,42 @@ func initDB() error {
 	return err
 }
 
+// metrics provides functionality for monitoring the application status
+type metrics struct {
+	responseTimes *prometheus.SummaryVec
+}
+
+// setupMetrics creates custom Prometheus metrics for monitoring
+// application statistics.
+func setupMetrics() *metrics {
+	m := &metrics{}
+	m.responseTimes = prometheus.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Name: "response_time_ms",
+			Help: "Time to serve requests",
+		},
+		[]string{"endpoint"},
+	)
+
+	prometheus.MustRegister(m.responseTimes)
+	return m
+}
+
+// recordDuration records the length of a request from start to now
+func (m metrics) recordDuration(start time.Time, name string) {
+	elapsed := time.Since(start)
+	m.responseTimes.WithLabelValues(name).Observe(float64(elapsed.Nanoseconds()))
+	log.Printf("Served %s in %s", name, elapsed)
+}
+
+// instrument adds metric instrumentation to the handler passed in as argument
+func (m metrics) instrument(path string, h http.HandlerFunc) (string, http.HandlerFunc) {
+	return path, func(w http.ResponseWriter, r *http.Request) {
+		defer m.recordDuration(time.Now(), path)
+		h.ServeHTTP(w, r)
+	}
+}
+
 func main() {
 	flag.Parse()
 	if err := os.MkdirAll("_repos/src/github.com", 0755); err != nil && !os.IsExist(err) {
@@ -87,14 +125,18 @@ func main() {
 		log.Fatal("ERROR: could not open bolt db: ", err)
 	}
 
-	http.HandleFunc("/assets/", handlers.AssetsHandler)
-	http.HandleFunc("/favicon.ico", handlers.FaviconHandler)
-	http.HandleFunc("/checks", handlers.CheckHandler)
-	http.HandleFunc("/report/", makeHandler("report", *dev, handlers.ReportHandler))
-	http.HandleFunc("/badge/", makeHandler("badge", *dev, handlers.BadgeHandler))
-	http.HandleFunc("/high_scores/", handlers.HighScoresHandler)
-	http.HandleFunc("/about/", handlers.AboutHandler)
-	http.HandleFunc("/", handlers.HomeHandler)
+	m := setupMetrics()
+
+	http.HandleFunc(m.instrument("/assets/", handlers.AssetsHandler))
+	http.HandleFunc(m.instrument("/favicon.ico", handlers.FaviconHandler))
+	http.HandleFunc(m.instrument("/checks", handlers.CheckHandler))
+	http.HandleFunc(m.instrument("/report/", makeHandler("report", *dev, handlers.ReportHandler)))
+	http.HandleFunc(m.instrument("/badge/", makeHandler("badge", *dev, handlers.BadgeHandler)))
+	http.HandleFunc(m.instrument("/high_scores/", handlers.HighScoresHandler))
+	http.HandleFunc(m.instrument("/about/", handlers.AboutHandler))
+	http.HandleFunc(m.instrument("/", handlers.HomeHandler))
+
+	http.Handle("/metrics", promhttp.Handler())
 
 	log.Printf("Running on %s ...", *addr)
 	log.Fatal(http.ListenAndServe(*addr, nil))
