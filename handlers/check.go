@@ -76,7 +76,20 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		log.Println(err)
+		log.Println("ERROR getting repo from repo bucket:", err)
+	}
+
+	// get the old score and store it for stats updating
+	var oldScore *float64
+	if isNewRepo = oldRepoBytes == nil; !isNewRepo {
+		oldRepo := checksResp{}
+		err = json.Unmarshal(oldRepoBytes, &oldRepo)
+		if err != nil {
+			log.Println("ERROR: could not unmarshal json:", err)
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		oldScore = &oldRepo.Average
 	}
 
 	// if this is a new repo, or the user force-refreshed, update the cache
@@ -94,7 +107,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				return err
 			}
-			return updateMetadata(tx, resp, repo, isNewRepo)
+			return updateMetadata(tx, resp, repo, isNewRepo, oldScore)
 		})
 
 		if err != nil {
@@ -227,7 +240,32 @@ func updateRecentlyViewed(mb *bolt.Bucket, repo string) error {
 	return nil
 }
 
-func updateMetadata(tx *bolt.Tx, resp checksResp, repo string, isNewRepo bool) error {
+func updateStats(mb *bolt.Bucket, resp checksResp, oldScore *float64) error {
+	scores := make([]int, 101, 101)
+	statsBytes := mb.Get([]byte("stats"))
+	if statsBytes == nil {
+		statsBytes, _ = json.Marshal(scores)
+	}
+	err := json.Unmarshal(statsBytes, &scores)
+	if err != nil {
+		return err
+	}
+	scores[int(resp.Average*100)]++
+	if oldScore != nil {
+		scores[int(*oldScore*100)]--
+	}
+	newStats, err := json.Marshal(scores)
+	if err != nil {
+		return err
+	}
+	err = mb.Put([]byte("stats"), newStats)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func updateMetadata(tx *bolt.Tx, resp checksResp, repo string, isNewRepo bool, oldScore *float64) error {
 	// fetch meta-bucket
 	mb := tx.Bucket([]byte(MetaBucket))
 	if mb == nil {
@@ -241,5 +279,10 @@ func updateMetadata(tx *bolt.Tx, resp checksResp, repo string, isNewRepo bool) e
 		}
 	}
 
-	return updateHighScores(mb, resp, repo)
+	err := updateHighScores(mb, resp, repo)
+	if err != nil {
+		return err
+	}
+
+	return updateStats(mb, resp, oldScore)
 }
