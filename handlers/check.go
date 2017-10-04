@@ -55,18 +55,6 @@ func CheckRepo(db *bolt.DB, repo string, forceRefresh bool) error {
 		log.Println(err)
 	}
 
-	// get the old score and store it for stats updating
-	var oldScore *float64
-	if isNewRepo = oldRepoBytes == nil; !isNewRepo {
-		oldRepo := checksResp{}
-		err = json.Unmarshal(oldRepoBytes, &oldRepo)
-		if err != nil {
-			log.Println("ERROR: could not unmarshal json:", err)
-			return err
-		}
-		oldScore = &oldRepo.Average
-	}
-
 	// if this is a new repo, or the user force-refreshed, update the cache
 	if isNewRepo || forceRefresh {
 		err = db.Update(func(tx *bolt.Tx) error {
@@ -82,7 +70,7 @@ func CheckRepo(db *bolt.DB, repo string, forceRefresh bool) error {
 			if err != nil {
 				return err
 			}
-			return updateMetadata(tx, resp, repo, isNewRepo, oldScore)
+			return updateMetadata(tx, resp, repo, isNewRepo)
 		})
 
 		if err != nil {
@@ -183,31 +171,6 @@ func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
 	return nil
 }
 
-func updateStats(mb *bolt.Bucket, resp checksResp, oldScore *float64) error {
-	scores := make([]int, 101, 101)
-	statsBytes := mb.Get([]byte("stats"))
-	if statsBytes == nil {
-		statsBytes, _ = json.Marshal(scores)
-	}
-	err := json.Unmarshal(statsBytes, &scores)
-	if err != nil {
-		return err
-	}
-	scores[int(resp.Average*100)]++
-	if oldScore != nil {
-		scores[int(*oldScore*100)]--
-	}
-	newStats, err := json.Marshal(scores)
-	if err != nil {
-		return err
-	}
-	err = mb.Put([]byte("stats"), newStats)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func updateReposCount(mb *bolt.Bucket, repo string) (err error) {
 	log.Printf("New repo %q, adding to repo count...", repo)
 	totalInt := 0
@@ -267,7 +230,7 @@ func updateRecentlyViewed(mb *bolt.Bucket, repo string) error {
 	return nil
 }
 
-func updateMetadata(tx *bolt.Tx, resp checksResp, repo string, isNewRepo bool, oldScore *float64) error {
+func updateMetadata(tx *bolt.Tx, resp checksResp, repo string, isNewRepo bool) error {
 	// fetch meta-bucket
 	mb := tx.Bucket([]byte(MetaBucket))
 	if mb == nil {
@@ -280,9 +243,6 @@ func updateMetadata(tx *bolt.Tx, resp checksResp, repo string, isNewRepo bool, o
 			return err
 		}
 	}
-	err := updateHighScores(mb, resp, repo)
-	if err != nil {
-		return err
-	}
-	return updateStats(mb, resp, oldScore)
+
+	return updateHighScores(mb, resp, repo)
 }

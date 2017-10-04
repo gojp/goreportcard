@@ -31,7 +31,7 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	count, scores, stats := 0, &ScoreHeap{}, make([]int, 101, 101)
+	count, scores := 0, &ScoreHeap{}
 	err = db.View(func(tx *bolt.Tx) error {
 		hsb := tx.Bucket([]byte(MetaBucket))
 		if hsb == nil {
@@ -45,15 +45,6 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		json.Unmarshal(scoreBytes, scores)
-
-		statsBytes := hsb.Get([]byte("stats"))
-		if statsBytes == nil {
-			statsBytes, err = json.Marshal(stats)
-			if err != nil {
-				return err
-			}
-		}
-		json.Unmarshal(statsBytes, &stats)
 
 		heap.Init(scores)
 
@@ -81,7 +72,6 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 
 	t.Execute(w, map[string]interface{}{
 		"HighScores":           sortedScores,
-		"Stats":                stats,
 		"Count":                humanize.Comma(int64(count)),
 		"google_analytics_key": googleAnalyticsKey,
 	})
