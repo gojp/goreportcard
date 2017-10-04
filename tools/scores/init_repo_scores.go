@@ -26,7 +26,6 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	stats := make([]int, 101, 101)
 	err = db.Update(func(tx *bolt.Tx) error {
 		rb := tx.Bucket([]byte(repoBucket))
 		if rb == nil {
@@ -39,33 +38,9 @@ func main() {
 				return err
 			}
 			log.Printf("%s - %.2f", resp.Repo, resp.Average*100)
-			stats[int(resp.Average*100)]++
 			return nil
 		})
 
-		// finally update the stats
-		mb := tx.Bucket([]byte(metaBucket))
-		if mb == nil {
-			return fmt.Errorf("meta bucket not found")
-		}
-		var statsBytes []byte
-		statsBytes, err = json.Marshal(stats)
-		if err != nil {
-			return err
-		}
-		log.Printf("Stats: %v", stats)
-		err = mb.Put([]byte("stats"), statsBytes)
-		if err != nil {
-			return err
-		}
-
-		tResp := mb.Get([]byte("stats"))
-		tStats := []int{}
-		err = json.Unmarshal(tResp, &tStats)
-		if err != nil {
-			return err
-		}
-		log.Printf("Stats Confirmation: %v", tStats)
 		return nil
 	})
 	if err != nil {
