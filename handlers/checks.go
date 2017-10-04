@@ -20,7 +20,7 @@ func dirName(repo string) string {
 
 func getFromCache(repo string) (checksResp, error) {
 	// try and fetch from boltdb
-	db, err := bolt.Open(DBPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
+	db, err := bolt.Open(DBPath, 0600, &bolt.Options{Timeout: 3 * time.Second})
 	if err != nil {
 		return checksResp{}, fmt.Errorf("failed to open bolt database during GET: %v", err)
 	}
