@@ -1,18 +1,30 @@
 {
 	"comment": "",
-	"ignore": "",
+	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "4dyuA6YaUz+fO2JgIimCw4l2KAs=",
+			"checksumSHA1": "Ac0sHflTyYX4PmgBEJ+POSTyd5o=",
 			"path": "github.com/boltdb/bolt",
 			"revision": "fa5367d20c994db73282594be0146ab221657943",
 			"revisionTime": "2017-09-07T20:20:52Z"
 		},
 		{
-			"checksumSHA1": "//chYfEE+It/PSs2tDubu+QLud0=",
+			"checksumSHA1": "rhLUtXvcmouYuBwOq9X/nYKzvNg=",
 			"path": "github.com/dustin/go-humanize",
 			"revision": "79e699ccd02f240a1f1fbbdcee7e64c1c12e41aa",
 			"revisionTime": "2017-08-28T03:59:35Z"
+		},
+		{
+			"checksumSHA1": "tY+5thYxjKDUQyQXYcBqogmMS5U=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "314a259e304ff91bd6985da2a7149bbf91237993",
+			"revisionTime": "2017-07-19T03:44:26Z"
+		},
+		{
+			"checksumSHA1": "TNJiDMoJEKYZyXo8Vkj37gqH5A0=",
+			"path": "golang.org/x/tools/go/vcs",
+			"revision": "68e087e2a5786de2c035ed544b1c5a42e31f1933",
+			"revisionTime": "2017-07-19T04:03:19Z"
 		}
 	],
 	"rootPath": "github.com/gojp/goreportcard"

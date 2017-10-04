@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package vcs
+package vcs // import "golang.org/x/tools/go/vcs"
 
 import (
 	"bytes"
@@ -268,8 +268,8 @@ func (v *Cmd) Tags(dir string) ([]string, error) {
 	return tags, nil
 }
 
-// TagSync syncs the repo in dir to the named tag,
-// which either is a tag returned by tags or is v.TagDefault.
+// TagSync syncs the repo in dir to the named tag, which is either a
+// tag returned by Tags or the empty string (the default tag).
 // dir must be a valid VCS repo compatible with v and the tag must exist.
 func (v *Cmd) TagSync(dir, tag string) error {
 	if v.TagSyncCmd == "" {
@@ -344,9 +344,10 @@ func FromDir(dir, srcRoot string) (vcs *Cmd, root string, err error) {
 		return nil, "", fmt.Errorf("directory %q is outside source root %q", dir, srcRoot)
 	}
 
+	origDir := dir
 	for len(dir) > len(srcRoot) {
 		for _, vcs := range vcsList {
-			if fi, err := os.Stat(filepath.Join(dir, "."+vcs.Cmd)); err == nil && fi.IsDir() {
+			if _, err := os.Stat(filepath.Join(dir, "."+vcs.Cmd)); err == nil {
 				return vcs, filepath.ToSlash(dir[len(srcRoot)+1:]), nil
 			}
 		}
@@ -360,7 +361,7 @@ func FromDir(dir, srcRoot string) (vcs *Cmd, root string, err error) {
 		dir = ndir
 	}
 
-	return nil, "", fmt.Errorf("directory %q is not using a known version control system", dir)
+	return nil, "", fmt.Errorf("directory %q is not using a known version control system", origDir)
 }
 
 // RepoRoot represents a version control system, a repo, and a root of
@@ -601,7 +602,7 @@ var vcsPaths = []*vcsPath{
 	// Github
 	{
 		prefix: "github.com/",
-		re:     `^(?P<root>github\.com/[A-Za-z0-9_.\-]+/[A-Za-z0-9_.\-]+)(/[A-Za-z0-9_.\-]+)*$`,
+		re:     `^(?P<root>github\.com/[A-Za-z0-9_.\-]+/[A-Za-z0-9_.\-]+)(/[\p{L}0-9_.\-]+)*$`,
 		vcs:    "git",
 		repo:   "https://{root}",
 		check:  noVCSSuffix,
@@ -622,6 +623,15 @@ var vcsPaths = []*vcsPath{
 		vcs:    "bzr",
 		repo:   "https://{root}",
 		check:  launchpadVCS,
+	},
+
+	// Git at OpenStack
+	{
+		prefix: "git.openstack.org",
+		re:     `^(?P<root>git\.openstack\.org/[A-Za-z0-9_.\-]+/[A-Za-z0-9_.\-]+)(\.git)?(/[A-Za-z0-9_.\-]+)*$`,
+		vcs:    "git",
+		repo:   "https://{root}",
+		check:  noVCSSuffix,
 	},
 
 	// General syntax for any server.
