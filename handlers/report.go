@@ -19,13 +19,13 @@ func ReportHandler(w http.ResponseWriter, r *http.Request, repo string, dev bool
 	resp, err := getFromCache(repo)
 	needToLoad := false
 	if err != nil {
-		log.Println("ERROR:", err) // log error, but continue
+		log.Println("ERROR ReportHandler:", err) // log error, but continue
 		needToLoad = true
 	}
 
 	respBytes, err := json.Marshal(resp)
 	if err != nil {
-		log.Println("ERROR: marshaling json: ", err)
+		log.Println("ERROR ReportHandler: could not marshal JSON: ", err)
 		http.Error(w, "Failed to load cache object", 500)
 		return
 	}
