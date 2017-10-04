@@ -25,20 +25,44 @@ const (
 	MetaBucket string = "meta"
 )
 
-// CheckRepo performs the code analysis of a repo and updates the cache with
-// the analysis report and various metadata
-func CheckRepo(db *bolt.DB, repo string, forceRefresh bool) error {
+// CheckHandler handles the request for checking a repo
+func CheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	repo, err := download.Clean(r.FormValue("repo"))
+	if err != nil {
+		log.Println("ERROR: from download.Clean:", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`Could not download the repository: ` + err.Error()))
+		return
+	}
+
+	log.Printf("Checking repo %q...", repo)
+
+	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in boltdb first
 	resp, err := newChecksResp(repo, forceRefresh)
 	if err != nil {
 		log.Println("ERROR: from newChecksResp:", err)
-		return err
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`Could not download the repository.`))
+		return
 	}
 
 	respBytes, err := json.Marshal(resp)
 	if err != nil {
 		log.Println("ERROR: could not marshal json:", err)
-		return err
+		http.Error(w, err.Error(), 500)
+		return
 	}
+
+	// write to boltdb
+	db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
+	if err != nil {
+		log.Println("Failed to open bolt database: ", err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	defer db.Close()
 
 	// is this a new repo? if so, increase the count in the high scores bucket later
 	isNewRepo := false
@@ -75,43 +99,16 @@ func CheckRepo(db *bolt.DB, repo string, forceRefresh bool) error {
 
 		if err != nil {
 			log.Println("Bolt writing error:", err)
-			return err
 		}
-	}
-	return nil
-}
 
-// CheckHandler handles the request for checking a repo
-func CheckHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in boltdb first
-	repoParam := r.FormValue("repo")
-	repo, err := download.Clean(repoParam)
-	if err != nil {
-		log.Println("ERROR: from download.Clean:", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`Could not download the repository: ` + err.Error()))
-		return
 	}
-	log.Printf("Checking repo %q...", repo)
-	// write to boltdb
-	db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		log.Println("Failed to open bolt database: ", err)
-		http.Error(w, err.Error(), 500)
-		return
-	}
-	defer db.Close()
-	if err = CheckRepo(db, repo, forceRefresh); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`Error while analyzing the repository: ` + err.Error()))
-		return
-	}
+
 	db.Update(func(tx *bolt.Tx) error {
 		// fetch meta-bucket
 		mb := tx.Bucket([]byte(MetaBucket))
 		return updateRecentlyViewed(mb, repo)
 	})
+
 	b, err := json.Marshal(map[string]string{"redirect": "/report/" + repo})
 	if err != nil {
 		log.Println("JSON marshal error:", err)
