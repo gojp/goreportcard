@@ -107,7 +107,7 @@ func lineCount(filepath string) (int, error) {
 	// wc output is like: 999 filename.go
 	count, err := strconv.Atoi(strings.Split(strings.TrimSpace(string(out)), " ")[0])
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("could not count lines: %v", err)
 	}
 
 	return count, nil
@@ -162,7 +162,7 @@ func (fs *FileSummary) AddError(out string) error {
 	ls := strings.Split(s[1], ":")
 	ln, err := strconv.Atoi(ls[0])
 	if err != nil {
-		return err
+		return fmt.Errorf("AddError: could not parse %q - %v", out, err)
 	}
 	e.LineNumber = ln
 
