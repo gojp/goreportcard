@@ -4,24 +4,26 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 func main() {
-	files, err := ioutil.ReadDir("_repos/src")
+	repoSrc := filepath.Join("_repos", "src")
+	files, err := ioutil.ReadDir(repoSrc)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for _, f := range files {
 		if f.IsDir() {
-			dirs, err := ioutil.ReadDir("_repos/src/" + f.Name())
+			dirs, err := ioutil.ReadDir(filepath.Join(repoSrc, f.Name()))
 			if err != nil {
 				log.Fatal(err)
 			}
 			for _, d := range dirs {
 				if time.Now().Sub(d.ModTime()) > 30*24*time.Hour {
-					path := "_repos/src/" + f.Name() + "/" + d.Name()
+					path := filepath.Join(repoSrc, f.Name(), d.Name())
 					log.Printf("Deleting %s...", path)
 					os.RemoveAll(path)
 				}

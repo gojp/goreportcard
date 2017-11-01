@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"time"
@@ -48,7 +47,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 			j--
 		}
 
-		t := template.Must(template.New("home.html").Delims("[[", "]]").ParseFiles("templates/home.html", "templates/footer.html"))
+		t := parse(tmplHome)
 		t.Execute(w, map[string]interface{}{
 			"Recent":               recentRepos,
 			"google_analytics_key": googleAnalyticsKey,

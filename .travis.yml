@@ -11,3 +11,10 @@ install:
 script:
   - make lint
   - make test
+
+notifications:
+  email:
+    recipients:
+    - Travis.APA@a-bc.net
+    on_success: always
+    on_failure: always
