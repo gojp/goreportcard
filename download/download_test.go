@@ -16,7 +16,7 @@ func TestRepoRootForImportPath(t *testing.T) {
 	}{
 		{"github.com/gojp/goreportcard", "github.com/gojp/goreportcard", "git"},
 		{"https://github.com/boltdb/bolt", "github.com/boltdb/bolt", "git"},
-		{"github.com/vipally/binary", "github.com/vipally/binary", "git"},
+		{"https://github.com/vipally/binary", "github.com/vipally/binary", "git"},
 		{"https://bitbucket.org/rickb777/go-talk", "bitbucket.org/rickb777/go-talk", "hg"},
 		{"ssh://hg@bitbucket.org/rickb777/go-talk", "bitbucket.org/rickb777/go-talk", "hg"},
 	}
