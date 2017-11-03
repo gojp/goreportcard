@@ -112,8 +112,13 @@ var vcsGit = &Cmd{
 	TagLookupCmd: []TagCmd{
 		{"show-ref tags/{tag} origin/{tag}", `((?:tags|origin)/\S+)$`},
 	},
-	TagSyncCmd:     "checkout {tag}",
-	TagSyncDefault: "checkout master",
+	TagSyncCmd: "checkout {tag}",
+
+	// fix issue #223: It will download fail if dest repository's default branch is not ‘master’
+	// if repo's default branch is not 'master', it will download fail,
+	// beacause current branch is not always "master"
+	// change "checkout master" to "checkout"
+	TagSyncDefault: "checkout",
 
 	Scheme:  []string{"git", "https", "http", "git+ssh"},
 	PingCmd: "ls-remote {scheme}://{repo}",

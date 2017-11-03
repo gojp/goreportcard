@@ -61,10 +61,7 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 		log.Println("Create", root.Repo)
 
 		if root.VCS.Name == "Git" {
-			// fix issue #223: It will download fail if dest repository's default branch is not ‘master’
-			// if repo's default branch is not 'master', it will download fail
-			// add "-b master" to make sure clone master branch only
-			root.VCS.CreateCmd = "clone -b master --depth 1 {repo} {dir}"
+			root.VCS.CreateCmd = "clone --depth 1 {repo} {dir}"
 		}
 		err = root.VCS.Create(fullLocalPath, root.Repo)
 		if err != nil {
