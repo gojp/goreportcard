@@ -121,6 +121,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		check.Misspell{Dir: dir, Filenames: filenames},
 		check.IneffAssign{Dir: dir, Filenames: filenames},
 		// check.ErrCheck{Dir: dir, Filenames: filenames}, // disable errcheck for now, too slow and not finalized
+		check.TodoFinder{Dir: dir, Filenames: filenames},
 	}
 
 	ch := make(chan score)
