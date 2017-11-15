@@ -117,7 +117,11 @@
   <script id="template-check" type="text/x-handlebars-template">
       <a class="panel-block" href="#{{{name}}}">
         {{{name}}}
+        {{#ifEquals name "todofinder"}}
+        <span class="percentage misc">{{percentage}}</span>
+        {{else}}
         <span class="percentage {{color percentage}}">{{percentage}}%</span>
+        {{/ifEquals}}
       </a>
   </script>
   <script id="template-badgedropdown" type="text/x-handlebars-template">
@@ -132,7 +136,12 @@
   </script>
   <script id="template-details" type="text/x-handlebars-template">
     <div class="wrapper">
+      
+      {{#ifEquals name "todofinder"}}
+      <a name="{{{name}}}"></a><h1 class="tool-title">{{{name}}}<span class="percentage misc">{{percentage}}</span></h1>
+      {{else}}
       <a name="{{{name}}}"></a><h1 class="tool-title">{{{name}}}<span class="percentage {{color percentage}}">{{percentage}}%</span></h1>
+      {{/ifEquals}}
       <p class="tool-description">{{{description}}}</p>
     {{#if error}}
         <p class="error-msg">An error occurred while running this test ({{error}})</p>
@@ -202,6 +211,10 @@
       return percentage == false;
     });
 
+    Handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
+    return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
+});
+
     var allowedLinkDomains = ["https://github.com/", "https://bitbucket.org/",
       "https://golang.org/", "https://go.googlesource.com/"];
 
@@ -233,8 +246,13 @@
         $resultsText.html($(templates.grade(data)));
         var $table = $(".results");
         $table.html('<p class="panel-heading">Results</p>');
+        console.log(checks)
         for (var i = 0; i < checks.length; i++) {
-            checks[i].percentage = parseInt(checks[i].percentage * 100.0);
+
+            
+            if (checks[i].name!="todofinder"){
+            checks[i].percentage = parseInt(checks[i].percentage*100.0);
+            }
             var $headRow = $(templates.check(checks[i]));
             $headRow.on("click", function(){
             $(this).closest("nav").find(".is-active").removeClass("is-active");
@@ -250,6 +268,8 @@
         }
         $(".container-suggestions").addClass('hidden');
         $(".container-results").removeClass('hidden').slideDown();
+
+        
 
         $lastRefresh = $(templates.lastrefresh(data));
         $div = $(".container-update").html($lastRefresh);

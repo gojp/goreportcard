@@ -49,6 +49,9 @@ time {
 .percentage.success {
     color: #4CC61E;
 }
+.percentage.misc {
+    color: blue;
+}
 .results-text {
     font-size: 1.4em;
 }
