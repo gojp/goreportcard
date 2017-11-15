@@ -32,8 +32,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	repo, err := download.Clean(r.FormValue("repo"))
 	if err != nil {
 		log.Println("ERROR: from download.Clean:", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`Could not download the repository: ` + err.Error()))
+		http.Error(w, "Could not download the repository: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -43,15 +42,14 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := newChecksResp(repo, forceRefresh)
 	if err != nil {
 		log.Println("ERROR: from newChecksResp:", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`Could not download the repository.`))
+		http.Error(w, "Could not analyze the repository: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	respBytes, err := json.Marshal(resp)
 	if err != nil {
 		log.Println("ERROR: could not marshal json:", err)
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -59,7 +57,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		log.Println("Failed to open bolt database: ", err)
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer db.Close()
