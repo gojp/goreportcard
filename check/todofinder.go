@@ -27,10 +27,11 @@ var regex = "(\\/\\/.*\\b(?i)todo(?-i)\\b)"
 var todoRegex, err = regexp.Compile(regex)
 
 //Percentage returns files with todo comments
-func (g TodoFinder) Percentage() (percentage float64, fs []FileSummary, err error) {
+func (g TodoFinder) Percentage() (todosCount float64, fs []FileSummary, err error) {
 
 	for _, file := range g.Filenames {
 		todosInFile, _ := findTodosInFile(file)
+		todosCount += float64(len(todosInFile))
 		if len(todosInFile) != 0 {
 			filename := strings.TrimPrefix(file, "_repos/src")
 			fs = append(fs, FileSummary{Filename: makeFilename(filename),
@@ -42,7 +43,7 @@ func (g TodoFinder) Percentage() (percentage float64, fs []FileSummary, err erro
 	if err != nil {
 		return 0.0, []FileSummary{}, err
 	}
-	return 1.0, fs, err
+	return float64(todosCount), fs, err
 }
 
 //Description returns the description of TodoFinder
