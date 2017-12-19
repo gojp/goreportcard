@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/gojp/goreportcard/download"
@@ -39,76 +38,12 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Checking repo %q...", repo)
 
 	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in boltdb first
-	resp, err := newChecksResp(repo, forceRefresh)
+	_, err = newChecksResp(repo, forceRefresh)
 	if err != nil {
 		log.Println("ERROR: from newChecksResp:", err)
 		http.Error(w, "Could not analyze the repository: "+err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	respBytes, err := json.Marshal(resp)
-	if err != nil {
-		log.Println("ERROR: could not marshal json:", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// write to boltdb
-	db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		log.Println("Failed to open bolt database: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer db.Close()
-
-	// is this a new repo? if so, increase the count in the high scores bucket later
-	isNewRepo := false
-	var oldRepoBytes []byte
-	err = db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(RepoBucket))
-		if b == nil {
-			return fmt.Errorf("repo bucket not found")
-		}
-		oldRepoBytes = b.Get([]byte(repo))
-		return nil
-	})
-	if err != nil {
-		log.Println("ERROR getting repo from repo bucket:", err)
-	}
-
-	isNewRepo = oldRepoBytes == nil
-
-	// if this is a new repo, or the user force-refreshed, update the cache
-	if isNewRepo || forceRefresh {
-		err = db.Update(func(tx *bolt.Tx) error {
-			log.Printf("Saving repo %q to cache...", repo)
-
-			b := tx.Bucket([]byte(RepoBucket))
-			if b == nil {
-				return fmt.Errorf("repo bucket not found")
-			}
-
-			// save repo to cache
-			err = b.Put([]byte(repo), respBytes)
-			if err != nil {
-				return err
-			}
-
-			return updateMetadata(tx, resp, repo, isNewRepo)
-		})
-
-		if err != nil {
-			log.Println("Bolt writing error:", err)
-		}
-
-	}
-
-	db.Update(func(tx *bolt.Tx) error {
-		// fetch meta-bucket
-		mb := tx.Bucket([]byte(MetaBucket))
-		return updateRecentlyViewed(mb, repo)
-	})
 
 	b, err := json.Marshal(map[string]string{"redirect": "/report/" + repo})
 	if err != nil {
