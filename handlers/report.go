@@ -19,7 +19,12 @@ func ReportHandler(w http.ResponseWriter, r *http.Request, repo string, dev bool
 	resp, err := getFromCache(repo)
 	needToLoad := false
 	if err != nil {
-		log.Println("ERROR ReportHandler:", err) // log error, but continue
+		switch err.(type) {
+		case notFoundError:
+			// don't bother logging - we already log in getFromCache. continue
+		default:
+			log.Println("ERROR ReportHandler:", err) // log error, but continue
+		}
 		needToLoad = true
 	}
 
