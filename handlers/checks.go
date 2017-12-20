@@ -14,6 +14,14 @@ import (
 	"github.com/gojp/goreportcard/download"
 )
 
+type notFoundError struct {
+	repo string
+}
+
+func (n notFoundError) Error() string {
+	return fmt.Sprintf("%q not found in cache", n.repo)
+}
+
 func dirName(repo string) string {
 	return fmt.Sprintf("_repos/src/%s", repo)
 }
@@ -34,7 +42,7 @@ func getFromCache(repo string) (checksResp, error) {
 		}
 		cached := b.Get([]byte(repo))
 		if cached == nil {
-			return fmt.Errorf("%q not found in cache", repo)
+			return notFoundError{repo}
 		}
 
 		err = json.Unmarshal(cached, &resp)
