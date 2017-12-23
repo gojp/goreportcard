@@ -42,10 +42,10 @@ func main() {
 				}
 				if size < 15*1000*1000 {
 					if *real {
-						log.Printf("Deleting %s (repo size < 15M)...", path)
+						log.Printf("Deleting %s (dir size < 15M)...", path)
 						os.RemoveAll(path)
 					} else {
-						log.Printf("Would delete %s (repo size < 15M)", path)
+						log.Printf("Would delete %s (dir size < 15M)", path)
 					}
 				}
 			}
