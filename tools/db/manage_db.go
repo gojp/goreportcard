@@ -56,12 +56,7 @@ func deleteRepo(repo string) error {
 			return err
 		}
 
-		err = mb.Put([]byte("scores"), scoreBytes)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return mb.Put([]byte("scores"), scoreBytes)
 	})
 
 }
@@ -110,7 +105,7 @@ func listDuplicates() error {
 
 func main() {
 	flag.Parse()
-	if *repo == "" && *listDupes == false {
+	if *repo == "" && !*listDupes {
 		log.Println("Usage: manage_db.go [-list-duplicates] [-remove repo]")
 		return
 	}

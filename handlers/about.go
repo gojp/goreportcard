@@ -11,5 +11,4 @@ func AboutHandler(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, map[string]interface{}{
 		"google_analytics_key": googleAnalyticsKey,
 	})
-	return
 }

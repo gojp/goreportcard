@@ -84,6 +84,9 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 		// may have been rebased; we delete the directory, then try one more time:
 		log.Printf("Failed to update %q (%v), trying again...", root.Repo, err.Error())
 		err = os.RemoveAll(fullLocalPath)
+		if err != nil {
+			log.Printf("Failed to delete directory %s", fullLocalPath)
+		}
 		return download(path, dest, false)
 	}
 	return root, err
