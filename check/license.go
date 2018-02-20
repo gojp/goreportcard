@@ -2,6 +2,7 @@ package check
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -37,6 +38,17 @@ func (g License) Percentage() (float64, []FileSummary, error) {
 	files, err := ioutil.ReadDir(g.Dir)
 	if err != nil {
 		return 0.0, []FileSummary{}, err
+	}
+
+	// Check 'docs' folder too
+	docsPath := filepath.Join(g.Dir, "docs")
+	if _, err = os.Stat(docsPath); err == nil {
+		docsFiles, err := ioutil.ReadDir(docsPath)
+		if err != nil {
+			return 0.0, []FileSummary{}, err
+		}
+
+		files = append(files, docsFiles...)
 	}
 
 	for _, file := range files {
