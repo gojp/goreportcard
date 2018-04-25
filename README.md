@@ -39,6 +39,16 @@ When running the site in a production environment, instead of `make start-dev`, 
 make start
 ```
 
+### Integration
+
+#### GitHub
+`/github/hook` accepts `application/json` GitHub hook POST, and refreshs go package located at
+`"github.com/" + payload.repository.full_name`.
+
+#### Others
+`/check` accepts `application/x-www-form-urlencoded` POST, and refreshs go package located at
+`form.repo`. In success, it write `application/json` response `{redirect: "/report/" + repositoryName}`.
+
 ### Contributing
 
 Go Report Card is an open source project run by volunteers, and contributions are welcome! Check out the [Issues](https://github.com/gojp/goreportcard/issues) page to see if your idea for a contribution has already been mentioned, and feel free to raise an issue or submit a pull request.
