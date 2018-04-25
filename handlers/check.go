@@ -24,24 +24,43 @@ const (
 	MetaBucket string = "meta"
 )
 
+// checkRepo checks repository and returns canonical repository name and potential error.
+func checkRepo(repo string, forceRefresh bool) (string, error) {
+	log.Printf("Checking repo %q...", repo)
+
+	repo, err := download.Clean(repo)
+	if err != nil {
+		log.Println("ERROR: from download.Clean:", err)
+		return repo, fmt.Errorf("Could not download repository: %s", err)
+	}
+
+	_, err = newChecksResp(repo, forceRefresh)
+	if err != nil {
+		log.Println("ERROR: from newChecksResp:", err)
+		return repo, fmt.Errorf("Could not analyze repository: %s", err)
+	}
+
+	return repo, nil
+}
+
+// handleHTTPCheckRepo check repository and write http.StatusOK or http.StatusBadRequest to response.
+func handleHTTPCheckRepo(repo string, forceRefresh bool, w http.ResponseWriter) (string, error) {
+	repo, err := checkRepo(repo, forceRefresh)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return repo, err
+	}
+	w.WriteHeader(http.StatusOK)
+	return repo, nil
+}
+
 // CheckHandler handles the request for checking a repo
 func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	repo, err := download.Clean(r.FormValue("repo"))
-	if err != nil {
-		log.Println("ERROR: from download.Clean:", err)
-		http.Error(w, "Could not download the repository: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	log.Printf("Checking repo %q...", repo)
-
 	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in boltdb first
-	_, err = newChecksResp(repo, forceRefresh)
+	repo, err := handleHTTPCheckRepo(r.FormValue("repo"), forceRefresh, w)
 	if err != nil {
-		log.Println("ERROR: from newChecksResp:", err)
-		http.Error(w, "Could not analyze the repository: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -49,7 +68,6 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println("JSON marshal error:", err)
 	}
-	w.WriteHeader(http.StatusOK)
 	w.Write(b)
 	return
 }
