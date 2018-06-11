@@ -26,7 +26,7 @@ func main() {
 			}
 			for _, d := range dirs {
 				path := "_repos/src/" + f.Name() + "/" + d.Name()
-				if time.Now().Sub(d.ModTime()) > 30*24*time.Hour {
+				if time.Since(d.ModTime()) > 30*24*time.Hour {
 					if *real {
 						log.Printf("Deleting %s (repo is old)...", path)
 						os.RemoveAll(path)

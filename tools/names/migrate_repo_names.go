@@ -75,12 +75,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-		err = mb.Put([]byte("scores"), scoreBytes)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return mb.Put([]byte("scores"), scoreBytes)
 	})
 	if err != nil {
 		log.Fatal(err)

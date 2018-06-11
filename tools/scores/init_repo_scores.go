@@ -10,10 +10,7 @@ import (
 	"github.com/gojp/goreportcard/handlers"
 )
 
-const (
-	repoBucket string = "repos"
-	metaBucket string = "meta"
-)
+const repoBucket = "repos"
 
 type checksResp struct {
 	Repo    string  `json:"repo"`

@@ -51,7 +51,6 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(b)
-	return
 }
 
 func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
@@ -96,12 +95,7 @@ func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
 	if err != nil {
 		return err
 	}
-	err = mb.Put([]byte("scores"), scoreBytes)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return mb.Put([]byte("scores"), scoreBytes)
 }
 
 func updateReposCount(mb *bolt.Bucket, repo string) (err error) {
@@ -155,12 +149,7 @@ func updateRecentlyViewed(mb *bolt.Bucket, repo string) error {
 	if err != nil {
 		return err
 	}
-	err = mb.Put([]byte("recent"), b)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return mb.Put([]byte("recent"), b)
 }
 
 //func updateMetadata(tx *bolt.Tx, resp checksResp, repo string, isNewRepo bool, oldScore *float64) error {
