@@ -260,8 +260,8 @@
         });
 
         var badgeData = {
-            url: "https://[[ .domain ]]/report/" + data.repo,
-            image_url: "https://[[ .domain ]]/badge/" + data.repo,
+            url: location.protocol + "//[[ .domain ]]/report/" + data.repo,
+            image_url: location.protocol + "//[[ .domain ]]/badge/" + data.repo,
         }
         var $badgeDropdown = $(templates.badgedropdown(badgeData));
         $badgeDropdown.find("input").on("click", function(){
