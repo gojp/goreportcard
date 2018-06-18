@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	humanize "github.com/dustin/go-humanize"
+	"github.com/dustin/go-humanize"
 	"github.com/gojp/goreportcard/check"
 	"github.com/gojp/goreportcard/download"
 )
@@ -180,43 +180,38 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	resp.Issues = len(issues)
 	resp.Grade = grade(total * 100)
 
-	respBytes, err := json.Marshal(resp)
+	err = updateCache(repo, resp, forceRefresh)
 	if err != nil {
-		return checksResp{}, fmt.Errorf("could not marshal json: %v", err)
+		return checksResp{}, err
 	}
 
+	return resp, nil
+}
+
+func updateCache(repo string, resp checksResp, forceRefresh bool) error {
 	// write to boltdb
 	db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		return checksResp{}, fmt.Errorf("could not open bolt db: %v", err)
+		return fmt.Errorf("could not open bolt db: %v", err)
 	}
 	defer db.Close()
 
 	// is this a new repo? if so, increase the count in the high scores bucket later
-	isNewRepo := false
-	var oldRepoBytes []byte
-	err = db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(RepoBucket))
-		if b == nil {
-			return fmt.Errorf("repo bucket not found")
-		}
-		oldRepoBytes = b.Get([]byte(repo))
-		return nil
-	})
-	if err != nil {
-		log.Println("ERROR getting repo from repo bucket:", err)
-	}
-
-	isNewRepo = oldRepoBytes == nil
+	isNewRepo := isNewRepo(db, repo)
 
 	// if this is a new repo, or the user force-refreshed, update the cache
 	if isNewRepo || forceRefresh {
-		err = db.Update(func(tx *bolt.Tx) error {
+		err := db.Update(func(tx *bolt.Tx) error {
 			log.Printf("Saving repo %q to cache...", repo)
 
 			b := tx.Bucket([]byte(RepoBucket))
 			if b == nil {
 				return fmt.Errorf("repo bucket not found")
+			}
+
+			respBytes, err := json.Marshal(resp)
+			if err != nil {
+				return fmt.Errorf("could not marshal json: %v", err)
 			}
 
 			// save repo to cache
@@ -227,11 +222,9 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 
 			return updateMetadata(tx, resp, repo, isNewRepo)
 		})
-
 		if err != nil {
 			log.Println("Bolt writing error:", err)
 		}
-
 	}
 
 	db.Update(func(tx *bolt.Tx) error {
@@ -239,8 +232,25 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		mb := tx.Bucket([]byte(MetaBucket))
 		return updateRecentlyViewed(mb, repo)
 	})
+	return nil
+}
 
-	return resp, nil
+func isNewRepo(db *bolt.DB, repo string) bool {
+	var oldRepoBytes []byte
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(RepoBucket))
+		if b == nil {
+			return fmt.Errorf("repo bucket not found")
+		}
+		oldRepoBytes = b.Get([]byte(repo))
+		return nil
+	})
+	if err != nil {
+		log.Println("ERROR getting repo from repo bucket:", err)
+		return false
+	}
+
+	return oldRepoBytes == nil
 }
 
 // ByWeight implements sorting for checks by weight descending

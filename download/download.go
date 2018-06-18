@@ -3,12 +3,12 @@ package download
 import (
 	"errors"
 	"log"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"golang.org/x/tools/go/vcs"
+	"net/url"
 )
 
 // Download takes a user-provided string that represents a remote
@@ -60,24 +60,9 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 		}
 	} else {
 		log.Println("Create", root.Repo)
-
-		if root.VCS.Name == "Git" {
-			root.VCS.CreateCmd = "clone --depth 1 {repo} {dir}"
-			root.VCS.TagSyncDefault = ""
-		}
-		var rootRepo = root.Repo
-		u, err := url.Parse(root.Repo)
+		err = createNewRepo(root, fullLocalPath)
 		if err != nil {
-			log.Printf("WARN: could not parse root.Repo: %v", err)
-		} else {
-			if u.Host == "github.com" {
-				u.User = url.UserPassword("gojp", "gojp")
-				rootRepo = u.String()
-			}
-		}
-		err = root.VCS.Create(fullLocalPath, rootRepo)
-		if err != nil {
-			return root, err
+			return root, nil
 		}
 	}
 	err = root.VCS.TagSync(fullLocalPath, "")
@@ -85,12 +70,27 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 		// may have been rebased; we delete the directory, then try one more time:
 		log.Printf("Failed to update %q (%v), trying again...", root.Repo, err.Error())
 		err = os.RemoveAll(fullLocalPath)
-		if err != nil {
-			log.Printf("Failed to delete directory %s", fullLocalPath)
-		}
 		return download(path, dest, false)
 	}
 	return root, err
+}
+
+func createNewRepo(root *vcs.RepoRoot, fullLocalPath string) error {
+	if root.VCS.Name == "Git" {
+		root.VCS.CreateCmd = "clone --depth 1 {repo} {dir}"
+		root.VCS.TagSyncDefault = ""
+	}
+	var rootRepo = root.Repo
+	u, err := url.Parse(root.Repo)
+	if err != nil {
+		log.Printf("WARN: could not parse root.Repo: %v", err)
+		return err
+	}
+	if u.Host == "github.com" {
+		u.User = url.UserPassword("gojp", "gojp")
+		rootRepo = u.String()
+	}
+	return root.VCS.Create(fullLocalPath, rootRepo)
 }
 
 // Clean trims any URL parts, like the scheme or username, that might be present

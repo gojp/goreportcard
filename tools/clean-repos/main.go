@@ -36,7 +36,7 @@ func main() {
 					}
 				}
 
-				size, err := DirSize(path)
+				size, err := dirSize(path)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -53,7 +53,7 @@ func main() {
 	}
 }
 
-func DirSize(path string) (int64, error) {
+func dirSize(path string) (int64, error) {
 	var size int64
 	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
