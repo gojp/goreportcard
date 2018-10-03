@@ -14,7 +14,7 @@ func TestRepoRootForImportPath(t *testing.T) {
 		wantPath string
 		wantVCS  string
 	}{
-		{"github.com/gojp/goreportcard", "github.com/gojp/goreportcard", "git"},
+		{"github.com/tokopedia/goreportcard", "github.com/tokopedia/goreportcard", "git"},
 		{"https://github.com/boltdb/bolt", "github.com/boltdb/bolt", "git"},
 		{"https://bitbucket.org/rickb777/go-talk", "bitbucket.org/rickb777/go-talk", "hg"},
 		{"ssh://hg@bitbucket.org/rickb777/go-talk", "bitbucket.org/rickb777/go-talk", "hg"},

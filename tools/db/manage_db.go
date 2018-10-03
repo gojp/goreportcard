@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/gojp/goreportcard/handlers"
+	"github.com/tokopedia/goreportcard/handlers"
 )
 
 var (

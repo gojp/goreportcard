@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/boltdb/bolt"
-	"github.com/gojp/goreportcard/download"
+	"github.com/tokopedia/goreportcard/download"
 )
 
 const (
