@@ -1,0 +1,11 @@
+"/var/log/goreportcard/*.log" {
+  daily
+  create 777 www-data www-data
+  rotate 7
+  compress
+  su root www-data
+  postrotate
+    sleep 3
+    reload toko-goreportcard >/dev/null 2>&1 || true
+  endscript
+}

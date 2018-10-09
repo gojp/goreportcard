@@ -1,0 +1,9 @@
+[Server]
+  Name = http://localhost:8700
+  Debug = false
+
+[Tracer]
+  Name = jaeger
+  Enabled = true
+  Verbose = true
+

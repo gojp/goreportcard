@@ -133,6 +133,7 @@ func main() {
 	http.HandleFunc(m.instrument("/report/", makeHandler("report", *dev, handlers.ReportHandler)))
 	http.HandleFunc(m.instrument("/badge/", makeHandler("badge", *dev, handlers.BadgeHandler)))
 	http.HandleFunc(m.instrument("/high_scores/", handlers.HighScoresHandler))
+	http.HandleFunc(m.instrument("/scores/", handlers.ScoresHandler))
 	http.HandleFunc(m.instrument("/about/", handlers.AboutHandler))
 	http.HandleFunc(m.instrument("/", handlers.HomeHandler))
 
