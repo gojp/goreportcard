@@ -53,6 +53,7 @@ func main() {
 	}
 }
 
+// DirSize returns the size of a directory
 func DirSize(path string) (int64, error) {
 	var size int64
 	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
@@ -61,5 +62,6 @@ func DirSize(path string) (int64, error) {
 		}
 		return err
 	})
+
 	return size, err
 }
