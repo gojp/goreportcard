@@ -28,11 +28,11 @@ func main() {
 		fmt.Printf("%s: %d%%\n", c.Name, int64(c.Percentage*100))
 		if *verbose && len(c.FileSummaries) > 0 {
 			for _, f := range c.FileSummaries {
+				fmt.Printf("\t%s\n", f.Filename)
 				for _, e := range f.Errors {
-					fmt.Printf("%s\t%s:%d\n\t%s\n", c.Name, f.Filename, e.LineNumber, e.ErrorString)
+					fmt.Printf("\t\tLine %d: %s\n", e.LineNumber, e.ErrorString)
 				}
 			}
-			fmt.Println()
 		}
 	}
 }
