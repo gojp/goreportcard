@@ -17,6 +17,7 @@ type Check interface {
 	Percentage() (float64, []FileSummary, error)
 }
 
+// Score represents the result of a single check
 type Score struct {
 	Name          string        `json:"name"`
 	Description   string        `json:"description"`
@@ -26,6 +27,7 @@ type Score struct {
 	Error         string        `json:"error"`
 }
 
+// ChecksResult represents the combined result of multiple checks
 type ChecksResult struct {
 	Checks  []Score `json:"checks"`
 	Average float64 `json:"average"`
@@ -34,6 +36,7 @@ type ChecksResult struct {
 	Issues  int     `json:"issues"`
 }
 
+// CheckDir executes all checks on the given directory
 func CheckDir(dir string) (ChecksResult, error) {
 	filenames, skipped, err := GoFiles(dir)
 	if err != nil {
