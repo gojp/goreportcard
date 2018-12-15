@@ -39,6 +39,29 @@ When running the site in a production environment, instead of `make start-dev`, 
 make start
 ```
 
+### Command Line Interface
+
+There is also a CLI available for grading applications on your local machine.
+
+Example usage:
+```
+go get github.com/gojp/goreportcard/goreportcard-cli
+goreportcard-cli $GOPATH/src/github.com/gojp/goreportcard
+```
+
+```
+Grade: A+ (99.9%)
+Files: 362
+Issues: 2
+gofmt: 100%
+go_vet: 99%
+gocyclo: 99%
+golint: 100%
+ineffassign: 100%
+license: 100%
+misspell: 100%
+```
+
 ### Contributing
 
 Go Report Card is an open source project run by volunteers, and contributions are welcome! Check out the [Issues](https://github.com/gojp/goreportcard/issues) page to see if your idea for a contribution has already been mentioned, and feel free to raise an issue or submit a pull request.

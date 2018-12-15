@@ -9,7 +9,7 @@ import (
 
 var (
 	dir     = kingpin.Arg("dir", "Root directory of your Go application").Required().String()
-	verbose = kingpin.Flag("verbose", "Enable verbose output").Short('v').Bool()
+	verbose = kingpin.Flag("verbose", "Verbose output").Short('v').Bool()
 )
 
 func main() {
