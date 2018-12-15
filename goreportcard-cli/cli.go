@@ -1,19 +1,20 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/gojp/goreportcard/check"
-	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
 )
 
 var (
-	dir     = kingpin.Arg("dir", "Root directory of your Go application").Required().String()
-	verbose = kingpin.Flag("verbose", "Verbose output").Short('v').Bool()
+	dir     = flag.String("d", ".", "Root directory of your Go application")
+	verbose = flag.Bool("v", false, "Verbose output")
 )
 
 func main() {
-	kingpin.Parse()
+	flag.Parse()
+
 	result, err := check.CheckDir(*dir)
 	if err != nil {
 		log.Fatalf("Fatal error checking %s: %s", *dir, err.Error())

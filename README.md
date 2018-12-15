@@ -46,7 +46,8 @@ There is also a CLI available for grading applications on your local machine.
 Example usage:
 ```
 go get github.com/gojp/goreportcard/goreportcard-cli
-goreportcard-cli $GOPATH/src/github.com/gojp/goreportcard
+cd $GOPATH/src/github.com/gojp/goreportcard
+goreportcard-cli
 ```
 
 ```
@@ -56,6 +57,30 @@ Issues: 2
 gofmt: 100%
 go_vet: 99%
 gocyclo: 99%
+golint: 100%
+ineffassign: 100%
+license: 100%
+misspell: 100%
+```
+
+Verbose output is also available:
+```
+goreportcard-cli -v
+```
+
+```
+Grade: A+ (99.9%)
+Files: 332
+Issues: 2
+gofmt: 100%
+go_vet: 99%
+go_vet  vendor/github.com/prometheus/client_golang/prometheus/desc.go:25
+        error: cannot find package "github.com/prometheus/client_model/go" in any of: (vet)
+
+gocyclo: 99%
+gocyclo download/download.go:22
+        warning: cyclomatic complexity 17 of function download() is high (> 15) (gocyclo)
+
 golint: 100%
 ineffassign: 100%
 license: 100%
