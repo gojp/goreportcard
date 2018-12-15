@@ -69,6 +69,7 @@ type checksResp struct {
 	Files                int           `json:"files"`
 	Issues               int           `json:"issues"`
 	Repo                 string        `json:"repo"`
+	ResolvedRepo         string        `json:"resolvedRepo"`
 	LastRefresh          time.Time     `json:"last_refresh"`
 	LastRefreshFormatted string        `json:"formatted_last_refresh"`
 	LastRefreshHumanized string        `json:"humanized_last_refresh"`
@@ -106,6 +107,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		Files:                checkResult.Files,
 		Issues:               checkResult.Issues,
 		Repo:                 repo,
+		ResolvedRepo:         repoRoot.Repo,
 		LastRefresh:          t,
 		LastRefreshFormatted: t.Format(time.UnixDate),
 		LastRefreshHumanized: humanize.Time(t),
