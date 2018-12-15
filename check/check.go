@@ -36,8 +36,8 @@ type ChecksResult struct {
 	Issues  int     `json:"issues"`
 }
 
-// CheckDir executes all checks on the given directory
-func CheckDir(dir string) (ChecksResult, error) {
+// Run executes all checks on the given directory
+func Run(dir string) (ChecksResult, error) {
 	filenames, skipped, err := GoFiles(dir)
 	if err != nil {
 		return ChecksResult{}, fmt.Errorf("could not get filenames: %v", err)

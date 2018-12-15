@@ -15,7 +15,7 @@ var (
 func main() {
 	flag.Parse()
 
-	result, err := check.CheckDir(*dir)
+	result, err := check.Run(*dir)
 	if err != nil {
 		log.Fatalf("Fatal error checking %s: %s", *dir, err.Error())
 	}

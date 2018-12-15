@@ -94,7 +94,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	}
 
 	repo = repoRoot.Root
-	checkResult, err := check.CheckDir(dirName(repo))
+	checkResult, err := check.Run(dirName(repo))
 	if err != nil {
 		return checksResp{}, err
 	}
