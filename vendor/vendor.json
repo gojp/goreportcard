@@ -91,7 +91,7 @@
 			"path": "golang.org/x/tools/go/vcs",
 			"revision": "ae8cc594552814363a7aeeb4f2825515a771fa38",
 			"revisionTime": "2017-11-19T20:52:17Z"
-		},
+		}
 	],
 	"rootPath": "github.com/gojp/goreportcard"
 }
