@@ -45,7 +45,7 @@ There is also a CLI available for grading applications on your local machine.
 
 Example usage:
 ```
-go get github.com/gojp/goreportcard/goreportcard-cli
+go get github.com/gojp/goreportcard/cmd/goreportcard-cli
 cd $GOPATH/src/github.com/gojp/goreportcard
 goreportcard-cli
 ```
