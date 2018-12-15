@@ -19,19 +19,19 @@ func main() {
 		log.Fatalf("Fatal error checking %s: %s", *dir, err.Error())
 	}
 
-	fmt.Printf("Grade: %s\n", result.Grade)
-	fmt.Printf("Average: %f\n", result.Average)
+	fmt.Printf("Grade: %s (%.1f%%)\n", result.Grade, result.Average*100)
 	fmt.Printf("Files: %d\n", result.Files)
 	fmt.Printf("Issues: %d\n", result.Issues)
 
-	if *verbose {
-		for _, c := range result.Checks {
-			fmt.Printf("\n%s:\n", c.Name)
+	for _, c := range result.Checks {
+		fmt.Printf("%s: %d%%\n", c.Name, int64(c.Percentage*100))
+		if *verbose && len(c.FileSummaries) > 0 {
 			for _, f := range c.FileSummaries {
 				for _, e := range f.Errors {
-					fmt.Printf("%s:%d\n\t%s\n", f.Filename, e.LineNumber, e.ErrorString)
+					fmt.Printf("%s\t%s:%d\n\t%s\n", c.Name, f.Filename, e.LineNumber, e.ErrorString)
 				}
 			}
+			fmt.Println()
 		}
 	}
 }
