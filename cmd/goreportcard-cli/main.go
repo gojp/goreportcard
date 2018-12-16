@@ -3,8 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/gojp/goreportcard/check"
 	"log"
+
+	"github.com/gojp/goreportcard/check"
 )
 
 var (

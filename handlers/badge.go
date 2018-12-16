@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/gojp/goreportcard/check"
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/gojp/goreportcard/check"
 )
 
 func badgePath(grade check.Grade, style string, dev bool) string {
