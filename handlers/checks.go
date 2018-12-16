@@ -5,11 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"sort"
 	"time"
 
 	"github.com/boltdb/bolt"
-	humanize "github.com/dustin/go-humanize"
+	"github.com/dustin/go-humanize"
 	"github.com/gojp/goreportcard/check"
 	"github.com/gojp/goreportcard/download"
 )
@@ -63,26 +62,17 @@ func getFromCache(repo string) (checksResp, error) {
 	return resp, nil
 }
 
-type score struct {
-	Name          string              `json:"name"`
-	Description   string              `json:"description"`
-	FileSummaries []check.FileSummary `json:"file_summaries"`
-	Weight        float64             `json:"weight"`
-	Percentage    float64             `json:"percentage"`
-	Error         string              `json:"error"`
-}
-
 type checksResp struct {
-	Checks               []score   `json:"checks"`
-	Average              float64   `json:"average"`
-	Grade                Grade     `json:"grade"`
-	Files                int       `json:"files"`
-	Issues               int       `json:"issues"`
-	Repo                 string    `json:"repo"`
-	ResolvedRepo         string    `json:"resolvedRepo"`
-	LastRefresh          time.Time `json:"last_refresh"`
-	LastRefreshFormatted string    `json:"formatted_last_refresh"`
-	LastRefreshHumanized string    `json:"humanized_last_refresh"`
+	Checks               []check.Score `json:"checks"`
+	Average              float64       `json:"average"`
+	Grade                check.Grade   `json:"grade"`
+	Files                int           `json:"files"`
+	Issues               int           `json:"issues"`
+	Repo                 string        `json:"repo"`
+	ResolvedRepo         string        `json:"resolvedRepo"`
+	LastRefresh          time.Time     `json:"last_refresh"`
+	LastRefreshFormatted string        `json:"formatted_last_refresh"`
+	LastRefreshHumanized string        `json:"humanized_last_refresh"`
 }
 
 func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
@@ -92,7 +82,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 			// just log the error and continue
 			log.Println(err)
 		} else {
-			resp.Grade = grade(resp.Average * 100) // grade is not stored for some repos, yet
+			resp.Grade = check.GradeFromPercentage(resp.Average * 100) // grade is not stored for some repos, yet
 			return resp, nil
 		}
 	}
@@ -104,81 +94,24 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	}
 
 	repo = repoRoot.Root
-
-	dir := dirName(repo)
-	filenames, skipped, err := check.GoFiles(dir)
+	checkResult, err := check.Run(dirName(repo))
 	if err != nil {
-		return checksResp{}, fmt.Errorf("could not get filenames: %v", err)
-	}
-	if len(filenames) == 0 {
-		return checksResp{}, fmt.Errorf("no .go files found")
-	}
-
-	err = check.RenameFiles(skipped)
-	if err != nil {
-		log.Println("Could not remove files:", err)
-	}
-	defer check.RevertFiles(skipped)
-
-	checks := []check.Check{
-		check.GoFmt{Dir: dir, Filenames: filenames},
-		check.GoVet{Dir: dir, Filenames: filenames},
-		check.GoLint{Dir: dir, Filenames: filenames},
-		check.GoCyclo{Dir: dir, Filenames: filenames},
-		check.License{Dir: dir, Filenames: []string{}},
-		check.Misspell{Dir: dir, Filenames: filenames},
-		check.IneffAssign{Dir: dir, Filenames: filenames},
-		// check.ErrCheck{Dir: dir, Filenames: filenames}, // disable errcheck for now, too slow and not finalized
-	}
-
-	ch := make(chan score)
-	for _, c := range checks {
-		go func(c check.Check) {
-			p, summaries, err := c.Percentage()
-			errMsg := ""
-			if err != nil {
-				log.Printf("ERROR: (%s) %v", c.Name(), err)
-				errMsg = err.Error()
-			}
-			s := score{
-				Name:          c.Name(),
-				Description:   c.Description(),
-				FileSummaries: summaries,
-				Weight:        c.Weight(),
-				Percentage:    p,
-				Error:         errMsg,
-			}
-			ch <- s
-		}(c)
+		return checksResp{}, err
 	}
 
 	t := time.Now().UTC()
 	resp := checksResp{
+		Checks:               checkResult.Checks,
+		Average:              checkResult.Average,
+		Grade:                checkResult.Grade,
+		Files:                checkResult.Files,
+		Issues:               checkResult.Issues,
 		Repo:                 repo,
 		ResolvedRepo:         repoRoot.Repo,
-		Files:                len(filenames),
 		LastRefresh:          t,
 		LastRefreshFormatted: t.Format(time.UnixDate),
 		LastRefreshHumanized: humanize.Time(t),
 	}
-
-	var total, totalWeight float64
-	var issues = make(map[string]bool)
-	for i := 0; i < len(checks); i++ {
-		s := <-ch
-		resp.Checks = append(resp.Checks, s)
-		total += s.Percentage * s.Weight
-		totalWeight += s.Weight
-		for _, fs := range s.FileSummaries {
-			issues[fs.Filename] = true
-		}
-	}
-	total /= totalWeight
-
-	sort.Sort(ByWeight(resp.Checks))
-	resp.Average = total
-	resp.Issues = len(issues)
-	resp.Grade = grade(total * 100)
 
 	respBytes, err := json.Marshal(resp)
 	if err != nil {
@@ -242,10 +175,3 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 
 	return resp, nil
 }
-
-// ByWeight implements sorting for checks by weight descending
-type ByWeight []score
-
-func (a ByWeight) Len() int           { return len(a) }
-func (a ByWeight) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByWeight) Less(i, j int) bool { return a[i].Weight > a[j].Weight }
