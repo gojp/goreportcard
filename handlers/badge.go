@@ -9,12 +9,12 @@ import (
 	"github.com/gojp/goreportcard/check"
 )
 
-func badgePath(grade check.Grade, style string, dev bool) string {
+func badgePath(grade check.Grade, style string) string {
 	return fmt.Sprintf("assets/badges/%s_%s.svg", strings.ToLower(string(grade)), strings.ToLower(style))
 }
 
 // BadgeHandler handles fetching the badge images
-func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string, dev bool) {
+func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string) {
 	resp, err := newChecksResp(repo, false)
 
 	// See: http://shields.io/#styles
@@ -31,5 +31,5 @@ func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string, dev bool)
 	}
 
 	w.Header().Set("Cache-control", "no-store, no-cache, must-revalidate")
-	http.ServeFile(w, r, badgePath(resp.Grade, style, dev))
+	http.ServeFile(w, r, badgePath(resp.Grade, style))
 }

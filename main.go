@@ -18,10 +18,9 @@ import (
 
 var (
 	addr = flag.String("http", ":8000", "HTTP listen address")
-	dev  = flag.Bool("dev", false, "dev mode")
 )
 
-func makeHandler(name string, dev bool, fn func(http.ResponseWriter, *http.Request, string, bool)) http.HandlerFunc {
+func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		validPath := regexp.MustCompile(fmt.Sprintf(`^/%s/([a-zA-Z0-9\-_\/\.]+)$`, name))
 
@@ -54,7 +53,7 @@ func makeHandler(name string, dev bool, fn func(http.ResponseWriter, *http.Reque
 			return
 		}
 
-		fn(w, r, repo, dev)
+		fn(w, r, repo)
 	}
 }
 
@@ -130,8 +129,8 @@ func main() {
 	http.HandleFunc(m.instrument("/assets/", handlers.AssetsHandler))
 	http.HandleFunc(m.instrument("/favicon.ico", handlers.FaviconHandler))
 	http.HandleFunc(m.instrument("/checks", handlers.CheckHandler))
-	http.HandleFunc(m.instrument("/report/", makeHandler("report", *dev, handlers.ReportHandler)))
-	http.HandleFunc(m.instrument("/badge/", makeHandler("badge", *dev, handlers.BadgeHandler)))
+	http.HandleFunc(m.instrument("/report/", makeHandler("report", handlers.ReportHandler)))
+	http.HandleFunc(m.instrument("/badge/", makeHandler("badge", handlers.BadgeHandler)))
 	http.HandleFunc(m.instrument("/high_scores/", handlers.HighScoresHandler))
 	http.HandleFunc(m.instrument("/about/", handlers.AboutHandler))
 	http.HandleFunc(m.instrument("/", handlers.HomeHandler))

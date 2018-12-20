@@ -16,8 +16,5 @@ test:
 start:
 	 go run main.go
 
-start-dev:
-	go run main.go -http 127.0.0.1:8000 -dev
-
 misspell:
 	find . -name '*.go' -not -path './vendor/*' -not -path './_repos/*' | xargs misspell -error
