@@ -61,6 +61,7 @@ golint: 100%
 ineffassign: 100%
 license: 100%
 misspell: 100%
+readme: 100%
 ```
 
 Verbose output is also available:
@@ -85,6 +86,7 @@ golint: 100%
 ineffassign: 100%
 license: 100%
 misspell: 100%
+readme: 100%
 ```
 
 ### Contributing

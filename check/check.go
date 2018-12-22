@@ -58,6 +58,7 @@ func Run(dir string) (ChecksResult, error) {
 		GoLint{Dir: dir, Filenames: filenames},
 		GoCyclo{Dir: dir, Filenames: filenames},
 		License{Dir: dir, Filenames: []string{}},
+		Readme{Dir: dir, Filenames: []string{}},
 		Misspell{Dir: dir, Filenames: filenames},
 		IneffAssign{Dir: dir, Filenames: filenames},
 		// ErrCheck{Dir: dir, Filenames: filenames}, // disable errcheck for now, too slow and not finalized
