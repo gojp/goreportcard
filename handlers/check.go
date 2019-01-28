@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/boltdb/bolt"
@@ -28,16 +29,24 @@ const (
 func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
+	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in boltdb first
+
 	repo, err := download.Clean(r.FormValue("repo"))
 	if err != nil {
-		log.Println("ERROR: from download.Clean:", err)
-		http.Error(w, "Could not download the repository: "+err.Error(), http.StatusBadRequest)
-		return
+		repo = r.FormValue("repo")
+		workDir, _ := os.Getwd()
+		if err1 := os.Chdir(repo); err1 != nil {
+			log.Println("ERROR: from download.Clean:", err)
+			http.Error(w, "Could not download the repository: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		forceRefresh = false
+		_ = os.Chdir(workDir)
 	}
 
 	log.Printf("Checking repo %q...", repo)
 
-	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in boltdb first
 	_, err = newChecksResp(repo, forceRefresh)
 	if err != nil {
 		log.Println("ERROR: from newChecksResp:", err)

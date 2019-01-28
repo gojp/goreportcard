@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -97,15 +98,22 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		}
 	}
 
-	// fetch the repo and grade it
-	repoRoot, err := download.Download(repo, "_repos/src")
-	if err != nil {
-		return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
+	repoRootRepo := repo
+	dir := repo
+	if strings.HasPrefix(repo, "/") {
+		repo = strings.TrimPrefix(repo, "/")
+	} else {
+		// fetch the repo and grade it
+		repoRoot, err := download.Download(repo, "_repos/src")
+		if err != nil {
+			return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
+		}
+
+		repo = repoRoot.Root
+		repoRootRepo = repoRoot.Repo
+		dir = dirName(repo)
 	}
 
-	repo = repoRoot.Root
-
-	dir := dirName(repo)
 	filenames, skipped, err := check.GoFiles(dir)
 	if err != nil {
 		return checksResp{}, fmt.Errorf("could not get filenames: %v", err)
@@ -155,7 +163,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 	t := time.Now().UTC()
 	resp := checksResp{
 		Repo:                 repo,
-		ResolvedRepo:         repoRoot.Repo,
+		ResolvedRepo:         repoRootRepo,
 		Files:                len(filenames),
 		LastRefresh:          t,
 		LastRefreshFormatted: t.Format(time.UnixDate),
