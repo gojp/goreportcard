@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/boltdb/bolt"
@@ -31,18 +32,30 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 
 	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in boltdb first
 
-	repo, err := download.Clean(r.FormValue("repo"))
-	if err != nil {
-		repo = r.FormValue("repo")
+	repo := r.FormValue("repo")
+	if strings.HasPrefix(repo, "https://") {
+		repo = strings.TrimPrefix(repo, "https://")
+	}
+
+	var err error
+	env := os.Getenv("GOPATH")
+	if env > "" {
 		workDir, _ := os.Getwd()
-		if err1 := os.Chdir(repo); err1 != nil {
+		repo = path.Join(env, "src", repo)
+		if err := os.Chdir(repo); err != nil {
+			// not found dir with code
+			env = ""
+		}
+		_ = os.Chdir(workDir)
+	}
+	// need download code from github
+	if env == "" {
+		repo, err = download.Clean(repo)
+		if err != nil {
 			log.Println("ERROR: from download.Clean:", err)
 			http.Error(w, "Could not download the repository: "+err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		forceRefresh = false
-		_ = os.Chdir(workDir)
 	}
 
 	log.Printf("Checking repo %q...", repo)
