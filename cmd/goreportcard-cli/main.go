@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/gojp/goreportcard/check"
 )
@@ -11,6 +12,7 @@ import (
 var (
 	dir     = flag.String("d", ".", "Root directory of your Go application")
 	verbose = flag.Bool("v", false, "Verbose output")
+	th      = flag.Float64("t", 0, "Threshold of failure command")
 )
 
 func main() {
@@ -35,5 +37,9 @@ func main() {
 				}
 			}
 		}
+	}
+
+	if result.Average*100 < *th {
+		os.Exit(1)
 	}
 }
