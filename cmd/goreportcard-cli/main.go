@@ -13,6 +13,7 @@ var (
 	dir     = flag.String("d", ".", "Root directory of your Go application")
 	verbose = flag.Bool("v", false, "Verbose output")
 	th      = flag.Float64("t", 0, "Threshold of failure command")
+	badge   = flag.Bool("b", false, "Print svg badge and exit")
 )
 
 func main() {
@@ -21,6 +22,11 @@ func main() {
 	result, err := check.Run(*dir)
 	if err != nil {
 		log.Fatalf("Fatal error checking %s: %s", *dir, err.Error())
+	}
+	if *badge {
+		badgeSvg := check.BadgeFromGrade(result.Grade)
+		fmt.Println(badgeSvg)
+		return
 	}
 
 	fmt.Printf("Grade: %s (%.1f%%)\n", result.Grade, result.Average*100)
