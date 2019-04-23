@@ -102,4 +102,4 @@ The code is licensed under the permissive Apache v2.0 licence. This means you ca
 
 ### Notes
 
-We don't support this on Windows since we have no way to test it on Windows.
+We don't support Go Report Card on Windows since we have no way to test it on Windows.
