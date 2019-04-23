@@ -1,4 +1,4 @@
-FROM golang:1.11-alpine
+FROM golang:1.12.4-alpine
 
 COPY . $GOPATH/src/github.com/gojp/goreportcard
 
