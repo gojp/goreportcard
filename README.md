@@ -4,6 +4,11 @@
 
 A web application that generates a report on the quality of an open source go project. It uses several measures, including `gofmt`, `go vet`, `go lint` and `gocyclo`. To get a report on your own project, try using the hosted version of this code running at [goreportcard.com](https://goreportcard.com).
 
+### Sponsors
+
+<a href="https://www.signalsciences.com/"><img src="https://goreportcard.com/assets/signalsciences.png" height="54" width="260" ></a>
+
+
 ### Installation
 
 Assuming you already have a recent version of Go installed, pull down the code with `go get`:
