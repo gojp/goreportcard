@@ -27,7 +27,7 @@ make install
 Now run
 
 ```
-make start-dev
+make start
 ```
 
 and you should see
