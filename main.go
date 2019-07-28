@@ -9,15 +9,17 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/gojp/goreportcard/database"
+
 	"github.com/gojp/goreportcard/handlers"
 
-	"github.com/boltdb/bolt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
-	addr = flag.String("http", ":8000", "HTTP listen address")
+	addr      string
+	redisHost string
 )
 
 func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
@@ -57,26 +59,6 @@ func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string
 	}
 }
 
-// initDB opens the bolt database file (or creates it if it does not exist), and creates
-// a bucket for saving the repos, also only if it does not exist.
-func initDB() error {
-	db, err := bolt.Open(handlers.DBPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte(handlers.RepoBucket))
-		if err != nil {
-			return err
-		}
-		_, err = tx.CreateBucketIfNotExists([]byte(handlers.MetaBucket))
-		return err
-	})
-	return err
-}
-
 // metrics provides functionality for monitoring the application status
 type metrics struct {
 	responseTimes *prometheus.SummaryVec
@@ -114,14 +96,17 @@ func (m metrics) instrument(path string, h http.HandlerFunc) (string, http.Handl
 }
 
 func main() {
+	flag.StringVar(&addr, "http", ":8000", "HTTP listen address")
+	flag.StringVar(&redisHost, "redis", "", "Address of Redis server")
 	flag.Parse()
 	if err := os.MkdirAll("_repos/src/github.com", 0755); err != nil && !os.IsExist(err) {
 		log.Fatal("ERROR: could not create repos dir: ", err)
 	}
 
 	// initialize database
-	if err := initDB(); err != nil {
-		log.Fatal("ERROR: could not open bolt db: ", err)
+	_, err := database.GetConnection(redisHost)
+	if err != nil {
+		log.Fatal("ERROR: could not connect to db: ", err)
 	}
 
 	m := setupMetrics()
@@ -137,6 +122,6 @@ func main() {
 
 	http.Handle("/metrics", promhttp.Handler())
 
-	log.Printf("Running on %s ...", *addr)
-	log.Fatal(http.ListenAndServe(*addr, nil))
+	log.Printf("Running on %s ...", addr)
+	log.Fatal(http.ListenAndServe(addr, nil))
 }
