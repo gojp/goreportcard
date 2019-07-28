@@ -38,12 +38,6 @@ Running on 127.0.0.1:8000...
 
 Navigate to that URL in your browser and check that you can see the front page.
 
-When running the site in a production environment, instead of `make start-dev`, run:
-
-```
-make start
-```
-
 ### Command Line Interface
 
 There is also a CLI available for grading applications on your local machine.
