@@ -78,7 +78,7 @@ func (ms *memStorage) GetMeta() (FileDesc, error) {
 func (ms *memStorage) List(ft FileType) ([]FileDesc, error) {
 	ms.mu.Lock()
 	var fds []FileDesc
-	for x, _ := range ms.files {
+	for x := range ms.files {
 		fd := unpackFile(x)
 		if fd.Type&ft != 0 {
 			fds = append(fds, fd)

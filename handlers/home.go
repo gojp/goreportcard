@@ -8,11 +8,12 @@ import (
 	"github.com/gojp/goreportcard/database"
 )
 
+// HomeHandler handles the homepage
 type HomeHandler struct {
 	DB database.Database
 }
 
-// HomeHandler handles the homepage
+// Handle handles the homepage
 func (h *HomeHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path[1:] == "" {
 

@@ -14,6 +14,7 @@ import (
 var domain = flag.String("domain", "goreportcard.com", "Domain used for your goreportcard installation")
 var googleAnalyticsKey = flag.String("google_analytics_key", "UA-58936835-1", "Google Analytics Account Id")
 
+// ReportHandler handles the report page
 type ReportHandler struct {
 	DB database.Database
 }

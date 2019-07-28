@@ -9,6 +9,8 @@ import (
 	"github.com/siddontang/ledisdb/ledis"
 )
 
+// Database represents the main functions that should be made available by a GRC database
+// implementation
 type Database interface {
 	GetRepo(string) (string, error)
 	SetRepo(repo string, value string) error

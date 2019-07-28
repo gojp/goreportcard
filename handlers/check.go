@@ -12,6 +12,7 @@ import (
 	"github.com/gojp/goreportcard/download"
 )
 
+// CheckHandler handles requests for checking repos
 type CheckHandler struct {
 	DB database.Database
 }

@@ -25,6 +25,7 @@ func formatScore(x float64) string {
 	return fmt.Sprintf("%.2f", x)
 }
 
+// HighScoresHandler handles the stats page
 type HighScoresHandler struct {
 	DB database.Database
 }

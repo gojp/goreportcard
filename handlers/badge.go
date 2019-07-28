@@ -10,6 +10,7 @@ import (
 	"github.com/gojp/goreportcard/database"
 )
 
+// BadgeHandler handles fetching badge images
 type BadgeHandler struct {
 	DB database.Database
 }
