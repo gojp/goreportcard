@@ -1,51 +1,26 @@
 package handlers
 
 import (
-	"encoding/json"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
-	"time"
 
-	"github.com/boltdb/bolt"
+	"github.com/gojp/goreportcard/database"
 )
 
+type HomeHandler struct {
+	DB database.Database
+}
+
 // HomeHandler handles the homepage
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
+func (h *HomeHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path[1:] == "" {
-		db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
+
+		recentRepos, err := h.DB.GetMostRecentlyViewed(5)
 		if err != nil {
-			log.Println("Failed to open bolt database: ", err)
-			return
+			log.Println("ERROR: while calling GetMostRecentlyViewed:", err)
+			recentRepos = []string{}
 		}
-		defer db.Close()
-
-		recent := &[]recentItem{}
-		err = db.View(func(tx *bolt.Tx) error {
-			rb := tx.Bucket([]byte(MetaBucket))
-			if rb == nil {
-				return fmt.Errorf("meta bucket not found")
-			}
-			b := rb.Get([]byte("recent"))
-			if b == nil {
-				b, err = json.Marshal([]recentItem{})
-				if err != nil {
-					return err
-				}
-			}
-			json.Unmarshal(b, recent)
-
-			return nil
-		})
-
-		var recentRepos = make([]string, len(*recent))
-		var j = len(*recent) - 1
-		for _, r := range *recent {
-			recentRepos[j] = r.Repo
-			j--
-		}
-
 		t := template.Must(template.New("home.html").Delims("[[", "]]").ParseFiles("templates/home.html", "templates/footer.html"))
 		t.Execute(w, map[string]interface{}{
 			"Recent":               recentRepos,

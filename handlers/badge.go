@@ -7,15 +7,20 @@ import (
 	"strings"
 
 	"github.com/gojp/goreportcard/check"
+	"github.com/gojp/goreportcard/database"
 )
+
+type BadgeHandler struct {
+	DB database.Database
+}
 
 func badgePath(grade check.Grade, style string) string {
 	return fmt.Sprintf("assets/badges/%s_%s.svg", strings.ToLower(string(grade)), strings.ToLower(style))
 }
 
-// BadgeHandler handles fetching the badge images
-func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string) {
-	resp, err := newChecksResp(repo, false)
+// Handle handles fetching the badge images
+func (b *BadgeHandler) Handle(w http.ResponseWriter, r *http.Request, repo string) {
+	resp, err := newChecksResp(b.DB, repo, false)
 
 	// See: http://shields.io/#styles
 	style := r.URL.Query().Get("style")

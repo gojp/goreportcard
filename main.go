@@ -104,21 +104,27 @@ func main() {
 	}
 
 	// initialize database
-	_, err := database.GetConnection(redisHost)
+	db, err := database.GetConnection(redisHost)
 	if err != nil {
 		log.Fatal("ERROR: could not connect to db: ", err)
 	}
 
 	m := setupMetrics()
 
+	homeHandler := handlers.HomeHandler{DB: db}
+	checkHandler := handlers.CheckHandler{DB: db}
+	reportHandler := handlers.ReportHandler{DB: db}
+	badgeHandler := handlers.BadgeHandler{DB: db}
+	highScoresHandler := handlers.HighScoresHandler{DB: db}
+
 	http.HandleFunc(m.instrument("/assets/", handlers.AssetsHandler))
 	http.HandleFunc(m.instrument("/favicon.ico", handlers.FaviconHandler))
-	http.HandleFunc(m.instrument("/checks", handlers.CheckHandler))
-	http.HandleFunc(m.instrument("/report/", makeHandler("report", handlers.ReportHandler)))
-	http.HandleFunc(m.instrument("/badge/", makeHandler("badge", handlers.BadgeHandler)))
-	http.HandleFunc(m.instrument("/high_scores/", handlers.HighScoresHandler))
+	http.HandleFunc(m.instrument("/checks", checkHandler.Handle))
+	http.HandleFunc(m.instrument("/report/", makeHandler("report", reportHandler.Handle)))
+	http.HandleFunc(m.instrument("/badge/", makeHandler("badge", badgeHandler.Handle)))
+	http.HandleFunc(m.instrument("/high_scores/", highScoresHandler.Handle))
 	http.HandleFunc(m.instrument("/about/", handlers.AboutHandler))
-	http.HandleFunc(m.instrument("/", handlers.HomeHandler))
+	http.HandleFunc(m.instrument("/", homeHandler.Handle))
 
 	http.Handle("/metrics", promhttp.Handler())
 
