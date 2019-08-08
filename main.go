@@ -108,7 +108,7 @@ func (m metrics) recordDuration(start time.Time, name string) {
 // instrument adds metric instrumentation to the handler passed in as argument
 func (m metrics) instrument(path string, h http.HandlerFunc) (string, http.HandlerFunc) {
 	return path, func(w http.ResponseWriter, r *http.Request) {
-		defer m.recordDuration(time.Now(), path)
+		defer m.recordDuration(time.Now(), r.URL.Path)
 		h.ServeHTTP(w, r)
 	}
 }
