@@ -90,10 +90,24 @@ misspell: 100%
 
 Go Report Card is an open source project run by volunteers, and contributions are welcome! Check out the [Issues](https://github.com/gojp/goreportcard/issues) page to see if your idea for a contribution has already been mentioned, and feel free to raise an issue or submit a pull request.
 
+### Academic Citation
+
+If you use Go Report Card for academic purposes, please use the following citation:
+
+```
+@Misc{schaaf-smith-goreportcard,
+    author = {Schaaf, Herman and Smith, Shawn},
+    title  = {Go Report Card: A report card for your Go application},
+    year   = {2015--},
+    url    = {https://www.goreportcard.com/},
+    note   = {[Online; accessed <today>]}
+}
+```
+
 ### License
 
 The code is licensed under the permissive Apache v2.0 licence. This means you can do what you like with the software, as long as you include the required notices. [Read this](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)) for a summary.
 
 ### Notes
 
-We don't support Go Report Card on Windows since we have no way to test it on Windows.
+We don't support Go Report Card on Windows.
