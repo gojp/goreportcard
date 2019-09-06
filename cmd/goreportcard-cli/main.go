@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"encoding/json"
 	"log"
 	"os"
 
@@ -13,6 +14,7 @@ var (
 	dir     = flag.String("d", ".", "Root directory of your Go application")
 	verbose = flag.Bool("v", false, "Verbose output")
 	th      = flag.Float64("t", 0, "Threshold of failure command")
+	jsn	= flag.Bool("j", false, "JSON output. The binary will always exit with code 0")
 )
 
 func main() {
@@ -21,6 +23,12 @@ func main() {
 	result, err := check.Run(*dir)
 	if err != nil {
 		log.Fatalf("Fatal error checking %s: %s", *dir, err.Error())
+	}
+
+	if *jsn {
+		marshalledResults, _ := json.Marshal(result)
+		fmt.Println(string(marshalledResults))
+		os.Exit(0)
 	}
 
 	fmt.Printf("Grade: %s (%.1f%%)\n", result.Grade, result.Average*100)
