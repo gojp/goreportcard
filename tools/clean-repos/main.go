@@ -48,12 +48,12 @@ func main() {
 					if err != nil {
 						log.Fatal(err)
 					}
-					if size < 15*1000*1000 {
+					if size < 50*1000*1000 {
 						if *real {
-							log.Printf("Deleting %s (dir size < 15M)...", path)
+							log.Printf("Deleting %s (dir size < 50M)...", path)
 							os.RemoveAll(path)
 						} else {
-							log.Printf("Would delete %s (dir size < 15M)", path)
+							log.Printf("Would delete %s (dir size < 50M)", path)
 						}
 					}
 				}
