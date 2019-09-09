@@ -6,8 +6,7 @@ A web application that generates a report on the quality of an open source go pr
 
 ### Sponsors
 
-<a href="https://www.signalsciences.com/"><img src="https://goreportcard.com/assets/signalsciences.png" height="54" width="260" ></a>
-
+Support us over on [Patreon](https://www.patreon.com/goreportcard)!
 
 ### Installation
 
