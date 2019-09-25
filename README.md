@@ -8,6 +8,9 @@ A web application that generates a report on the quality of an open source go pr
 
 Support us over on [Patreon](https://www.patreon.com/goreportcard)!
 
+- [Cooper Press](https://golangweekly.com)
+- [Cody Wood](https://www.linkedin.com/in/sprkyco/)
+
 ### Installation
 
 Assuming you already have a recent version of Go installed, pull down the code with `go get`:
