@@ -8,7 +8,8 @@ A web application that generates a report on the quality of an open source go pr
 
 Support us over on [Patreon](https://www.patreon.com/goreportcard)!
 
-- [Cooper Press](https://golangweekly.com)
+<a href="https://cooperpress.com"><img src="https://goreportcard.com/assets/cooperpress.png" width="50%" height="50%"></a>
+
 - [Cody Wood](https://www.linkedin.com/in/sprkyco/)
 
 ### Installation
