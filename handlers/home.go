@@ -17,7 +17,7 @@ var cache struct {
 }
 
 // HomeHandler handles the homepage
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
+func HomeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 	if r.URL.Path[1:] == "" {
 		var recentRepos = []string{}
 
@@ -30,15 +30,8 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println("Fetching recent repos from cache...")
 		} else {
 			log.Println("Updating recent repos cache...")
-			db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
-			if err != nil {
-				log.Println("Failed to open badger database: ", err)
-				return
-			}
-			defer db.Close()
-
 			recent := &[]recentItem{}
-			err = db.View(func(txn *badger.Txn) error {
+			err := db.View(func(txn *badger.Txn) error {
 				item, err := txn.Get([]byte("recent"))
 				if err != nil && err != badger.ErrKeyNotFound {
 					return err
@@ -54,6 +47,10 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 				return nil
 			})
+
+			if err != nil {
+				log.Println("ERROR: ", err)
+			}
 
 			recentRepos = make([]string, len(*recent))
 			var j = len(*recent) - 1

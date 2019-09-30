@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/dgraph-io/badger"
 	"github.com/gojp/goreportcard/check"
 )
 
@@ -17,7 +18,7 @@ func badgePath(grade check.Grade, style string) string {
 var badgeCache = sync.Map{}
 
 // BadgeHandler handles fetching the badge images
-func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string) {
+func BadgeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo string) {
 	// See: http://shields.io/#styles
 	style := r.URL.Query().Get("style")
 	if style == "" {
@@ -30,7 +31,7 @@ func BadgeHandler(w http.ResponseWriter, r *http.Request, repo string) {
 		log.Printf("Fetching badge for %q from cache...", repo)
 		grade = g.(check.Grade)
 	} else {
-		resp, err := newChecksResp(repo, false)
+		resp, err := newChecksResp(db, repo, false)
 		if err != nil {
 			log.Printf("ERROR: fetching badge for %s: %v", repo, err)
 			url := "https://img.shields.io/badge/go%20report-error-lightgrey.svg?style=" + style

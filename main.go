@@ -20,7 +20,7 @@ var (
 	addr = flag.String("http", ":8000", "HTTP listen address")
 )
 
-func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
+func makeHandler(db *badger.DB, name string, fn func(http.ResponseWriter, *http.Request, *badger.DB, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		validPath := regexp.MustCompile(fmt.Sprintf(`^/%s/([a-zA-Z0-9\-_\/\.]+)$`, name))
 
@@ -53,18 +53,14 @@ func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string
 			return
 		}
 
-		fn(w, r, repo)
+		fn(w, r, db, repo)
 	}
 }
 
-func initDB() error {
-	db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
-	if err != nil {
-		return err
+func injectBadgerHandler(db *badger.DB, fn func(http.ResponseWriter, *http.Request, *badger.DB)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fn(w, r, db)
 	}
-	db.Close()
-
-	return nil
 }
 
 // metrics provides functionality for monitoring the application status
@@ -109,22 +105,24 @@ func main() {
 		log.Fatal("ERROR: could not create repos dir: ", err)
 	}
 
-	// initialize database
-	if err := initDB(); err != nil {
-		log.Fatal("ERROR: could not open bolt db: ", err)
+	db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
+	if err != nil {
+		log.Fatal("ERROR: could not open badger db: ", err)
 	}
+
+	defer db.Close()
 
 	m := setupMetrics()
 
 	http.HandleFunc(m.instrument("/assets/", handlers.AssetsHandler))
 	http.HandleFunc(m.instrument("/favicon.ico", handlers.FaviconHandler))
-	http.HandleFunc(m.instrument("/checks", handlers.CheckHandler))
-	http.HandleFunc(m.instrument("/report/", makeHandler("report", handlers.ReportHandler)))
-	http.HandleFunc(m.instrument("/badge/", makeHandler("badge", handlers.BadgeHandler)))
+	http.HandleFunc(m.instrument("/checks", injectBadgerHandler(db, handlers.CheckHandler)))
+	http.HandleFunc(m.instrument("/report/", makeHandler(db, "report", handlers.ReportHandler)))
+	http.HandleFunc(m.instrument("/badge/", makeHandler(db, "badge", handlers.BadgeHandler)))
 	http.HandleFunc(m.instrument("/high_scores/", handlers.HighScoresHandler))
 	http.HandleFunc(m.instrument("/supporters/", handlers.SupportersHandler))
 	http.HandleFunc(m.instrument("/about/", handlers.AboutHandler))
-	http.HandleFunc(m.instrument("/", handlers.HomeHandler))
+	http.HandleFunc(m.instrument("/", injectBadgerHandler(db, handlers.HomeHandler)))
 
 	http.Handle("/metrics", promhttp.Handler())
 

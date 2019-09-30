@@ -24,16 +24,12 @@ func dirName(repo string) string {
 	return fmt.Sprintf("_repos/src/%s", repo)
 }
 
-func getFromCache(repo string) (checksResp, error) {
+func getFromCache(db *badger.DB, repo string) (checksResp, error) {
 	// try and fetch from badger
-	db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
+	fmt.Println("1")
 
 	resp := checksResp{}
-	err = db.View(func(txn *badger.Txn) error {
+	err := db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(RepoPrefix + repo))
 		if err != nil && err != badger.ErrKeyNotFound {
 			return err
@@ -79,9 +75,9 @@ type checksResp struct {
 	LastRefreshHumanized string        `json:"humanized_last_refresh"`
 }
 
-func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
+func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, error) {
 	if !forceRefresh {
-		resp, err := getFromCache(repo)
+		resp, err := getFromCache(db, repo)
 		if err != nil {
 			// just log the error and continue
 			log.Println(err)
@@ -124,13 +120,6 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		return checksResp{}, fmt.Errorf("could not marshal json: %v", err)
 	}
 
-	// write to badger
-	db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
 	// is this a new repo? if so, increase the count in the high scores bucket later
 	isNewRepo := false
 	var oldRepoBytes []byte
@@ -169,7 +158,7 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		})
 
 		if err != nil {
-			log.Println("Bolt writing error:", err)
+			log.Println("Badger writing error:", err)
 		}
 
 	}

@@ -18,7 +18,7 @@ const (
 )
 
 // CheckHandler handles the request for checking a repo
-func CheckHandler(w http.ResponseWriter, r *http.Request) {
+func CheckHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 	w.Header().Set("Content-Type", "application/json")
 
 	repo, err := download.Clean(r.FormValue("repo"))
@@ -31,7 +31,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Checking repo %q...", repo)
 
 	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in badger first
-	_, err = newChecksResp(repo, forceRefresh)
+	_, err = newChecksResp(db, repo, forceRefresh)
 	if err != nil {
 		log.Println("ERROR: from newChecksResp:", err)
 		http.Error(w, "Could not analyze the repository: "+err.Error(), http.StatusBadRequest)
