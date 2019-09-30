@@ -21,15 +21,9 @@ func formatScore(x float64) string {
 }
 
 // HighScoresHandler handles the stats page
-func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
-	db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
+func HighScoresHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 	count, scores := 0, &ScoreHeap{}
-	err = db.View(func(txn *badger.Txn) error {
+	err := db.View(func(txn *badger.Txn) error {
 		var scoreBytes = []byte("[]")
 		item, err := txn.Get([]byte("scores"))
 
