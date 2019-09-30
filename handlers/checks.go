@@ -26,8 +26,6 @@ func dirName(repo string) string {
 
 func getFromCache(db *badger.DB, repo string) (checksResp, error) {
 	// try and fetch from badger
-	fmt.Println("1")
-
 	resp := checksResp{}
 	err := db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(RepoPrefix + repo))
@@ -137,8 +135,9 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 
 		return err
 	})
-	if err != nil {
-		log.Println("ERROR getting repo from repo bucket:", err)
+
+	if err != nil && err != badger.ErrKeyNotFound {
+		log.Println("ERROR getting repo badger:", err)
 	}
 
 	isNewRepo = oldRepoBytes == nil
