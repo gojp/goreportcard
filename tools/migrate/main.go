@@ -11,7 +11,7 @@ import (
 )
 
 func migrate() error {
-	db, err := bolt.Open("/Users/shawn/goreportcard.db", 0755, &bolt.Options{Timeout: 1 * time.Second})
+	db, err := bolt.Open("goreportcard.db", 0755, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		return fmt.Errorf("could not open bolt db: %v", err)
 	}
