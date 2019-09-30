@@ -13,10 +13,6 @@ import (
 )
 
 const (
-	// MetaBucket is the bucket containing the names of the projects with the
-	// top 100 high scores, and other meta information
-	MetaBucket string = "meta"
-
 	// RepoPrefix is the badger prefix for repos
 	RepoPrefix string = "repos-"
 )
