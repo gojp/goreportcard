@@ -30,7 +30,7 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Checking repo %q...", repo)
 
-	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in boltdb first
+	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in badger first
 	_, err = newChecksResp(repo, forceRefresh)
 	if err != nil {
 		log.Println("ERROR: from newChecksResp:", err)

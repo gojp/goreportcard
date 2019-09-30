@@ -30,25 +30,20 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
 
 	count, scores := 0, &ScoreHeap{}
 	err = db.View(func(txn *badger.Txn) error {
-		var scoreBytes []byte
+		var scoreBytes = []byte("[]")
 		item, err := txn.Get([]byte("scores"))
-		if item == nil {
-			scoreBytes, err = json.Marshal([]ScoreHeap{})
-			if err != nil {
-				return err
-			}
-		}
 
 		if item != nil {
 			err = item.Value(func(val []byte) error {
-				err = json.Unmarshal(val, &scoreBytes)
-				if err != nil {
-					return fmt.Errorf("failed to unmarshal high scores JSON: %v", err)
-				}
-
+				scoreBytes = val
 				return nil
 			})
+
+			if err != nil {
+				log.Println(err)
+			}
 		}
+
 		json.Unmarshal(scoreBytes, scores)
 
 		heap.Init(scores)
