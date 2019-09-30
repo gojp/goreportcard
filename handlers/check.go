@@ -8,20 +8,17 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/boltdb/bolt"
+	"github.com/dgraph-io/badger"
 	"github.com/gojp/goreportcard/download"
 )
 
 const (
-	// DBPath is the relative (or absolute) path to the bolt database file
-	DBPath string = "goreportcard.db"
-
-	// RepoBucket is the bucket in which repos will be cached in the bolt DB
-	RepoBucket string = "repos"
-
 	// MetaBucket is the bucket containing the names of the projects with the
 	// top 100 high scores, and other meta information
 	MetaBucket string = "meta"
+
+	// RepoPrefix is the badger prefix for repos
+	RepoPrefix string = "repos-"
 )
 
 // CheckHandler handles the request for checking a repo
@@ -53,18 +50,35 @@ func CheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
-func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
+func updateHighScores(txn *badger.Txn, resp checksResp, repo string) error {
 	// check if we need to update the high score list
 	if resp.Files < 100 {
 		// only repos with >= 100 files are considered for the high score list
 		return nil
 	}
 
+	var scoreBytes []byte
 	// start updating high score list
-	scoreBytes := mb.Get([]byte("scores"))
-	if scoreBytes == nil {
+	item, err := txn.Get([]byte("scores"))
+	if err != nil && err != badger.ErrKeyNotFound {
+		return err
+	}
+
+	if item == nil {
 		scoreBytes, _ = json.Marshal([]ScoreHeap{})
 	}
+
+	if item != nil {
+		err = item.Value(func(val []byte) error {
+			err = json.Unmarshal(val, &scoreBytes)
+			if err != nil {
+				return fmt.Errorf("could not unmarshal high scores: %v", err)
+			}
+
+			return nil
+		})
+	}
+
 	scores := &ScoreHeap{}
 	json.Unmarshal(scoreBytes, scores)
 
@@ -74,6 +88,7 @@ func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
 		// we do not have 50 high scores yet
 		return nil
 	}
+
 	// if this repo is already in the list, remove the original entry:
 	for i := range *scores {
 		if strings.ToLower((*scores)[i].Repo) == strings.ToLower(repo) {
@@ -81,40 +96,58 @@ func updateHighScores(mb *bolt.Bucket, resp checksResp, repo string) error {
 			break
 		}
 	}
+
 	// now we can safely push it onto the heap
 	heap.Push(scores, scoreItem{
 		Repo:  repo,
 		Score: resp.Average * 100.0,
 		Files: resp.Files,
 	})
+
 	if len(*scores) > 50 {
 		// trim heap if it's grown to over 50
 		*scores = (*scores)[1:51]
 	}
-	scoreBytes, err := json.Marshal(&scores)
+
+	scoreBytes, err = json.Marshal(&scores)
 	if err != nil {
 		return err
 	}
-	return mb.Put([]byte("scores"), scoreBytes)
+
+	return txn.Set([]byte("scores"), scoreBytes)
 }
 
-func updateReposCount(mb *bolt.Bucket, repo string) (err error) {
+func updateReposCount(txn *badger.Txn, repo string) error {
 	log.Printf("New repo %q, adding to repo count...", repo)
 	totalInt := 0
-	total := mb.Get([]byte("total_repos"))
-	if total != nil {
-		err = json.Unmarshal(total, &totalInt)
-		if err != nil {
-			return fmt.Errorf("could not unmarshal total repos count: %v", err)
-		}
+	item, err := txn.Get([]byte("total_repos"))
+	if err != nil && err != badger.ErrKeyNotFound {
+		return err
 	}
+
+	if item != nil {
+		err = item.Value(func(val []byte) error {
+			err = json.Unmarshal(val, &totalInt)
+			if err != nil {
+				return fmt.Errorf("could not unmarshal total repos count: %v", err)
+			}
+
+			return nil
+		})
+	}
+
 	totalInt++ // increase repo count
-	total, err = json.Marshal(totalInt)
+	total, err := json.Marshal(totalInt)
 	if err != nil {
 		return fmt.Errorf("could not marshal total repos count: %v", err)
 	}
-	mb.Put([]byte("total_repos"), total)
+
+	err = txn.Set([]byte("total_repos"), total)
+	if err != nil {
+		return err
+	}
 	log.Println("Repo count is now", totalInt)
+
 	return nil
 }
 
@@ -122,16 +155,14 @@ type recentItem struct {
 	Repo string
 }
 
-func updateRecentlyViewed(mb *bolt.Bucket, repo string) error {
-	if mb == nil {
-		return fmt.Errorf("meta bucket not found")
+func updateRecentlyViewed(txn *badger.Txn, repo string) error {
+	var recent []recentItem
+	item, err := txn.Get([]byte("recent"))
+	if item != nil {
+		item.Value(func(val []byte) error {
+			return json.Unmarshal(val, &recent)
+		})
 	}
-	b := mb.Get([]byte("recent"))
-	if b == nil {
-		b, _ = json.Marshal([]recentItem{})
-	}
-	recent := []recentItem{}
-	json.Unmarshal(b, &recent)
 
 	// add it to the slice, if it is not in there already
 	for i := range recent {
@@ -149,23 +180,18 @@ func updateRecentlyViewed(mb *bolt.Bucket, repo string) error {
 	if err != nil {
 		return err
 	}
-	return mb.Put([]byte("recent"), b)
+
+	return txn.Set([]byte("recent"), b)
 }
 
-//func updateMetadata(tx *bolt.Tx, resp checksResp, repo string, isNewRepo bool, oldScore *float64) error {
-func updateMetadata(tx *bolt.Tx, resp checksResp, repo string, isNewRepo bool) error {
-	// fetch meta-bucket
-	mb := tx.Bucket([]byte(MetaBucket))
-	if mb == nil {
-		return fmt.Errorf("high score bucket not found")
-	}
+func updateMetadata(txn *badger.Txn, resp checksResp, repo string, isNewRepo bool) error {
 	// update total repos count
 	if isNewRepo {
-		err := updateReposCount(mb, repo)
+		err := updateReposCount(txn, repo)
 		if err != nil {
 			return err
 		}
 	}
 
-	return updateHighScores(mb, resp, repo)
+	return updateHighScores(txn, resp, repo)
 }

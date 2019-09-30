@@ -2,14 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"sync"
-	"time"
 
-	"github.com/boltdb/bolt"
+	"github.com/dgraph-io/badger"
 )
 
 var cache struct {
@@ -32,27 +30,27 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println("Fetching recent repos from cache...")
 		} else {
 			log.Println("Updating recent repos cache...")
-			db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
+			db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
 			if err != nil {
-				log.Println("Failed to open bolt database: ", err)
+				log.Println("Failed to open badger database: ", err)
 				return
 			}
 			defer db.Close()
 
 			recent := &[]recentItem{}
-			err = db.View(func(tx *bolt.Tx) error {
-				rb := tx.Bucket([]byte(MetaBucket))
-				if rb == nil {
-					return fmt.Errorf("meta bucket not found")
+			err = db.View(func(txn *badger.Txn) error {
+				item, err := txn.Get([]byte("recent"))
+				if err != nil && err != badger.ErrKeyNotFound {
+					return err
 				}
-				b := rb.Get([]byte("recent"))
-				if b == nil {
-					b, err = json.Marshal([]recentItem{})
-					if err != nil {
-						return err
-					}
+
+				if item != nil {
+					err = item.Value(func(val []byte) error {
+						return json.Unmarshal(val, recent)
+					})
+
+					return err
 				}
-				json.Unmarshal(b, recent)
 
 				return nil
 			})

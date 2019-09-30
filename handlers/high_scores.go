@@ -7,9 +7,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"time"
 
-	"github.com/boltdb/bolt"
+	"github.com/dgraph-io/badger"
 	"github.com/dustin/go-humanize"
 )
 
@@ -23,37 +22,50 @@ func formatScore(x float64) string {
 
 // HighScoresHandler handles the stats page
 func HighScoresHandler(w http.ResponseWriter, r *http.Request) {
-	// write to boltdb
-	db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
+	db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
 	if err != nil {
-		log.Println("Failed to open bolt database: ", err)
-		return
+		log.Fatal(err)
 	}
 	defer db.Close()
 
 	count, scores := 0, &ScoreHeap{}
-	err = db.View(func(tx *bolt.Tx) error {
-		hsb := tx.Bucket([]byte(MetaBucket))
-		if hsb == nil {
-			return fmt.Errorf("high score bucket not found")
-		}
-		scoreBytes := hsb.Get([]byte("scores"))
-		if scoreBytes == nil {
+	err = db.View(func(txn *badger.Txn) error {
+		var scoreBytes []byte
+		item, err := txn.Get([]byte("scores"))
+		if item == nil {
 			scoreBytes, err = json.Marshal([]ScoreHeap{})
 			if err != nil {
 				return err
 			}
 		}
+
+		if item != nil {
+			err = item.Value(func(val []byte) error {
+				err = json.Unmarshal(val, &scoreBytes)
+				if err != nil {
+					return fmt.Errorf("failed to unmarshal high scores JSON: %v", err)
+				}
+
+				return nil
+			})
+		}
 		json.Unmarshal(scoreBytes, scores)
 
 		heap.Init(scores)
 
-		total := hsb.Get([]byte("total_repos"))
-		if total == nil {
+		item, err = txn.Get([]byte("total_repos"))
+		if item == nil {
 			count = 0
 			return nil
 		}
-		return json.Unmarshal(total, &count)
+
+		if item != nil {
+			err = item.Value(func(val []byte) error {
+				return json.Unmarshal(val, &count)
+			})
+		}
+
+		return err
 	})
 
 	if err != nil {

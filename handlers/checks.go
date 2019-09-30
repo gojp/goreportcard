@@ -2,12 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/boltdb/bolt"
+	"github.com/dgraph-io/badger"
 	"github.com/dustin/go-humanize"
 	"github.com/gojp/goreportcard/check"
 	"github.com/gojp/goreportcard/download"
@@ -26,29 +25,34 @@ func dirName(repo string) string {
 }
 
 func getFromCache(repo string) (checksResp, error) {
-	// try and fetch from boltdb
-	db, err := bolt.Open(DBPath, 0600, &bolt.Options{Timeout: 3 * time.Second})
+	// try and fetch from badger
+	db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
 	if err != nil {
-		return checksResp{}, fmt.Errorf("failed to open bolt database during GET: %v", err)
+		log.Fatal(err)
 	}
 	defer db.Close()
 
 	resp := checksResp{}
-	err = db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(RepoBucket))
-		if b == nil {
-			return errors.New("No repo bucket")
+	err = db.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(RepoPrefix + repo))
+		if err != nil && err != badger.ErrKeyNotFound {
+			return err
 		}
-		cached := b.Get([]byte(repo))
-		if cached == nil {
+
+		if item == nil {
 			return notFoundError{repo}
 		}
 
-		err = json.Unmarshal(cached, &resp)
-		if err != nil {
-			return fmt.Errorf("failed to parse JSON for %q in cache", repo)
-		}
-		return nil
+		err = item.Value(func(val []byte) error {
+			err = json.Unmarshal(val, &resp)
+			if err != nil {
+				return fmt.Errorf("failed to parse JSON for %q in cache", repo)
+			}
+
+			return nil
+		})
+
+		return err
 	})
 
 	if err != nil {
@@ -120,23 +124,29 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 		return checksResp{}, fmt.Errorf("could not marshal json: %v", err)
 	}
 
-	// write to boltdb
-	db, err := bolt.Open(DBPath, 0755, &bolt.Options{Timeout: 1 * time.Second})
+	// write to badger
+	db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
 	if err != nil {
-		return checksResp{}, fmt.Errorf("could not open bolt db: %v", err)
+		log.Fatal(err)
 	}
 	defer db.Close()
 
 	// is this a new repo? if so, increase the count in the high scores bucket later
 	isNewRepo := false
 	var oldRepoBytes []byte
-	err = db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(RepoBucket))
-		if b == nil {
-			return fmt.Errorf("repo bucket not found")
+	err = db.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(RepoPrefix + repo))
+		if err != nil {
+			return err
 		}
-		oldRepoBytes = b.Get([]byte(repo))
-		return nil
+
+		err = item.Value(func(val []byte) error {
+			oldRepoBytes = val
+
+			return nil
+		})
+
+		return err
 	})
 	if err != nil {
 		log.Println("ERROR getting repo from repo bucket:", err)
@@ -146,21 +156,16 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 
 	// if this is a new repo, or the user force-refreshed, update the cache
 	if isNewRepo || forceRefresh {
-		err = db.Update(func(tx *bolt.Tx) error {
+		err = db.Update(func(txn *badger.Txn) error {
 			log.Printf("Saving repo %q to cache...", repo)
 
-			b := tx.Bucket([]byte(RepoBucket))
-			if b == nil {
-				return fmt.Errorf("repo bucket not found")
-			}
-
 			// save repo to cache
-			err = b.Put([]byte(repo), respBytes)
+			err = txn.Set([]byte(RepoPrefix+repo), respBytes)
 			if err != nil {
 				return err
 			}
 
-			return updateMetadata(tx, resp, repo, isNewRepo)
+			return updateMetadata(txn, resp, repo, isNewRepo)
 		})
 
 		if err != nil {
@@ -169,11 +174,13 @@ func newChecksResp(repo string, forceRefresh bool) (checksResp, error) {
 
 	}
 
-	db.Update(func(tx *bolt.Tx) error {
-		// fetch meta-bucket
-		mb := tx.Bucket([]byte(MetaBucket))
-		return updateRecentlyViewed(mb, repo)
+	err = db.Update(func(txn *badger.Txn) error {
+		return updateRecentlyViewed(txn, repo)
 	})
+
+	if err != nil {
+		log.Printf("ERROR: could not update recently viewed: %v", err)
+	}
 
 	return resp, nil
 }

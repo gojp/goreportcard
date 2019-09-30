@@ -9,9 +9,9 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/dgraph-io/badger"
 	"github.com/gojp/goreportcard/handlers"
 
-	"github.com/boltdb/bolt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -57,24 +57,14 @@ func makeHandler(name string, fn func(http.ResponseWriter, *http.Request, string
 	}
 }
 
-// initDB opens the bolt database file (or creates it if it does not exist), and creates
-// a bucket for saving the repos, also only if it does not exist.
 func initDB() error {
-	db, err := bolt.Open(handlers.DBPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
+	db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	db.Close()
 
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte(handlers.RepoBucket))
-		if err != nil {
-			return err
-		}
-		_, err = tx.CreateBucketIfNotExists([]byte(handlers.MetaBucket))
-		return err
-	})
-	return err
+	return nil
 }
 
 // metrics provides functionality for monitoring the application status
