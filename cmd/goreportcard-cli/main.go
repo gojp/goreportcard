@@ -1,9 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
-	"encoding/json"
 	"log"
 	"os"
 
@@ -14,7 +14,7 @@ var (
 	dir     = flag.String("d", ".", "Root directory of your Go application")
 	verbose = flag.Bool("v", false, "Verbose output")
 	th      = flag.Float64("t", 0, "Threshold of failure command")
-	jsn	= flag.Bool("j", false, "JSON output. The binary will always exit with code 0")
+	jsn     = flag.Bool("j", false, "JSON output. The binary will always exit with code 0")
 )
 
 func main() {
