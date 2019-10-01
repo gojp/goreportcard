@@ -130,6 +130,7 @@ func main() {
 	http.HandleFunc(m.instrument("/favicon.ico", handlers.FaviconHandler))
 	http.HandleFunc(m.instrument("/checks", handlers.CheckHandler))
 	http.HandleFunc(m.instrument("/report/", makeHandler("report", handlers.ReportHandler)))
+	http.HandleFunc(m.instrument("/json/report/", makeHandler("report", handlers.JSONReportHandler)))
 	http.HandleFunc(m.instrument("/badge/", makeHandler("badge", handlers.BadgeHandler)))
 	http.HandleFunc(m.instrument("/high_scores/", handlers.HighScoresHandler))
 	http.HandleFunc(m.instrument("/supporters/", handlers.SupportersHandler))

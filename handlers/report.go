@@ -43,3 +43,35 @@ func ReportHandler(w http.ResponseWriter, r *http.Request, repo string) {
 		"google_analytics_key": googleAnalyticsKey,
 	})
 }
+
+// JSONReportHandler API handles the report
+func JSONReportHandler(w http.ResponseWriter, r *http.Request, repo string) {
+	log.Printf("Displaying report (JSON): %q", repo)
+	resp, err := getFromCache(repo)
+	needToLoad := false
+	if err != nil {
+		switch err.(type) {
+		case notFoundError:
+			// don't bother logging - we already log in getFromCache. continue
+		default:
+			log.Println("ERROR ReportHandler:", err) // log error, but continue
+		}
+		needToLoad = true
+	}
+
+	respBytes, err := json.Marshal(resp)
+	if err != nil {
+		log.Println("ERROR ReportHandler: could not marshal JSON: ", err)
+		http.Error(w, "Failed to load cache object", 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(map[string]interface{}{
+		"repo":                 repo,
+		"response":             string(respBytes),
+		"loading":              needToLoad,
+		"domain":               domain,
+		"google_analytics_key": googleAnalyticsKey,
+	})
+}
