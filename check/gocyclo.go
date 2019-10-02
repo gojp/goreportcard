@@ -18,7 +18,7 @@ func (g GoCyclo) Weight() float64 {
 
 // Percentage returns the percentage of .go files that pass gofmt
 func (g GoCyclo) Percentage() (float64, []FileSummary, error) {
-	return GoTool(g.Dir, g.Filenames, []string{"gometalinter", "--deadline=180s", "--disable-all", "--enable=gocyclo", "--cyclo-over=15"})
+	return GoTool(g.Dir, g.Filenames, []string{"golangci-lint", "run", "--deadline=180s", "--disable-all", "--enable=gocyclo", "--cyclo-over=15"})
 }
 
 // Description returns the description of GoCyclo
