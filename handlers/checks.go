@@ -2,12 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/boltdb/bolt"
 	"github.com/dgraph-io/badger"
 	"github.com/dustin/go-humanize"
 	"github.com/gojp/goreportcard/check"
@@ -48,50 +46,8 @@ func getFromCache(db *badger.DB, repo string) (checksResp, error) {
 		}
 
 		if item == nil {
-			log.Printf("Repo %q not found in badger cache. Checking boltdb...", repo)
-			// try getting from boltdb and saving to badger.
-			boltDB, err := bolt.Open("goreportcard.db", 0600, &bolt.Options{Timeout: 3 * time.Second})
-			if err != nil {
-				return fmt.Errorf("failed to open bolt database during GET: %v", err)
-			}
-			defer boltDB.Close()
-
-			err = boltDB.View(func(tx *bolt.Tx) error {
-				b := tx.Bucket([]byte("repos"))
-				if b == nil {
-					return errors.New("No repo bucket")
-				}
-				cached := b.Get([]byte(repo))
-				if cached == nil {
-					log.Println("Repo not found in boltdb")
-					return notFoundError{repo}
-				}
-
-				err = json.Unmarshal(cached, &resp)
-				if err != nil {
-					return fmt.Errorf("failed to parse JSON for %q in cache", repo)
-				}
-
-				return db.Update(func(txn *badger.Txn) error {
-					log.Printf("Repo %q found in boltdb. Saving to badger cache...", repo)
-
-					// save repo to cache
-					err = txn.Set([]byte(RepoPrefix+repo), cached)
-					if err != nil {
-						return err
-					}
-
-					return updateMetadata(txn, resp, repo, false)
-				})
-			})
-
-			if err != nil {
-				return err
-			}
-
-			if resp.Repo == "" {
-				return notFoundError{repo}
-			}
+			log.Println("Repo not found in badger")
+			return notFoundError{repo}
 		}
 
 		return nil
