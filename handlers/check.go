@@ -119,14 +119,19 @@ func updateReposCount(txn *badger.Txn, repo string) error {
 	}
 
 	if item != nil {
-		err = item.Value(func(val []byte) error {
+		err := item.Value(func(val []byte) error {
 			err = json.Unmarshal(val, &totalInt)
 			if err != nil {
 				return fmt.Errorf("could not unmarshal total repos count: %v", err)
 			}
 
 			return nil
+
 		})
+
+		if err != nil {
+			return err
+		}
 	}
 
 	totalInt++ // increase repo count
