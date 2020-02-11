@@ -66,10 +66,7 @@ func updateHighScores(txn *badger.Txn, resp checksResp, repo string) error {
 
 	if item != nil {
 		err = item.Value(func(val []byte) error {
-			err = json.Unmarshal(val, &scoreBytes)
-			if err != nil {
-				return fmt.Errorf("could not unmarshal high scores: %v", err)
-			}
+			scoreBytes = val
 
 			return nil
 		})
