@@ -28,3 +28,8 @@ _testmain.go
 _repos
 
 goreportcard.db
+.vscode/
+goreportcard-cli
+testdata/
+.badger
+git_downloader_up_test.go

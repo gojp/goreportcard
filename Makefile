@@ -1,20 +1,18 @@
 all: lint build test
 
 build:
-	go build ./...
+	go build ./cmd/goreportcard-cli
 
 install: 
 	./scripts/make-install.sh
 
 lint:
-	gometalinter --exclude=vendor --exclude=repos --disable-all --enable=golint --enable=vet --enable=gofmt ./...
-	find . -name '*.go' | xargs gofmt -w -s
+	golangci-lint run --skip-dirs=repos --disable-all \
+		--enable=golint --enable=vet --enable=gofmt --enable=misspell ./...
 
 test: 
-	 go test -cover ./check ./handlers
+	go test -cover ./internal
 
 start:
-	 go run main.go
+	go run ./cmd/goreportcard-cli/ start-web
 
-misspell:
-	find . -name '*.go' -not -path './vendor/*' -not -path './_repos/*' | xargs misspell -error

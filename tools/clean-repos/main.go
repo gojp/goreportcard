@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/yeqown/log"
 )
 
 var real = flag.Bool("real", false, "run the deletions")
@@ -36,11 +37,11 @@ func main() {
 					path := "_repos/src/" + f.Name() + "/" + d.Name() + "/" + repo.Name()
 					if time.Since(d.ModTime()) > 30*24*time.Hour {
 						if *real {
-							log.Printf("Deleting %s (repo is old)...", path)
+							log.Infof("Deleting %s (repo is old)...", path)
 							os.RemoveAll(path)
 							continue
 						} else {
-							log.Printf("Would delete %s (repo is old)", path)
+							log.Infof("Would delete %s (repo is old)", path)
 						}
 					}
 
@@ -50,10 +51,10 @@ func main() {
 					}
 					if size < 50*1000*1000 {
 						if *real {
-							log.Printf("Deleting %s (dir size < 50M)...", path)
+							log.Infof("Deleting %s (dir size < 50M)...", path)
 							os.RemoveAll(path)
 						} else {
-							log.Printf("Would delete %s (dir size < 50M)", path)
+							log.Infof("Would delete %s (dir size < 50M)", path)
 						}
 					}
 				}
