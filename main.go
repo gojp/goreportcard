@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger"
-	"github.com/gojp/goreportcard/handlers"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"github.com/gojp/goreportcard/handlers"
 )
 
 var (

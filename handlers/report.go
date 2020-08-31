@@ -2,11 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
-	"net/http"
-
 	"flag"
 	"html/template"
+	"log"
+	"net/http"
 
 	"github.com/dgraph-io/badger"
 )
@@ -37,7 +36,7 @@ func ReportHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo s
 		return
 	}
 
-	t.Execute(w, map[string]interface{}{
+	_ = t.Execute(w, map[string]interface{}{
 		"repo":                 repo,
 		"response":             string(respBytes),
 		"loading":              needToLoad,

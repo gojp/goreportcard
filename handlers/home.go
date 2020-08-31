@@ -19,7 +19,7 @@ var cache struct {
 // HomeHandler handles the homepage
 func HomeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 	if r.URL.Path[1:] == "" {
-		var recentRepos = []string{}
+		var recentRepos []string
 
 		cache.mux.Lock()
 		cache.count++
@@ -64,7 +64,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 		}
 
 		t := template.Must(template.New("home.html").Delims("[[", "]]").ParseFiles("templates/home.html", "templates/footer.html"))
-		t.Execute(w, map[string]interface{}{
+		_ = t.Execute(w, map[string]interface{}{
 			"Recent":               recentRepos,
 			"google_analytics_key": googleAnalyticsKey,
 		})

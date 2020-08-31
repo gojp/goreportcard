@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/dgraph-io/badger"
+
 	"github.com/gojp/goreportcard/download"
 )
 

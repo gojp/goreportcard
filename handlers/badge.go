@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/dgraph-io/badger"
+
 	"github.com/gojp/goreportcard/check"
 )
 
