@@ -105,7 +105,7 @@ func main() {
 		log.Fatal("ERROR: could not create repos dir: ", err)
 	}
 
-	db, err := badger.Open(badger.DefaultOptions("/tmp/badger"))
+	db, err := badger.Open(badger.DefaultOptions("/usr/local/badger"))
 	if err != nil {
 		log.Fatal("ERROR: could not open badger db: ", err)
 	}
