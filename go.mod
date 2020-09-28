@@ -4,7 +4,6 @@ go 1.14
 
 require (
 	github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a // indirect
-	github.com/boltdb/bolt v1.3.2-0.20171120010307-9da317453632
 	github.com/dgraph-io/badger v1.6.1-0.20190924140636-a425b0eafac0
 	github.com/dgraph-io/ristretto v0.0.0-20190928180628-8acd55ed71b0 // indirect
 	github.com/dustin/go-humanize v1.0.0

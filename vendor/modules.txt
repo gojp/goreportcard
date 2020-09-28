@@ -1,9 +1,6 @@
 # github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a
 ## explicit
 github.com/beorn7/perks/quantile
-# github.com/boltdb/bolt v1.3.2-0.20171120010307-9da317453632
-## explicit
-github.com/boltdb/bolt
 # github.com/cespare/xxhash v1.1.0
 github.com/cespare/xxhash
 # github.com/dgraph-io/badger v1.6.1-0.20190924140636-a425b0eafac0
