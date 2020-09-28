@@ -21,6 +21,7 @@ import (
 	"context"
 	"encoding/binary"
 	"expvar"
+	"io"
 	"math"
 	"os"
 	"path/filepath"
@@ -88,8 +89,7 @@ type DB struct {
 
 	orc *oracle
 
-	pub      *publisher
-	registry *KeyRegistry
+	pub *publisher
 }
 
 const (
@@ -119,10 +119,11 @@ func (db *DB) replayFunction() func(Entry, valuePointer) error {
 			db.elog.Printf("First key=%q\n", e.Key)
 		}
 		first = false
-
+		db.orc.Lock()
 		if db.orc.nextTxnTs < y.ParseTs(e.Key) {
 			db.orc.nextTxnTs = y.ParseTs(e.Key)
 		}
+		db.orc.Unlock()
 
 		nk := make([]byte, len(e.Key))
 		copy(nk, e.Key)
@@ -132,9 +133,14 @@ func (db *DB) replayFunction() func(Entry, valuePointer) error {
 			nv = make([]byte, len(e.Value))
 			copy(nv, e.Value)
 		} else {
-			nv = vp.Encode()
+			nv = make([]byte, vptrSize)
+			vp.Encode(nv)
 			meta = meta | bitValuePointer
 		}
+		// Update vhead. If the crash happens while replay was in progess
+		// and the head is not updated, we will end up replaying all the
+		// files starting from file zero, again.
+		db.updateHead([]valuePointer{vp})
 
 		v := y.ValueStruct{
 			Value:     nv,
@@ -188,20 +194,9 @@ func Open(opt Options) (db *DB, err error) {
 	opt.maxBatchSize = (15 * opt.MaxTableSize) / 100
 	opt.maxBatchCount = opt.maxBatchSize / int64(skl.MaxNodeSize)
 
-	// We are limiting opt.ValueThreshold to maxValueThreshold for now.
-	if opt.ValueThreshold > maxValueThreshold {
-		return nil, errors.Errorf("Invalid ValueThreshold, must be less or equal to %d",
-			maxValueThreshold)
+	if opt.ValueThreshold > ValueThresholdLimit {
+		return nil, ErrValueThreshold
 	}
-
-	// If ValueThreshold is greater than opt.maxBatchSize, we won't be able to push any data using
-	// the transaction APIs. Transaction batches entries into batches of size opt.maxBatchSize.
-	if int64(opt.ValueThreshold) > opt.maxBatchSize {
-		return nil, errors.Errorf("Valuethreshold greater than max batch size of %d. Either "+
-			"reduce opt.ValueThreshold or increase opt.MaxTableSize.", opt.maxBatchSize)
-	}
-	// Compact L0 on close if either it is set or if KeepL0InMemory is set.
-	opt.CompactL0OnClose = opt.CompactL0OnClose || opt.KeepL0InMemory
 
 	if opt.ReadOnly {
 		// Can't truncate if the DB is read only.
@@ -226,34 +221,36 @@ func Open(opt Options) (db *DB, err error) {
 			}
 		}
 	}
-	absDir, err := filepath.Abs(opt.Dir)
-	if err != nil {
-		return nil, err
-	}
-	absValueDir, err := filepath.Abs(opt.ValueDir)
-	if err != nil {
-		return nil, err
-	}
 	var dirLockGuard, valueDirLockGuard *directoryLockGuard
-	dirLockGuard, err = acquireDirectoryLock(opt.Dir, lockFile, opt.ReadOnly)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if dirLockGuard != nil {
-			_ = dirLockGuard.release()
+	if !opt.BypassLockGuard {
+		absDir, err := filepath.Abs(opt.Dir)
+		if err != nil {
+			return nil, err
 		}
-	}()
-	if absValueDir != absDir {
-		valueDirLockGuard, err = acquireDirectoryLock(opt.ValueDir, lockFile, opt.ReadOnly)
+		absValueDir, err := filepath.Abs(opt.ValueDir)
+		if err != nil {
+			return nil, err
+		}
+		dirLockGuard, err = acquireDirectoryLock(opt.Dir, lockFile, opt.ReadOnly)
 		if err != nil {
 			return nil, err
 		}
 		defer func() {
-			if valueDirLockGuard != nil {
-				_ = valueDirLockGuard.release()
+			if dirLockGuard != nil {
+				_ = dirLockGuard.release()
 			}
 		}()
+		if absValueDir != absDir {
+			valueDirLockGuard, err = acquireDirectoryLock(opt.ValueDir, lockFile, opt.ReadOnly)
+			if err != nil {
+				return nil, err
+			}
+			defer func() {
+				if valueDirLockGuard != nil {
+					_ = valueDirLockGuard.release()
+				}
+			}()
+		}
 	}
 	if !(opt.ValueLogFileSize <= 2<<30 && opt.ValueLogFileSize >= 1<<20) {
 		return nil, ErrValueLogSize
@@ -290,18 +287,6 @@ func Open(opt Options) (db *DB, err error) {
 		pub:           newPublisher(),
 	}
 
-	krOpt := KeyRegistryOptions{
-		ReadOnly:                      opt.ReadOnly,
-		Dir:                           opt.Dir,
-		EncryptionKey:                 opt.EncryptionKey,
-		EncryptionKeyRotationDuration: opt.EncryptionKeyRotationDuration,
-	}
-
-	kr, err := OpenKeyRegistry(krOpt)
-	if err != nil {
-		return nil, err
-	}
-	db.registry = kr
 	// Calculate initial size.
 	db.calculateSize()
 	db.closers.updateSize = y.NewCloser(1)
@@ -312,6 +297,9 @@ func Open(opt Options) (db *DB, err error) {
 	if db.lc, err = newLevelsController(db, &manifest); err != nil {
 		return nil, err
 	}
+
+	// Initialize vlog struct.
+	db.vlog.init(db)
 
 	if !opt.ReadOnly {
 		db.closers.compactors = y.NewCloser(1)
@@ -339,7 +327,7 @@ func Open(opt Options) (db *DB, err error) {
 	go db.doWrites(replayCloser)
 
 	if err = db.vlog.open(db, vptr, db.replayFunction()); err != nil {
-		return db, y.Wrapf(err, "During db.vlog.open")
+		return db, err
 	}
 	replayCloser.SignalAndWait() // Wait for replay to be applied first.
 
@@ -379,10 +367,6 @@ func (db *DB) Close() error {
 
 func (db *DB) close() (err error) {
 	db.elog.Printf("Closing database")
-
-	if err := db.vlog.flushDiscardStats(); err != nil {
-		return errors.Wrap(err, "failed to flush discard stats")
-	}
 
 	atomic.StoreInt32(&db.blockWrites, 1)
 
@@ -473,9 +457,6 @@ func (db *DB) close() (err error) {
 	if manifestErr := db.manifest.close(); err == nil {
 		err = errors.Wrap(manifestErr, "DB.Close")
 	}
-	if registryErr := db.registry.Close(); err == nil {
-		err = errors.Wrap(registryErr, "DB.Close")
-	}
 
 	// Fsync directories to ensure that lock file, and any other removed files whose directory
 	// we haven't specifically fsynced, are guaranteed to have their directory entry removal
@@ -488,12 +469,6 @@ func (db *DB) close() (err error) {
 	}
 
 	return err
-}
-
-// VerifyChecksum verifies checksum for all tables on all levels.
-// This method can be used to verify checksum, if opt.ChecksumVerificationMode is NoVerification.
-func (db *DB) VerifyChecksum() error {
-	return db.lc.verifyChecksum()
 }
 
 const (
@@ -579,6 +554,8 @@ func (db *DB) get(key []byte) (y.ValueStruct, error) {
 	return db.lc.get(key, maxVs)
 }
 
+// updateHead should not be called without the db.Lock() since db.vhead is used
+// by the writer go routines and memtable flushing goroutine.
 func (db *DB) updateHead(ptrs []valuePointer) {
 	var ptr valuePointer
 	for i := len(ptrs) - 1; i >= 0; i-- {
@@ -592,8 +569,6 @@ func (db *DB) updateHead(ptrs []valuePointer) {
 		return
 	}
 
-	db.Lock()
-	defer db.Unlock()
 	y.AssertTrue(!ptr.Less(db.vhead))
 	db.vhead = ptr
 }
@@ -620,15 +595,20 @@ func (db *DB) writeToLSM(b *request) error {
 		if db.shouldWriteValueToLSM(*entry) { // Will include deletion / tombstone case.
 			db.mt.Put(entry.Key,
 				y.ValueStruct{
-					Value:     entry.Value,
-					Meta:      entry.meta,
+					Value: entry.Value,
+					// Ensure value pointer flag is removed. Otherwise, the value will fail
+					// to be retrieved during iterator prefetch. `bitValuePointer` is only
+					// known to be set in write to LSM when the entry is loaded from a backup
+					// with lower ValueThreshold and its value was stored in the value log.
+					Meta:      entry.meta &^ bitValuePointer,
 					UserMeta:  entry.UserMeta,
 					ExpiresAt: entry.ExpiresAt,
 				})
 		} else {
+			var offsetBuf [vptrSize]byte
 			db.mt.Put(entry.Key,
 				y.ValueStruct{
-					Value:     b.Ptrs[i].Encode(),
+					Value:     b.Ptrs[i].Encode(offsetBuf[:]),
 					Meta:      entry.meta | bitValuePointer,
 					UserMeta:  entry.UserMeta,
 					ExpiresAt: entry.ExpiresAt,
@@ -686,7 +666,9 @@ func (db *DB) writeRequests(reqs []*request) error {
 			done(err)
 			return errors.Wrap(err, "writeRequests")
 		}
+		db.Lock()
 		db.updateHead(b.Ptrs)
+		db.Unlock()
 	}
 	done(nil)
 	db.elog.Printf("%d entries written", count)
@@ -709,11 +691,10 @@ func (db *DB) sendToWriteCh(entries []*Entry) (*request, error) {
 	// We can only service one request because we need each txn to be stored in a contigous section.
 	// Txns should not interleave among other txns or rewrites.
 	req := requestPool.Get().(*request)
+	req.reset()
 	req.Entries = entries
-	req.Wg = sync.WaitGroup{}
 	req.Wg.Add(1)
 	req.IncrRef()     // for db write
-	req.IncrRef()     // for publisher updates
 	db.writeCh <- req // Handled in doWrites.
 	y.NumPuts.Add(int64(len(entries)))
 
@@ -868,96 +849,88 @@ func arenaSize(opt Options) int64 {
 	return opt.MaxTableSize + opt.maxBatchSize + opt.maxBatchCount*int64(skl.MaxNodeSize)
 }
 
-// buildL0Table builds a new table from the memtable.
-func buildL0Table(ft flushTask, bopts table.Options) []byte {
+// WriteLevel0Table flushes memtable.
+func writeLevel0Table(ft flushTask, f io.Writer) error {
 	iter := ft.mt.NewIterator()
 	defer iter.Close()
-	b := table.NewTableBuilder(bopts)
+	b := table.NewTableBuilder()
 	defer b.Close()
 	for iter.SeekToFirst(); iter.Valid(); iter.Next() {
-		if len(ft.dropPrefix) > 0 && bytes.HasPrefix(iter.Key(), ft.dropPrefix) {
+		if len(ft.dropPrefixes) > 0 && hasAnyPrefixes(iter.Key(), ft.dropPrefixes) {
 			continue
 		}
 		b.Add(iter.Key(), iter.Value())
 	}
-	return b.Finish()
+	_, err := f.Write(b.Finish())
+	return err
 }
 
 type flushTask struct {
-	mt         *skl.Skiplist
-	vptr       valuePointer
-	dropPrefix []byte
+	mt           *skl.Skiplist
+	vptr         valuePointer
+	dropPrefixes [][]byte
+}
+
+func (db *DB) pushHead(ft flushTask) error {
+	// Ensure we never push a zero valued head pointer.
+	if ft.vptr.IsZero() {
+		return errors.New("Head should not be zero")
+	}
+
+	// Store badger head even if vptr is zero, need it for readTs
+	db.opt.Debugf("Storing value log head: %+v\n", ft.vptr)
+	offset := make([]byte, vptrSize)
+	ft.vptr.Encode(offset)
+
+	// Pick the max commit ts, so in case of crash, our read ts would be higher than all the
+	// commits.
+	headTs := y.KeyWithTs(head, db.orc.nextTs())
+	ft.mt.Put(headTs, y.ValueStruct{Value: offset})
+
+	return nil
 }
 
 // handleFlushTask must be run serially.
 func (db *DB) handleFlushTask(ft flushTask) error {
-	// There can be a scnerio, when empty memtable is flushed. For example, memtable is empty and
+	// There can be a scenario, when empty memtable is flushed. For example, memtable is empty and
 	// after writing request to value log, rotation count exceeds db.LogRotatesToFlush.
 	if ft.mt.Empty() {
 		return nil
 	}
 
-	// Store badger head even if vptr is zero, need it for readTs
-	db.opt.Debugf("Storing value log head: %+v\n", ft.vptr)
-	db.elog.Printf("Storing offset: %+v\n", ft.vptr)
-	val := ft.vptr.Encode()
-
-	// Pick the max commit ts, so in case of crash, our read ts would be higher than all the
-	// commits.
-	headTs := y.KeyWithTs(head, db.orc.nextTs())
-	ft.mt.Put(headTs, y.ValueStruct{Value: val})
-
-	dk, err := db.registry.latestDataKey()
-	if err != nil {
-		return y.Wrapf(err, "failed to get datakey in db.handleFlushTask")
+	if err := db.pushHead(ft); err != nil {
+		return err
 	}
-	bopts := table.Options{
-		BlockSize:          db.opt.BlockSize,
-		BloomFalsePositive: db.opt.BloomFalsePositive,
-		DataKey:            dk,
-	}
-	tableData := buildL0Table(ft, bopts)
 
 	fileID := db.lc.reserveFileID()
-	if db.opt.KeepL0InMemory {
-		tbl, err := table.OpenInMemoryTable(tableData, fileID, dk)
-		if err != nil {
-			return errors.Wrapf(err, "failed to open table in memory")
-		}
-		return db.lc.addLevel0Table(tbl)
-	}
-
 	fd, err := y.CreateSyncedFile(table.NewFilename(fileID, db.opt.Dir), true)
 	if err != nil {
 		return y.Wrap(err)
 	}
 
 	// Don't block just to sync the directory entry.
-	dirSyncCh := make(chan error, 1)
+	dirSyncCh := make(chan error)
 	go func() { dirSyncCh <- syncDir(db.opt.Dir) }()
 
-	if _, err = fd.Write(tableData); err != nil {
+	err = writeLevel0Table(ft, fd)
+	dirSyncErr := <-dirSyncCh
+
+	if err != nil {
 		db.elog.Errorf("ERROR while writing to level 0: %v", err)
 		return err
 	}
-
-	if dirSyncErr := <-dirSyncCh; dirSyncErr != nil {
+	if dirSyncErr != nil {
 		// Do dir sync as best effort. No need to return due to an error there.
 		db.elog.Errorf("ERROR while syncing level directory: %v", dirSyncErr)
 	}
 
-	opts := table.Options{
-		LoadingMode: db.opt.TableLoadingMode,
-		ChkMode:     db.opt.ChecksumVerificationMode,
-		DataKey:     dk,
-	}
-	tbl, err := table.OpenTable(fd, opts)
+	tbl, err := table.OpenTable(fd, db.opt.TableLoadingMode, nil)
 	if err != nil {
 		db.elog.Printf("ERROR while opening table: %v", err)
 		return err
 	}
 	// We own a ref on tbl.
-	err = db.lc.addLevel0Table(tbl) // This will incrRef
+	err = db.lc.addLevel0Table(tbl) // This will incrRef (if we don't error, sure)
 	_ = tbl.DecrRef()               // Releases our ref.
 	return err
 }
@@ -1155,9 +1128,26 @@ func (seq *Sequence) Release() error {
 	seq.Lock()
 	defer seq.Unlock()
 	err := seq.db.Update(func(txn *Txn) error {
-		var buf [8]byte
-		binary.BigEndian.PutUint64(buf[:], seq.next)
-		return txn.SetEntry(NewEntry(seq.key, buf[:]))
+		item, err := txn.Get(seq.key)
+		if err != nil {
+			return err
+		}
+
+		var num uint64
+		if err := item.Value(func(v []byte) error {
+			num = binary.BigEndian.Uint64(v)
+			return nil
+		}); err != nil {
+			return err
+		}
+
+		if num == seq.leased {
+			var buf [8]byte
+			binary.BigEndian.PutUint64(buf[:], seq.next)
+			return txn.SetEntry(NewEntry(seq.key, buf[:]))
+		}
+
+		return nil
 	})
 	if err != nil {
 		return err
@@ -1474,7 +1464,8 @@ func (db *DB) dropAll() (func(), error) {
 // - Compact L0->L1, skipping over Kp.
 // - Compact rest of the levels, Li->Li, picking tables which have Kp.
 // - Resume memtable flushes, compactions and writes.
-func (db *DB) DropPrefix(prefix []byte) error {
+func (db *DB) DropPrefix(prefixes ...[]byte) error {
+	db.opt.Infof("DropPrefix Called")
 	f := db.prepareToDrop()
 	defer f()
 	// Block all foreign interactions with memory tables.
@@ -1490,8 +1481,8 @@ func (db *DB) DropPrefix(prefix []byte) error {
 		task := flushTask{
 			mt: memtable,
 			// Ensure that the head of value log gets persisted to disk.
-			vptr:       db.vhead,
-			dropPrefix: prefix,
+			vptr:         db.vhead,
+			dropPrefixes: prefixes,
 		}
 		db.opt.Debugf("Flushing memtable")
 		if err := db.handleFlushTask(task); err != nil {
@@ -1506,7 +1497,7 @@ func (db *DB) DropPrefix(prefix []byte) error {
 	db.mt = skl.NewSkiplist(arenaSize(db.opt))
 
 	// Drop prefixes from the levels.
-	if err := db.lc.dropPrefix(prefix); err != nil {
+	if err := db.lc.dropPrefixes(prefixes); err != nil {
 		return err
 	}
 	db.opt.Infof("DropPrefix done")
@@ -1522,51 +1513,48 @@ type KVList = pb.KVList
 // This function blocks until the given context is done or an error occurs.
 // The given function will be called with a new KVList containing the modified keys and the
 // corresponding values.
-func (db *DB) Subscribe(ctx context.Context, cb func(kv *KVList), prefixes ...[]byte) error {
+func (db *DB) Subscribe(ctx context.Context, cb func(kv *KVList) error, prefixes ...[]byte) error {
 	if cb == nil {
 		return ErrNilCallback
 	}
-	if len(prefixes) == 0 {
-		return ErrNoPrefixes
-	}
+
 	c := y.NewCloser(1)
 	recvCh, id := db.pub.newSubscriber(c, prefixes...)
-	slurp := func(batch *pb.KVList) {
-		defer func() {
-			if len(batch.GetKv()) > 0 {
-				cb(batch)
-			}
-		}()
+	slurp := func(batch *pb.KVList) error {
 		for {
 			select {
 			case kvs := <-recvCh:
 				batch.Kv = append(batch.Kv, kvs.Kv...)
 			default:
-				return
+				if len(batch.GetKv()) > 0 {
+					return cb(batch)
+				}
+				return nil
 			}
 		}
 	}
 	for {
 		select {
 		case <-c.HasBeenClosed():
-			slurp(new(pb.KVList))
-			// Drain if any pending updates.
-			c.Done()
 			// No need to delete here. Closer will be called only while
 			// closing DB. Subscriber will be deleted by cleanSubscribers.
-			return nil
+			err := slurp(new(pb.KVList))
+			// Drain if any pending updates.
+			c.Done()
+			return err
 		case <-ctx.Done():
 			c.Done()
 			db.pub.deleteSubscriber(id)
 			// Delete the subscriber to avoid further updates.
 			return ctx.Err()
 		case batch := <-recvCh:
-			slurp(batch)
+			err := slurp(batch)
+			if err != nil {
+				c.Done()
+				// Delete the subscriber if there is an error by the callback.
+				db.pub.deleteSubscriber(id)
+				return err
+			}
 		}
 	}
-}
-
-// shouldEncrypt returns bool, which tells whether to encrypt or not.
-func (db *DB) shouldEncrypt() bool {
-	return len(db.opt.EncryptionKey) > 0
 }

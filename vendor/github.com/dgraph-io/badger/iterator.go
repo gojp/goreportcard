@@ -27,7 +27,6 @@ import (
 
 	"github.com/dgraph-io/badger/options"
 	"github.com/dgraph-io/badger/table"
-	"github.com/dgryski/go-farm"
 
 	"github.com/dgraph-io/badger/y"
 )
@@ -254,7 +253,7 @@ func (item *Item) KeySize() int64 {
 	return int64(len(item.key))
 }
 
-// ValueSize returns the approximate size of the value.
+// ValueSize returns the exact size of the value.
 //
 // This can be called to quickly estimate the size of a value without fetching
 // it.
@@ -269,9 +268,7 @@ func (item *Item) ValueSize() int64 {
 	vp.Decode(item.vptr)
 
 	klen := int64(len(item.key) + 8) // 8 bytes for timestamp.
-	// 6 bytes are for the approximate length of the header. Since header is encoded in varint, we
-	// cannot find the exact length of header without fetching it.
-	return int64(vp.Len) - klen - 6 - crc32.Size
+	return int64(vp.Len) - klen - headerBufSize - crc32.Size
 }
 
 // UserMeta returns the userMeta set by the user. Typically, this byte, optionally set by the user
@@ -362,7 +359,7 @@ func (opt *IteratorOptions) pickTable(t table.TableInterface) bool {
 	}
 	// Bloom filter lookup would only work if opt.Prefix does NOT have the read
 	// timestamp as part of the key.
-	if opt.prefixIsKey && t.DoesNotHave(farm.Fingerprint64(opt.Prefix)) {
+	if opt.prefixIsKey && t.DoesNotHave(opt.Prefix) {
 		return false
 	}
 	return true
@@ -395,7 +392,6 @@ func (opt *IteratorOptions) pickTables(all []*table.Table) []*table.Table {
 	}
 
 	var out []*table.Table
-	hash := farm.Fingerprint64(opt.Prefix)
 	for _, t := range filtered {
 		// When we encounter the first table whose smallest key is higher than
 		// opt.Prefix, we can stop.
@@ -404,7 +400,7 @@ func (opt *IteratorOptions) pickTables(all []*table.Table) []*table.Table {
 		}
 		// opt.Prefix is actually the key. So, we can run bloom filter checks
 		// as well.
-		if t.DoesNotHave(hash) {
+		if t.DoesNotHave(opt.Prefix) {
 			continue
 		}
 		out = append(out, t)
@@ -422,7 +418,7 @@ var DefaultIteratorOptions = IteratorOptions{
 
 // Iterator helps iterating over the KV pairs in a lexicographically sorted order.
 type Iterator struct {
-	iitr   *y.MergeIterator
+	iitr   y.Iterator
 	txn    *Txn
 	readTs uint64
 
@@ -466,9 +462,10 @@ func (txn *Txn) NewIterator(opt IteratorOptions) *Iterator {
 		iters = append(iters, tables[i].NewUniIterator(opt.Reverse))
 	}
 	iters = txn.db.lc.appendIterators(iters, &opt) // This will increment references.
+
 	res := &Iterator{
 		txn:    txn,
-		iitr:   y.NewMergeIterator(iters, opt.Reverse),
+		iitr:   table.NewMergeIterator(iters, opt.Reverse),
 		opt:    opt,
 		readTs: txn.readTs,
 	}

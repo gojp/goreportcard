@@ -32,6 +32,11 @@ var (
 	// range.
 	ErrValueLogSize = errors.New("Invalid ValueLogFileSize, must be between 1MB and 2GB")
 
+	// ErrValueThreshold is returned when ValueThreshold is set to a value close to or greater than
+	// uint16.
+	ErrValueThreshold = errors.Errorf(
+		"Invalid ValueThreshold, must be less than %d", ValueThresholdLimit)
+
 	// ErrKeyNotFound is returned when key isn't found on a txn.Get.
 	ErrKeyNotFound = errors.New("Key not found")
 
@@ -98,6 +103,9 @@ var (
 	// ErrWindowsNotSupported is returned when opt.ReadOnly is used on Windows
 	ErrWindowsNotSupported = errors.New("Read-only mode is not supported on Windows")
 
+	// ErrPlan9NotSupported is returned when opt.ReadOnly is used on Plan 9
+	ErrPlan9NotSupported = errors.New("Read-only mode is not supported on Plan 9")
+
 	// ErrTruncateNeeded is returned when the value log gets corrupt, and requires truncation of
 	// corrupt data to allow Badger to run properly.
 	ErrTruncateNeeded = errors.New(
@@ -109,17 +117,4 @@ var (
 
 	// ErrNilCallback is returned when subscriber's callback is nil.
 	ErrNilCallback = errors.New("Callback cannot be nil")
-
-	// ErrNoPrefixes is returned when subscriber doesn't provide any prefix.
-	ErrNoPrefixes = errors.New("At least one key prefix is required")
-
-	// ErrEncryptionKeyMismatch is returned when the storage key is not
-	// matched with the key previously given.
-	ErrEncryptionKeyMismatch = errors.New("Encryption key mismatch")
-
-	// ErrInvalidDataKeyID is returned if the datakey id is invalid.
-	ErrInvalidDataKeyID = errors.New("Invalid datakey id")
-
-	ErrInvalidEncryptionKey = errors.New("Encryption key's length should be" +
-		"either 16, 24, or 32 bytes")
 )

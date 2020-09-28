@@ -68,8 +68,8 @@ type levelManifest struct {
 // TableManifest contains information about a specific level
 // in the LSM tree.
 type TableManifest struct {
-	Level uint8
-	KeyID uint64
+	Level    uint8
+	Checksum []byte
 }
 
 // manifestFile holds the file pointer (and other info) about the manifest file, which is a log
@@ -100,7 +100,7 @@ const (
 func (m *Manifest) asChanges() []*pb.ManifestChange {
 	changes := make([]*pb.ManifestChange, 0, len(m.Tables))
 	for id, tm := range m.Tables {
-		changes = append(changes, newCreateChange(id, int(tm.Level), tm.KeyID))
+		changes = append(changes, newCreateChange(id, int(tm.Level), tm.Checksum))
 	}
 	return changes
 }
@@ -224,7 +224,7 @@ func (mf *manifestFile) addChanges(changesParam []*pb.ManifestChange) error {
 var magicText = [4]byte{'B', 'd', 'g', 'r'}
 
 // The magic version number.
-const magicVersion = 7
+const magicVersion = 4
 
 func helpRewrite(dir string, m *Manifest) (*os.File, int, error) {
 	rewritePath := filepath.Join(dir, manifestRewriteFilename)
@@ -341,7 +341,7 @@ func ReplayManifestFile(fp *os.File) (Manifest, int64, error) {
 	if !bytes.Equal(magicBuf[0:4], magicText[:]) {
 		return Manifest{}, 0, errBadMagic
 	}
-	version := y.BytesToU32(magicBuf[4:8])
+	version := binary.BigEndian.Uint32(magicBuf[4:8])
 	if version != magicVersion {
 		return Manifest{}, 0,
 			//nolint:lll
@@ -349,6 +349,11 @@ func ReplayManifestFile(fp *os.File) (Manifest, int64, error) {
 				"Please see https://github.com/dgraph-io/badger/blob/master/README.md#i-see-manifest-has-unsupported-version-x-we-support-y-error"+
 				" on how to fix this.",
 				version, magicVersion)
+	}
+
+	stat, err := fp.Stat()
+	if err != nil {
+		return Manifest{}, 0, err
 	}
 
 	build := createManifest()
@@ -363,7 +368,13 @@ func ReplayManifestFile(fp *os.File) (Manifest, int64, error) {
 			}
 			return Manifest{}, 0, err
 		}
-		length := y.BytesToU32(lenCrcBuf[0:4])
+		length := binary.BigEndian.Uint32(lenCrcBuf[0:4])
+		// Sanity check to ensure we don't over-allocate memory.
+		if length > uint32(stat.Size()) {
+			return Manifest{}, 0, errors.Errorf(
+				"Buffer length: %d greater than file size: %d. Manifest file might be corrupted",
+				length, stat.Size())
+		}
 		var buf = make([]byte, length)
 		if _, err := io.ReadFull(&r, buf); err != nil {
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
@@ -371,7 +382,7 @@ func ReplayManifestFile(fp *os.File) (Manifest, int64, error) {
 			}
 			return Manifest{}, 0, err
 		}
-		if crc32.Checksum(buf, y.CastagnoliCrcTable) != y.BytesToU32(lenCrcBuf[4:8]) {
+		if crc32.Checksum(buf, y.CastagnoliCrcTable) != binary.BigEndian.Uint32(lenCrcBuf[4:8]) {
 			return Manifest{}, 0, errBadChecksum
 		}
 
@@ -395,8 +406,8 @@ func applyManifestChange(build *Manifest, tc *pb.ManifestChange) error {
 			return fmt.Errorf("MANIFEST invalid, table %d exists", tc.Id)
 		}
 		build.Tables[tc.Id] = TableManifest{
-			Level: uint8(tc.Level),
-			KeyID: tc.KeyId,
+			Level:    uint8(tc.Level),
+			Checksum: append([]byte{}, tc.Checksum...),
 		}
 		for len(build.Levels) <= int(tc.Level) {
 			build.Levels = append(build.Levels, levelManifest{make(map[uint64]struct{})})
@@ -428,14 +439,12 @@ func applyChangeSet(build *Manifest, changeSet *pb.ManifestChangeSet) error {
 	return nil
 }
 
-func newCreateChange(id uint64, level int, keyID uint64) *pb.ManifestChange {
+func newCreateChange(id uint64, level int, checksum []byte) *pb.ManifestChange {
 	return &pb.ManifestChange{
-		Id:             id,
-		Op:             pb.ManifestChange_CREATE,
-		Level:          uint32(level),
-		KeyId:          keyID,
-		EncryptionAlgo: pb.EncryptionAlgo_aes,
-		// Hardcoding it, since we're supporting only AES for now.
+		Id:       id,
+		Op:       pb.ManifestChange_CREATE,
+		Level:    uint32(level),
+		Checksum: checksum,
 	}
 }
 

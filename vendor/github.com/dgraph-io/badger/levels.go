@@ -149,17 +149,8 @@ func newLevelsController(db *DB, mf *Manifest) (*levelsController, error) {
 				rerr = errors.Wrapf(err, "Opening file: %q", fname)
 				return
 			}
-			dk, err := db.registry.dataKey(tf.KeyID)
-			if err != nil {
-				rerr = errors.Wrapf(err, "Error while reading datakey")
-				return
-			}
-			opts := table.Options{
-				LoadingMode: db.opt.TableLoadingMode,
-				ChkMode:     db.opt.ChecksumVerificationMode,
-				DataKey:     dk,
-			}
-			t, err := table.OpenTable(fd, opts)
+
+			t, err := table.OpenTable(fd, db.opt.TableLoadingMode, tf.Checksum)
 			if err != nil {
 				if strings.HasPrefix(err.Error(), "CHECKSUM_MISMATCH:") {
 					db.opt.Errorf(err.Error())
@@ -242,10 +233,7 @@ func (s *levelsController) dropTree() (int, error) {
 	// Generate the manifest changes.
 	changes := []*pb.ManifestChange{}
 	for _, table := range all {
-		// Add a delete change only if the table is not in memory.
-		if !table.IsInmemory {
-			changes = append(changes, newDeleteChange(table.ID()))
-		}
+		changes = append(changes, newDeleteChange(table.ID()))
 	}
 	changeSet := pb.ManifestChangeSet{Changes: changes}
 	if err := s.kv.manifest.addChanges(changeSet.Changes); err != nil {
@@ -269,13 +257,30 @@ func (s *levelsController) dropTree() (int, error) {
 
 // dropPrefix runs a L0->L1 compaction, and then runs same level compaction on the rest of the
 // levels. For L0->L1 compaction, it runs compactions normally, but skips over all the keys with the
-// provided prefix. For Li->Li compactions, it picks up the tables which would have the prefix. The
+// provided prefix and also the internal move keys for the same prefix.
+// For Li->Li compactions, it picks up the tables which would have the prefix. The
 // tables who only have keys with this prefix are quickly dropped. The ones which have other keys
 // are run through MergeIterator and compacted to create new tables. All the mechanisms of
 // compactions apply, i.e. level sizes and MANIFEST are updated as in the normal flow.
-func (s *levelsController) dropPrefix(prefix []byte) error {
+func (s *levelsController) dropPrefixes(prefixes [][]byte) error {
+	// Internal move keys related to the given prefix should also be skipped.
+	for _, prefix := range prefixes {
+		key := make([]byte, 0, len(badgerMove)+len(prefix))
+		key = append(key, badgerMove...)
+		key = append(key, prefix...)
+		prefixes = append(prefixes, key)
+	}
+
 	opt := s.kv.opt
-	for _, l := range s.levels {
+	// Iterate levels in the reverse order because if we were to iterate from
+	// lower level (say level 0) to a higher level (say level 3) we could have
+	// a state in which level 0 is compacted and an older version of a key exists in lower level.
+	// At this point, if someone creates an iterator, they would see an old
+	// value for a key from lower levels. Iterating in reverse order ensures we
+	// drop the oldest data first so that lookups never return stale data.
+	for i := len(s.levels) - 1; i >= 0; i-- {
+		l := s.levels[i]
+
 		l.RLock()
 		if l.level == 0 {
 			size := len(l.tables)
@@ -287,7 +292,7 @@ func (s *levelsController) dropPrefix(prefix []byte) error {
 					score: 1.74,
 					// A unique number greater than 1.0 does two things. Helps identify this
 					// function in logs, and forces a compaction.
-					dropPrefix: prefix,
+					dropPrefixes: prefixes,
 				}
 				if err := s.doCompact(cp); err != nil {
 					opt.Warningf("While compacting level 0: %v", err)
@@ -297,37 +302,49 @@ func (s *levelsController) dropPrefix(prefix []byte) error {
 			continue
 		}
 
-		var tables []*table.Table
-		for _, table := range l.tables {
-			var absent bool
-			switch {
-			case bytes.HasPrefix(table.Smallest(), prefix):
-			case bytes.HasPrefix(table.Biggest(), prefix):
-			case bytes.Compare(prefix, table.Smallest()) > 0 &&
-				bytes.Compare(prefix, table.Biggest()) < 0:
-			default:
-				absent = true
-			}
-			if !absent {
-				tables = append(tables, table)
+		// Build a list of compaction tableGroups affecting all the prefixes we
+		// need to drop. We need to build tableGroups that satisfy the invariant that
+		// bottom tables are consecutive.
+		// tableGroup contains groups of consecutive tables.
+		var tableGroups [][]*table.Table
+		var tableGroup []*table.Table
+
+		finishGroup := func() {
+			if len(tableGroup) > 0 {
+				tableGroups = append(tableGroups, tableGroup)
+				tableGroup = nil
 			}
 		}
+
+		for _, table := range l.tables {
+			if containsAnyPrefixes(table.Smallest(), table.Biggest(), prefixes) {
+				tableGroup = append(tableGroup, table)
+			} else {
+				finishGroup()
+			}
+		}
+		finishGroup()
+
 		l.RUnlock()
-		if len(tables) == 0 {
+
+		if len(tableGroups) == 0 {
 			continue
 		}
 
-		cd := compactDef{
-			elog:       trace.New(fmt.Sprintf("Badger.L%d", l.level), "Compact"),
-			thisLevel:  l,
-			nextLevel:  l,
-			top:        []*table.Table{},
-			bot:        tables,
-			dropPrefix: prefix,
-		}
-		if err := s.runCompactDef(l.level, cd); err != nil {
-			opt.Warningf("While running compact def: %+v. Error: %v", cd, err)
-			return err
+		opt.Infof("Dropping prefix at level %d (%d tableGroups)", l.level, len(tableGroups))
+		for _, operation := range tableGroups {
+			cd := compactDef{
+				elog:         trace.New(fmt.Sprintf("Badger.L%d", l.level), "Compact"),
+				thisLevel:    l,
+				nextLevel:    l,
+				top:          nil,
+				bot:          operation,
+				dropPrefixes: prefixes,
+			}
+			if err := s.runCompactDef(l.level, cd); err != nil {
+				opt.Warningf("While running compact def: %+v. Error: %v", cd, err)
+				return err
+			}
 		}
 	}
 	return nil
@@ -389,9 +406,9 @@ func (l *levelHandler) isCompactable(delSize int64) bool {
 }
 
 type compactionPriority struct {
-	level      int
-	score      float64
-	dropPrefix []byte
+	level        int
+	score        float64
+	dropPrefixes [][]byte
 }
 
 // pickCompactLevel determines which level to compact.
@@ -427,28 +444,32 @@ func (s *levelsController) pickCompactLevels() (prios []compactionPriority) {
 	return prios
 }
 
-// compactBuildTables merge topTables and botTables to form a list of new tables.
+// checkOverlap checks if the given tables overlap with any level from the given "lev" onwards.
+func (s *levelsController) checkOverlap(tables []*table.Table, lev int) bool {
+	kr := getKeyRange(tables...)
+	for i, lh := range s.levels {
+		if i < lev { // Skip upper levels.
+			continue
+		}
+		lh.RLock()
+		left, right := lh.overlappingTables(levelHandlerRLocked{}, kr)
+		lh.RUnlock()
+		if right-left > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// compactBuildTables merges topTables and botTables to form a list of new tables.
 func (s *levelsController) compactBuildTables(
 	lev int, cd compactDef) ([]*table.Table, func() error, error) {
 	topTables := cd.top
 	botTables := cd.bot
 
-	var hasOverlap bool
-	{
-		kr := getKeyRange(cd.top...)
-		for i, lh := range s.levels {
-			if i <= lev { // Skip upper levels.
-				continue
-			}
-			lh.RLock()
-			left, right := lh.overlappingTables(levelHandlerRLocked{}, kr)
-			lh.RUnlock()
-			if right-left > 0 {
-				hasOverlap = true
-				break
-			}
-		}
-	}
+	// Check overlap of the top level with the levels which are not being
+	// compacted in this compaction.
+	hasOverlap := s.checkOverlap(cd.allTables(), cd.nextLevel.level+1)
 
 	// Try to collect stats so that we can inform value log about GC. That would help us find which
 	// value log file should be GCed.
@@ -472,18 +493,24 @@ func (s *levelsController) compactBuildTables(
 
 	// Next level has level>=1 and we can use ConcatIterator as key ranges do not overlap.
 	var valid []*table.Table
+
+nextTable:
 	for _, table := range botTables {
-		if len(cd.dropPrefix) > 0 &&
-			bytes.HasPrefix(table.Smallest(), cd.dropPrefix) &&
-			bytes.HasPrefix(table.Biggest(), cd.dropPrefix) {
-			// All the keys in this table have the dropPrefix. So, this table does not need to be
-			// in the iterator and can be dropped immediately.
-			continue
+		if len(cd.dropPrefixes) > 0 {
+			for _, prefix := range cd.dropPrefixes {
+				if bytes.HasPrefix(table.Smallest(), prefix) &&
+					bytes.HasPrefix(table.Biggest(), prefix) {
+					// All the keys in this table have the dropPrefix. So, this
+					// table does not need to be in the iterator and can be
+					// dropped immediately.
+					continue nextTable
+				}
+			}
 		}
 		valid = append(valid, table)
 	}
 	iters = append(iters, table.NewConcatIterator(valid, false))
-	it := y.NewMergeIterator(iters, false)
+	it := table.NewMergeIterator(iters, false)
 	defer it.Close() // Important to close the iterator to do ref counting.
 
 	it.Rewind()
@@ -503,21 +530,11 @@ func (s *levelsController) compactBuildTables(
 	var lastKey, skipKey []byte
 	for it.Valid() {
 		timeStart := time.Now()
-		dk, err := s.kv.registry.latestDataKey()
-		if err != nil {
-			return nil, nil,
-				y.Wrapf(err, "Error while retrieving datakey in levelsController.compactBuildTables")
-		}
-		bopts := table.Options{
-			BlockSize:          s.kv.opt.BlockSize,
-			BloomFalsePositive: s.kv.opt.BloomFalsePositive,
-			DataKey:            dk,
-		}
-		builder := table.NewTableBuilder(bopts)
+		builder := table.NewTableBuilder()
 		var numKeys, numSkips uint64
 		for ; it.Valid(); it.Next() {
 			// See if we need to skip the prefix.
-			if len(cd.dropPrefix) > 0 && bytes.HasPrefix(it.Key(), cd.dropPrefix) {
+			if len(cd.dropPrefixes) > 0 && hasAnyPrefixes(it.Key(), cd.dropPrefixes) {
 				numSkips++
 				updateStats(it.Value())
 				continue
@@ -554,22 +571,32 @@ func (s *levelsController) compactBuildTables(
 				// versions which are below the minReadTs, otherwise, we might end up discarding the
 				// only valid version for a running transaction.
 				numVersions++
-				lastValidVersion := vs.Meta&bitDiscardEarlierVersions > 0
-				if isDeletedOrExpired(vs.Meta, vs.ExpiresAt) ||
-					numVersions > s.kv.opt.NumVersionsToKeep ||
-					lastValidVersion {
+
+				// Keep the current version and discard all the next versions if
+				// - The `discardEarlierVersions` bit is set OR
+				// - We've already processed `NumVersionsToKeep` number of versions
+				// (including the current item being processed)
+				lastValidVersion := vs.Meta&bitDiscardEarlierVersions > 0 ||
+					numVersions == s.kv.opt.NumVersionsToKeep
+
+				isExpired := isDeletedOrExpired(vs.Meta, vs.ExpiresAt)
+
+				if isExpired || lastValidVersion {
 					// If this version of the key is deleted or expired, skip all the rest of the
 					// versions. Ensure that we're only removing versions below readTs.
 					skipKey = y.SafeCopy(skipKey, it.Key())
 
-					if lastValidVersion {
+					switch {
+					// Add the key to the table only if it has not expired.
+					// We don't want to add the deleted/expired keys.
+					case !isExpired && lastValidVersion:
 						// Add this key. We have set skipKey, so the following key versions
 						// would be skipped.
-					} else if hasOverlap {
+					case hasOverlap:
 						// If this key range has overlap with lower levels, then keep the deletion
 						// marker with the latest version, discarding the rest. We have set skipKey,
 						// so the following key versions would be skipped.
-					} else {
+					default:
 						// If no overlap, we can skip all the versions, by continuing here.
 						numSkips++
 						updateStats(vs)
@@ -584,35 +611,28 @@ func (s *levelsController) compactBuildTables(
 		// called Add() at least once, and builder is not Empty().
 		s.kv.opt.Debugf("LOG Compact. Added %d keys. Skipped %d keys. Iteration took: %v",
 			numKeys, numSkips, time.Since(timeStart))
-		build := func(fileID uint64) (*table.Table, error) {
-			fd, err := y.CreateSyncedFile(table.NewFilename(fileID, s.kv.opt.Dir), true)
-			if err != nil {
-				return nil, errors.Wrapf(err, "While opening new table: %d", fileID)
-			}
+		if !builder.Empty() {
+			numBuilds++
+			fileID := s.reserveFileID()
+			go func(builder *table.Builder) {
+				defer builder.Close()
 
-			if _, err := fd.Write(builder.Finish()); err != nil {
-				return nil, errors.Wrapf(err, "Unable to write to file: %d", fileID)
-			}
+				fd, err := y.CreateSyncedFile(table.NewFilename(fileID, s.kv.opt.Dir), true)
+				if err != nil {
+					resultCh <- newTableResult{nil, errors.Wrapf(err, "While opening new table: %d", fileID)}
+					return
+				}
 
-			opts := table.Options{
-				LoadingMode: s.kv.opt.TableLoadingMode,
-				ChkMode:     s.kv.opt.ChecksumVerificationMode,
-				DataKey:     builder.DataKey(),
-			}
-			tbl, err := table.OpenTable(fd, opts)
-			// decrRef is added below.
-			return tbl, errors.Wrapf(err, "Unable to open table: %q", fd.Name())
+				if _, err := fd.Write(builder.Finish()); err != nil {
+					resultCh <- newTableResult{nil, errors.Wrapf(err, "Unable to write to file: %d", fileID)}
+					return
+				}
+
+				tbl, err := table.OpenTable(fd, s.kv.opt.TableLoadingMode, nil)
+				// decrRef is added below.
+				resultCh <- newTableResult{tbl, errors.Wrapf(err, "Unable to open table: %q", fd.Name())}
+			}(builder)
 		}
-		if builder.Empty() {
-			continue
-		}
-		numBuilds++
-		fileID := s.reserveFileID()
-		go func(builder *table.Builder) {
-			defer builder.Close()
-			tbl, err := build(fileID)
-			resultCh <- newTableResult{tbl, err}
-		}(builder)
 	}
 
 	newTables := make([]*table.Table, 0, 20)
@@ -648,9 +668,7 @@ func (s *levelsController) compactBuildTables(
 	sort.Slice(newTables, func(i, j int) bool {
 		return y.CompareKeys(newTables[i].Biggest(), newTables[j].Biggest()) < 0
 	})
-	if err := s.kv.vlog.updateDiscardStats(discardStats); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to update discard stats")
-	}
+	s.kv.vlog.updateDiscardStats(discardStats)
 	s.kv.opt.Debugf("Discard stats: %v", discardStats)
 	return newTables, func() error { return decrRefs(newTables) }, nil
 }
@@ -659,18 +677,50 @@ func buildChangeSet(cd *compactDef, newTables []*table.Table) pb.ManifestChangeS
 	changes := []*pb.ManifestChange{}
 	for _, table := range newTables {
 		changes = append(changes,
-			newCreateChange(table.ID(), cd.nextLevel.level, table.KeyID()))
+			newCreateChange(table.ID(), cd.nextLevel.level, table.Checksum))
 	}
 	for _, table := range cd.top {
-		// Add a delete change only if the table is not in memory.
-		if !table.IsInmemory {
-			changes = append(changes, newDeleteChange(table.ID()))
-		}
+		changes = append(changes, newDeleteChange(table.ID()))
 	}
 	for _, table := range cd.bot {
 		changes = append(changes, newDeleteChange(table.ID()))
 	}
 	return pb.ManifestChangeSet{Changes: changes}
+}
+
+func hasAnyPrefixes(s []byte, listOfPrefixes [][]byte) bool {
+	for _, prefix := range listOfPrefixes {
+		if bytes.HasPrefix(s, prefix) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func containsPrefix(smallValue, largeValue, prefix []byte) bool {
+	if bytes.HasPrefix(smallValue, prefix) {
+		return true
+	}
+	if bytes.HasPrefix(largeValue, prefix) {
+		return true
+	}
+	if bytes.Compare(prefix, smallValue) > 0 &&
+		bytes.Compare(prefix, largeValue) < 0 {
+		return true
+	}
+
+	return false
+}
+
+func containsAnyPrefixes(smallValue, largeValue []byte, listOfPrefixes [][]byte) bool {
+	for _, prefix := range listOfPrefixes {
+		if containsPrefix(smallValue, largeValue, prefix) {
+			return true
+		}
+	}
+
+	return false
 }
 
 type compactDef struct {
@@ -687,7 +737,7 @@ type compactDef struct {
 
 	thisSize int64
 
-	dropPrefix []byte
+	dropPrefixes [][]byte
 }
 
 func (cd *compactDef) lockLevels() {
@@ -698,6 +748,13 @@ func (cd *compactDef) lockLevels() {
 func (cd *compactDef) unlockLevels() {
 	cd.nextLevel.RUnlock()
 	cd.thisLevel.RUnlock()
+}
+
+func (cd *compactDef) allTables() []*table.Table {
+	ret := make([]*table.Table, 0, len(cd.top)+len(cd.bot))
+	ret = append(ret, cd.top...)
+	ret = append(ret, cd.bot...)
+	return ret
 }
 
 func (s *levelsController) fillTablesL0(cd *compactDef) bool {
@@ -849,10 +906,10 @@ func (s *levelsController) doCompact(p compactionPriority) error {
 	y.AssertTrue(l+1 < s.kv.opt.MaxLevels) // Sanity check.
 
 	cd := compactDef{
-		elog:       trace.New(fmt.Sprintf("Badger.L%d", l), "Compact"),
-		thisLevel:  s.levels[l],
-		nextLevel:  s.levels[l+1],
-		dropPrefix: p.dropPrefix,
+		elog:         trace.New(fmt.Sprintf("Badger.L%d", l), "Compact"),
+		thisLevel:    s.levels[l],
+		nextLevel:    s.levels[l+1],
+		dropPrefixes: p.dropPrefixes,
 	}
 	cd.elog.SetMaxEvents(100)
 	defer cd.elog.Finish()
@@ -887,19 +944,15 @@ func (s *levelsController) doCompact(p compactionPriority) error {
 }
 
 func (s *levelsController) addLevel0Table(t *table.Table) error {
-	// Add table to manifest file only if it is not opened in memory. We don't want to add a table
-	// to the manifest file if it exists only in memory.
-	if !t.IsInmemory {
-		// We update the manifest _before_ the table becomes part of a levelHandler, because at that
-		// point it could get used in some compaction.  This ensures the manifest file gets updated in
-		// the proper order. (That means this update happens before that of some compaction which
-		// deletes the table.)
-		err := s.kv.manifest.addChanges([]*pb.ManifestChange{
-			newCreateChange(t.ID(), 0, t.KeyID()),
-		})
-		if err != nil {
-			return err
-		}
+	// We update the manifest _before_ the table becomes part of a levelHandler, because at that
+	// point it could get used in some compaction.  This ensures the manifest file gets updated in
+	// the proper order. (That means this update happens before that of some compaction which
+	// deletes the table.)
+	err := s.kv.manifest.addChanges([]*pb.ManifestChange{
+		newCreateChange(t.ID(), 0, t.Checksum),
+	})
+	if err != nil {
+		return err
 	}
 
 	for !s.levels[0].tryAddLevel0Table(t) {
@@ -1036,32 +1089,4 @@ func (s *levelsController) getTableInfo(withKeysCount bool) (result []TableInfo)
 		return result[i].ID < result[j].ID
 	})
 	return
-}
-
-// verifyChecksum verifies checksum for all tables on all levels.
-func (s *levelsController) verifyChecksum() error {
-	var tables []*table.Table
-	for _, l := range s.levels {
-		l.RLock()
-		tables = tables[:0]
-		for _, t := range l.tables {
-			tables = append(tables, t)
-			t.IncrRef()
-		}
-		l.RUnlock()
-
-		for _, t := range tables {
-			errChkVerify := t.VerifyChecksum()
-			if err := t.DecrRef(); err != nil {
-				s.kv.opt.Errorf("unable to decrease reference of table: %s while "+
-					"verifying checksum with error: %s", t.Filename(), err)
-			}
-
-			if errChkVerify != nil {
-				return errChkVerify
-			}
-		}
-	}
-
-	return nil
 }

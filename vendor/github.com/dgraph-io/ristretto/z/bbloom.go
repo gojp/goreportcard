@@ -63,7 +63,7 @@ func NewBloomFilter(params ...float64) (bloomfilter *Bloom) {
 			" i.e. New(float64(1000), float64(3)) or New(float64(number_of_entries)," +
 			" float64(number_of_hashlocations)) i.e. New(float64(1000), float64(0.03))")
 	}
-	size, exponent := getSize(uint64(entries))
+	size, exponent := getSize(entries)
 	bloomfilter = &Bloom{
 		sizeExp: exponent,
 		size:    size - 1,
@@ -113,8 +113,7 @@ func (bl Bloom) Has(hash uint64) bool {
 	h := hash >> bl.shift
 	l := hash << bl.shift >> bl.shift
 	for i := uint64(0); i < bl.setLocs; i++ {
-		switch bl.IsSet((h + i*l) & bl.size) {
-		case false:
+		if !bl.IsSet((h + i*l) & bl.size) {
 			return false
 		}
 	}
@@ -176,19 +175,21 @@ func newWithBoolset(bs *[]byte, locs uint64) *Bloom {
 
 // JSONUnmarshal takes JSON-Object (type bloomJSONImExport) as []bytes
 // returns bloom32 / bloom64 object.
-func JSONUnmarshal(dbData []byte) *Bloom {
+func JSONUnmarshal(dbData []byte) (*Bloom, error) {
 	bloomImEx := bloomJSONImExport{}
-	json.Unmarshal(dbData, &bloomImEx)
+	if err := json.Unmarshal(dbData, &bloomImEx); err != nil {
+		return nil, err
+	}
 	buf := bytes.NewBuffer(bloomImEx.FilterSet)
 	bs := buf.Bytes()
 	bf := newWithBoolset(&bs, bloomImEx.SetLocs)
-	return bf
+	return bf, nil
 }
 
 // JSONMarshal returns JSON-object (type bloomJSONImExport) as []byte.
 func (bl Bloom) JSONMarshal() []byte {
 	bloomImEx := bloomJSONImExport{}
-	bloomImEx.SetLocs = uint64(bl.setLocs)
+	bloomImEx.SetLocs = bl.setLocs
 	bloomImEx.FilterSet = make([]byte, len(bl.bitset)<<3)
 	for i := range bloomImEx.FilterSet {
 		bloomImEx.FilterSet[i] = *(*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(&bl.bitset[0])) +

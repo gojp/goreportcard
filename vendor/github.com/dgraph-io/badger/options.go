@@ -17,8 +17,6 @@
 package badger
 
 import (
-	"time"
-
 	"github.com/dgraph-io/badger/options"
 )
 
@@ -55,9 +53,6 @@ type Options struct {
 	MaxLevels           int
 	ValueThreshold      int
 	NumMemtables        int
-	BlockSize           int
-	BloomFalsePositive  float64
-	KeepL0InMemory      bool
 
 	NumLevelZeroTables      int
 	NumLevelZeroTablesStall int
@@ -69,13 +64,13 @@ type Options struct {
 	NumCompactors     int
 	CompactL0OnClose  bool
 	LogRotatesToFlush int32
+	// When set, checksum will be validated for each entry read from the value log file.
+	VerifyValueChecksum bool
 
-	// Encryption related options.
-	EncryptionKey                 []byte        // encryption key
-	EncryptionKeyRotationDuration time.Duration // key rotation duration
-
-	// ChecksumVerificationMode decides when db should verify checksum for SStable blocks.
-	ChecksumVerificationMode options.ChecksumVerificationMode
+	// BypassLockGaurd will bypass the lock guard on badger. Bypassing lock
+	// guard can cause data corruption if multiple badger instances are using
+	// the same directory. Use this options with caution.
+	BypassLockGuard bool
 
 	// Transaction start and commit timestamps are managed by end-user.
 	// This is only useful for databases built on top of Badger (like Dgraph).
@@ -86,6 +81,7 @@ type Options struct {
 	// ------------------------------
 	maxBatchCount int64 // max entries in batch
 	maxBatchSize  int64 // max batch size in bytes
+
 }
 
 // DefaultOptions sets a list of recommended options for good performance.
@@ -106,38 +102,31 @@ func DefaultOptions(path string) Options {
 		NumLevelZeroTables:      5,
 		NumLevelZeroTablesStall: 10,
 		NumMemtables:            5,
-		BloomFalsePositive:      0.01,
-		BlockSize:               4 * 1024,
 		SyncWrites:              true,
 		NumVersionsToKeep:       1,
 		CompactL0OnClose:        true,
-		KeepL0InMemory:          true,
+		VerifyValueChecksum:     false,
 		// Nothing to read/write value log using standard File I/O
 		// MemoryMap to mmap() the value log files
 		// (2^30 - 1)*2 when mmapping < 2^31 - 1, max int32.
 		// -1 so 2*ValueLogFileSize won't overflow on 32-bit systems.
 		ValueLogFileSize: 1<<30 - 1,
 
-		ValueLogMaxEntries:            1000000,
-		ValueThreshold:                32,
-		Truncate:                      false,
-		Logger:                        defaultLogger,
-		LogRotatesToFlush:             2,
-		EventLogging:                  true,
-		EncryptionKey:                 []byte{},
-		EncryptionKeyRotationDuration: 10 * 24 * time.Hour, // Default 10 days.
+		ValueLogMaxEntries: 1000000,
+		ValueThreshold:     32,
+		Truncate:           false,
+		Logger:             defaultLogger,
+		EventLogging:       true,
+		LogRotatesToFlush:  2,
 	}
 }
 
-const (
-	maxValueThreshold = (1 << 20) // 1 MB
-)
-
 // LSMOnlyOptions follows from DefaultOptions, but sets a higher ValueThreshold
-// so values would be collocated with the LSM tree, with value log largely acting
+// so values would be colocated with the LSM tree, with value log largely acting
 // as a write-ahead log only. These options would reduce the disk usage of value
 // log, and make Badger act more like a typical LSM tree.
 func LSMOnlyOptions(path string) Options {
+	// Max value length which fits in uint16.
 	// Let's not set any other options, because they can cause issues with the
 	// size of key-value a user can pass to Badger. For e.g., if we set
 	// ValueLogFileSize to 64MB, a user can't pass a value more than that.
@@ -147,8 +136,8 @@ func LSMOnlyOptions(path string) Options {
 	// achieve a heavier usage of LSM tree.
 	// NOTE: If a user does not want to set 64KB as the ValueThreshold because
 	// of performance reasons, 1KB would be a good option too, allowing
-	// values smaller than 1KB to be collocated with the keys in the LSM tree.
-	return DefaultOptions(path).WithValueThreshold(maxValueThreshold /* 1 MB */)
+	// values smaller than 1KB to be colocated with the keys in the LSM tree.
+	return DefaultOptions(path).WithValueThreshold(65500)
 }
 
 // WithDir returns a new Options value with Dir set to the given value.
@@ -294,9 +283,9 @@ func (opt Options) WithMaxLevels(val int) Options {
 // WithValueThreshold returns a new Options value with ValueThreshold set to the given value.
 //
 // ValueThreshold sets the threshold used to decide whether a value is stored directly in the LSM
-// tree or separately in the log value files.
+// tree or separatedly in the log value files.
 //
-// The default value of ValueThreshold is 32, but LSMOnlyOptions sets it to maxValueThreshold.
+// The default value of ValueThreshold is 32, but LSMOnlyOptions sets it to 65500.
 func (opt Options) WithValueThreshold(val int) Options {
 	opt.ValueThreshold = val
 	return opt
@@ -309,31 +298,6 @@ func (opt Options) WithValueThreshold(val int) Options {
 // The default value of NumMemtables is 5.
 func (opt Options) WithNumMemtables(val int) Options {
 	opt.NumMemtables = val
-	return opt
-}
-
-// WithBloomFalsePositive returns a new Options value with BloomFalsePositive set
-// to the given value.
-//
-// BloomFalsePositive sets the false positive probability of the bloom filter in any SSTable.
-// Before reading a key from table, the bloom filter is checked for key existence.
-// BloomFalsePositive might impact read performance of DB. Lower BloomFalsePositive value might
-// consume more memory.
-//
-// The default value of BloomFalsePositive is 0.01.
-func (opt Options) WithBloomFalsePositive(val float64) Options {
-	opt.BloomFalsePositive = val
-	return opt
-}
-
-// WithBlockSize returns a new Options value with BlockSize set to the given value.
-//
-// BlockSize sets the size of any block in SSTable. SSTable is divided into multiple blocks
-// internally. Each block is compressed using prefix diff encoding.
-//
-// The default value of BlockSize is 4KB.
-func (opt Options) WithBlockSize(val int) Options {
-	opt.BlockSize = val
 	return opt
 }
 
@@ -408,7 +372,7 @@ func (opt Options) WithNumCompactors(val int) Options {
 //
 // CompactL0OnClose determines whether Level 0 should be compacted before closing the DB.
 // This ensures that both reads and writes are efficient when the DB is opened later.
-// CompactL0OnClose is set to true if KeepL0InMemory is set to true.
+//
 // The default value of CompactL0OnClose is true.
 func (opt Options) WithCompactL0OnClose(val bool) Options {
 	opt.CompactL0OnClose = val
@@ -429,35 +393,28 @@ func (opt Options) WithLogRotatesToFlush(val int32) Options {
 	return opt
 }
 
-// WithEncryptionKey return a new Options value with EncryptionKey set to the given value.
-//
-// EncryptionKey is used to encrypt the data with AES. Type of AES is used based on the key
-// size. For example 16 bytes will use AES-128. 24 bytes will use AES-192. 32 bytes will
-// use AES-256.
-func (opt Options) WithEncryptionKey(key []byte) Options {
-	opt.EncryptionKey = key
-	return opt
-}
-
-// WithEncryptionRotationDuration returns new Options value with the duration set to
+// WithVerifyValueChecksum returns a new Options value with VerifyValueChecksum set to
 // the given value.
 //
-// Key Registry will use this duration to create new keys. If the previous generated
-// key exceed the given duration. Then the key registry will create new key.
-func (opt Options) WithEncryptionKeyRotationDuration(d time.Duration) Options {
-	opt.EncryptionKeyRotationDuration = d
+// When VerifyValueChecksum is set to true, checksum will be verified for every entry read
+// from the value log. If the value is stored in SST (value size less than value threshold) then the
+// checksum validation will not be done.
+//
+// The default value of VerifyValueChecksum is False.
+func (opt Options) WithVerifyValueChecksum(val bool) Options {
+	opt.VerifyValueChecksum = val
 	return opt
 }
 
-// WithKeepL0InMemory returns a new Options value with KeepL0InMemory set to the given value.
+// WithBypassLockGuard returns a new Options value with BypassLockGuard
+// set to the given value.
 //
-// When KeepL0InMemory is set to true we will keep all Level 0 tables in memory. This leads to
-// better performance in writes as well as compactions. In case of DB crash, the value log replay
-// will take longer to complete since memtables and all level 0 tables will have to be recreated.
-// This option also sets CompactL0OnClose option to true.
+// When BypassLockGuard option is set, badger will not acquire a lock on the
+// directory. This could lead to data corruption if multiple badger instances
+// write to the same data directory. Use this option with caution.
 //
-// The default value of KeepL0InMemory is true.
-func (opt Options) WithKeepL0InMemory(val bool) Options {
-	opt.KeepL0InMemory = val
+// The default value of BypassLockGuard is false.
+func (opt Options) WithBypassLockGuard(b bool) Options {
+	opt.BypassLockGuard = b
 	return opt
 }

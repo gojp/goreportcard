@@ -34,11 +34,11 @@ package skl
 
 import (
 	"math"
-	"math/rand"
 	"sync/atomic"
 	"unsafe"
 
 	"github.com/dgraph-io/badger/y"
+	"github.com/dgraph-io/ristretto/z"
 )
 
 const (
@@ -53,7 +53,7 @@ type node struct {
 	// Multiple parts of the value are encoded as a single uint64 so that it
 	// can be atomically loaded and stored:
 	//   value offset: uint32 (bits 0-31)
-	//   value size  : uint16 (bits 32-63)
+	//   value size  : uint16 (bits 32-47)
 	value uint64
 
 	// A byte slice is 24 bytes. We are trying to save space here.
@@ -113,13 +113,13 @@ func newNode(arena *Arena, key []byte, v y.ValueStruct, height int) *node {
 	return node
 }
 
-func encodeValue(valOffset uint32, valSize uint32) uint64 {
+func encodeValue(valOffset uint32, valSize uint16) uint64 {
 	return uint64(valSize)<<32 | uint64(valOffset)
 }
 
-func decodeValue(value uint64) (valOffset uint32, valSize uint32) {
+func decodeValue(value uint64) (valOffset uint32, valSize uint16) {
 	valOffset = uint32(value)
-	valSize = uint32(value >> 32)
+	valSize = uint16(value >> 32)
 	return
 }
 
@@ -135,7 +135,7 @@ func NewSkiplist(arenaSize int64) *Skiplist {
 	}
 }
 
-func (s *node) getValueOffset() (uint32, uint32) {
+func (s *node) getValueOffset() (uint32, uint16) {
 	value := atomic.LoadUint64(&s.value)
 	return decodeValue(value)
 }
@@ -165,9 +165,9 @@ func (s *node) casNextOffset(h int, old, val uint32) bool {
 //	return n != nil && y.CompareKeys(key, n.key) > 0
 //}
 
-func randomHeight() int {
+func (s *Skiplist) randomHeight() int {
 	h := 1
-	for h < maxHeight && rand.Uint32() <= heightIncrease {
+	for h < maxHeight && z.FastRand() <= heightIncrease {
 		h++
 	}
 	return h
@@ -300,7 +300,7 @@ func (s *Skiplist) Put(key []byte, v y.ValueStruct) {
 	}
 
 	// We do need to create a new node.
-	height := randomHeight()
+	height := s.randomHeight()
 	x := newNode(s.arena, key, v, height)
 
 	// Try to increase s.height via CAS.
