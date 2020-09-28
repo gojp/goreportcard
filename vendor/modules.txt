@@ -1,0 +1,61 @@
+# github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a
+## explicit
+github.com/beorn7/perks/quantile
+# github.com/boltdb/bolt v1.3.2-0.20171120010307-9da317453632
+## explicit
+github.com/boltdb/bolt
+# github.com/cespare/xxhash v1.1.0
+github.com/cespare/xxhash
+# github.com/dgraph-io/badger v1.6.1-0.20190924140636-a425b0eafac0
+## explicit
+github.com/dgraph-io/badger
+github.com/dgraph-io/badger/options
+github.com/dgraph-io/badger/pb
+github.com/dgraph-io/badger/skl
+github.com/dgraph-io/badger/table
+github.com/dgraph-io/badger/trie
+github.com/dgraph-io/badger/y
+# github.com/dgraph-io/ristretto v0.0.0-20190928180628-8acd55ed71b0
+## explicit
+github.com/dgraph-io/ristretto/z
+# github.com/dgryski/go-farm v0.0.0-20190423205320-6a90982ecee2
+github.com/dgryski/go-farm
+# github.com/dustin/go-humanize v1.0.0
+## explicit
+github.com/dustin/go-humanize
+# github.com/golang/protobuf v1.3.3-0.20190920234318-1680a479a2cf
+## explicit
+github.com/golang/protobuf/proto
+# github.com/kr/pretty v0.2.1
+## explicit
+# github.com/matttproud/golang_protobuf_extensions v1.0.1
+## explicit
+github.com/matttproud/golang_protobuf_extensions/pbutil
+# github.com/pkg/errors v0.8.2-0.20190227000051-27936f6d90f9
+## explicit
+github.com/pkg/errors
+# github.com/prometheus/client_golang v0.9.0-pre1.0.20171201122222-661e31bf844d
+## explicit
+github.com/prometheus/client_golang/prometheus
+github.com/prometheus/client_golang/prometheus/promhttp
+# github.com/prometheus/client_model v0.0.0-20171117100541-99fa1f4be8e5
+## explicit
+github.com/prometheus/client_model/go
+# github.com/prometheus/common v0.0.0-20171117163051-2e54d0b93cba
+## explicit
+github.com/prometheus/common/expfmt
+github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
+github.com/prometheus/common/model
+# github.com/prometheus/procfs v0.0.0-20171221151313-8f918ac9ab4b
+## explicit
+github.com/prometheus/procfs
+github.com/prometheus/procfs/xfs
+# golang.org/x/net v0.0.0-20190926025831-c00fd9afed17
+## explicit
+golang.org/x/net/internal/timeseries
+golang.org/x/net/trace
+# golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb
+golang.org/x/sys/unix
+# golang.org/x/tools v0.0.0-20190628034336-212fb13d595e
+## explicit
+golang.org/x/tools/go/vcs
