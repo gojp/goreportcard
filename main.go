@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 	"github.com/gojp/goreportcard/handlers"
 
 	"github.com/prometheus/client_golang/prometheus"

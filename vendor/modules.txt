@@ -1,41 +1,49 @@
-# github.com/AndreasBriese/bbloom v0.0.0-20190825152654-46b345b51c96
-github.com/AndreasBriese/bbloom
+# github.com/DataDog/zstd v1.4.5
+## explicit
+github.com/DataDog/zstd
 # github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a
 ## explicit
 github.com/beorn7/perks/quantile
 # github.com/cespare/xxhash v1.1.0
 github.com/cespare/xxhash
-# github.com/dgraph-io/badger v1.6.2
+# github.com/dgraph-io/badger/v2 v2.2007.2
 ## explicit
-github.com/dgraph-io/badger
-github.com/dgraph-io/badger/options
-github.com/dgraph-io/badger/pb
-github.com/dgraph-io/badger/skl
-github.com/dgraph-io/badger/table
-github.com/dgraph-io/badger/trie
-github.com/dgraph-io/badger/y
-# github.com/dgraph-io/ristretto v0.0.2
+github.com/dgraph-io/badger/v2
+github.com/dgraph-io/badger/v2/options
+github.com/dgraph-io/badger/v2/pb
+github.com/dgraph-io/badger/v2/skl
+github.com/dgraph-io/badger/v2/table
+github.com/dgraph-io/badger/v2/trie
+github.com/dgraph-io/badger/v2/y
+# github.com/dgraph-io/ristretto v0.0.3
+## explicit
+github.com/dgraph-io/ristretto
 github.com/dgraph-io/ristretto/z
+# github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13
+## explicit
+github.com/dgryski/go-farm
 # github.com/dustin/go-humanize v1.0.0
 ## explicit
 github.com/dustin/go-humanize
-# github.com/golang/protobuf v1.3.3-0.20190920234318-1680a479a2cf
+# github.com/golang/protobuf v1.4.2
 ## explicit
 github.com/golang/protobuf/proto
+# github.com/golang/snappy v0.0.2
+## explicit
+github.com/golang/snappy
 # github.com/kr/pretty v0.2.1
 ## explicit
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 ## explicit
 github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/pkg/errors v0.8.2-0.20190227000051-27936f6d90f9
+# github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
 # github.com/prometheus/client_golang v0.9.0-pre1.0.20171201122222-661e31bf844d
 ## explicit
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/promhttp
-# github.com/prometheus/client_model v0.0.0-20171117100541-99fa1f4be8e5
-## explicit
+# github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
 github.com/prometheus/client_model/go
 # github.com/prometheus/common v0.0.0-20171117163051-2e54d0b93cba
 ## explicit
@@ -46,12 +54,42 @@ github.com/prometheus/common/model
 ## explicit
 github.com/prometheus/procfs
 github.com/prometheus/procfs/xfs
-# golang.org/x/net v0.0.0-20190926025831-c00fd9afed17
+# golang.org/x/net v0.0.0-20200927032502-5d4f70055728
 ## explicit
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb
+# golang.org/x/sys v0.0.0-20200926100807-9d91bd62050c
+## explicit
+golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 # golang.org/x/tools v0.0.0-20190628034336-212fb13d595e
 ## explicit
 golang.org/x/tools/go/vcs
+# google.golang.org/protobuf v1.25.0
+## explicit
+google.golang.org/protobuf/encoding/prototext
+google.golang.org/protobuf/encoding/protowire
+google.golang.org/protobuf/internal/descfmt
+google.golang.org/protobuf/internal/descopts
+google.golang.org/protobuf/internal/detrand
+google.golang.org/protobuf/internal/encoding/defval
+google.golang.org/protobuf/internal/encoding/messageset
+google.golang.org/protobuf/internal/encoding/tag
+google.golang.org/protobuf/internal/encoding/text
+google.golang.org/protobuf/internal/errors
+google.golang.org/protobuf/internal/fieldsort
+google.golang.org/protobuf/internal/filedesc
+google.golang.org/protobuf/internal/filetype
+google.golang.org/protobuf/internal/flags
+google.golang.org/protobuf/internal/genid
+google.golang.org/protobuf/internal/impl
+google.golang.org/protobuf/internal/mapsort
+google.golang.org/protobuf/internal/pragma
+google.golang.org/protobuf/internal/set
+google.golang.org/protobuf/internal/strs
+google.golang.org/protobuf/internal/version
+google.golang.org/protobuf/proto
+google.golang.org/protobuf/reflect/protoreflect
+google.golang.org/protobuf/reflect/protoregistry
+google.golang.org/protobuf/runtime/protoiface
+google.golang.org/protobuf/runtime/protoimpl

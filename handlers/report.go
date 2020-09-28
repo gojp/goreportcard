@@ -8,7 +8,7 @@ import (
 	"flag"
 	"html/template"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 )
 
 var domain = flag.String("domain", "goreportcard.com", "Domain used for your goreportcard installation")

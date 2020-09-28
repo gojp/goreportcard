@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 )
 
 var cache struct {

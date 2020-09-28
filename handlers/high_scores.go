@@ -8,7 +8,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 	"github.com/dustin/go-humanize"
 )
 
