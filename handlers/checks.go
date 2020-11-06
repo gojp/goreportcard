@@ -115,8 +115,6 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 		LastRefreshHumanized: humanize.Time(t),
 	}
 
-	badgeCache.Store(repo, checkResult.Grade)
-
 	respBytes, err := json.Marshal(resp)
 	if err != nil {
 		return checksResp{}, fmt.Errorf("could not marshal json: %v", err)
