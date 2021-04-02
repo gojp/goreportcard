@@ -18,7 +18,7 @@ func (g Misspell) Weight() float64 {
 
 // Percentage returns the percentage of .go files that pass gofmt
 func (g Misspell) Percentage() (float64, []FileSummary, error) {
-	return GoTool(g.Dir, g.Filenames, []string{"gometalinter", "--deadline=180s", "--disable-all", "--enable=misspell"})
+	return GoTool(g.Dir, g.Filenames, []string{"golangci-lint", "run", "--deadline=180s", "--disable-all", "--enable=misspell"})
 }
 
 // Description returns the description of Misspell

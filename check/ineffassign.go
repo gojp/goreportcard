@@ -18,7 +18,7 @@ func (g IneffAssign) Weight() float64 {
 
 // Percentage returns the percentage of .go files that pass gofmt
 func (g IneffAssign) Percentage() (float64, []FileSummary, error) {
-	return GoTool(g.Dir, g.Filenames, []string{"gometalinter", "--deadline=180s", "--disable-all", "--enable=ineffassign"})
+	return GoTool(g.Dir, g.Filenames, []string{"golangci-lint", "run", "--deadline=180s", "--disable-all", "--enable=ineffassign"})
 }
 
 // Description returns the description of IneffAssign

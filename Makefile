@@ -7,7 +7,7 @@ install:
 	./scripts/make-install.sh
 
 lint:
-	gometalinter --exclude=vendor --exclude=repos --disable-all --enable=golint --enable=vet --enable=gofmt ./...
+	golangci-lint run --skip-dirs=repos --disable-all --enable=golint --enable=vet --enable=gofmt ./...
 	find . -name '*.go' | xargs gofmt -w -s
 
 test: 
