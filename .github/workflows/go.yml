@@ -14,5 +14,8 @@ jobs:
       with:
         go-version: 1.16
 
+    - name: Install
+      run: make install
+
     - name: Lint
       run: make lint
