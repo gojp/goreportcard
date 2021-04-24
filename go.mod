@@ -4,6 +4,10 @@ go 1.16
 
 require (
 	github.com/DataDog/zstd v1.4.8 // indirect
+	github.com/alecthomas/gocyclo v0.0.0-20150208221726-aa8f8b160214
+	github.com/alecthomas/gometalinter v1.0.3
+	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
+	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15 // indirect
 	github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a // indirect
 	github.com/client9/misspell v0.3.4
 	github.com/dgraph-io/badger/v2 v2.2007.2
@@ -12,6 +16,8 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
+	github.com/gordonklaus/ineffassign v0.0.0-20210225214923-2e10b2664254
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v0.9.0-pre1.0.20171201122222-661e31bf844d
@@ -22,5 +28,6 @@ require (
 	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c // indirect
 	golang.org/x/sys v0.0.0-20210402192133-700132347e07 // indirect
 	golang.org/x/tools v0.1.0
+	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	honnef.co/go/tools v0.1.3
 )
