@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"html/template"
 	"log"
 	"net/http"
 	"sync"
@@ -17,7 +16,7 @@ var cache struct {
 }
 
 // HomeHandler handles the homepage
-func HomeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
+func (gh *GRCHandler) HomeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 	if r.URL.Path[1:] == "" {
 		var recentRepos = []string{}
 
@@ -63,7 +62,13 @@ func HomeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 			cache.count = 0
 		}
 
-		t := template.Must(template.New("home.html").Delims("[[", "]]").ParseFiles("templates/home.html", "templates/footer.html"))
+		t, err := gh.loadTemplate("templates/home.html")
+		if err != nil {
+			log.Println("ERROR: could not get home template: ", err)
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
 		t.Execute(w, map[string]interface{}{
 			"Recent":               recentRepos,
 			"google_analytics_key": googleAnalyticsKey,
@@ -72,5 +77,5 @@ func HomeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 		return
 	}
 
-	errorHandler(w, r, http.StatusNotFound)
+	gh.errorHandler(w, r, http.StatusNotFound)
 }

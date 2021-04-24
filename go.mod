@@ -1,6 +1,6 @@
 module github.com/gojp/goreportcard
 
-go 1.14
+go 1.16
 
 require (
 	github.com/DataDog/zstd v1.4.8 // indirect
@@ -12,7 +12,6 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
-	github.com/kr/pretty v0.2.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v0.9.0-pre1.0.20171201122222-661e31bf844d

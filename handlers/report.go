@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"flag"
-	"html/template"
 
 	"github.com/dgraph-io/badger/v2"
 )
@@ -15,9 +14,15 @@ var domain = flag.String("domain", "goreportcard.com", "Domain used for your gor
 var googleAnalyticsKey = flag.String("google_analytics_key", "UA-58936835-1", "Google Analytics Account Id")
 
 // ReportHandler handles the report page
-func ReportHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo string) {
+func (gh *GRCHandler) ReportHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo string) {
 	log.Printf("Displaying report: %q", repo)
-	t := template.Must(template.New("report.html").Delims("[[", "]]").ParseFiles("templates/report.html", "templates/footer.html"))
+	t, err := gh.loadTemplate("/templates/report.html")
+	if err != nil {
+		log.Println("ERROR: could not get report template: ", err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
 	resp, err := getFromCache(db, repo)
 	needToLoad := false
 	if err != nil {

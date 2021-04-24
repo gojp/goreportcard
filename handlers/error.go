@@ -1,14 +1,20 @@
 package handlers
 
 import (
-	"html/template"
+	"log"
 	"net/http"
 )
 
-func errorHandler(w http.ResponseWriter, r *http.Request, status int) {
+func (gh *GRCHandler) errorHandler(w http.ResponseWriter, r *http.Request, status int) {
 	w.WriteHeader(status)
 	if status == http.StatusNotFound {
-		t := template.Must(template.New("404.html").Delims("[[", "]]").ParseFiles("templates/404.html", "templates/footer.html"))
+		t, err := gh.loadTemplate("/templates/404.html")
+		if err != nil {
+			log.Println("ERROR: could not get 404 template: ", err)
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
 		t.Execute(w, nil)
 	}
 }

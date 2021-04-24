@@ -3,8 +3,6 @@ package handlers
 import (
 	"container/heap"
 	"encoding/json"
-	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 
@@ -12,16 +10,8 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
-func add(x, y int) int {
-	return x + y
-}
-
-func formatScore(x float64) string {
-	return fmt.Sprintf("%.2f", x)
-}
-
 // HighScoresHandler handles the stats page
-func HighScoresHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
+func (gh *GRCHandler) HighScoresHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 	count, scores := 0, &ScoreHeap{}
 	err := db.View(func(txn *badger.Txn) error {
 		var scoreBytes = []byte("[]")
@@ -34,7 +24,7 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 			})
 
 			if err != nil {
-				log.Println(err)
+				log.Println("ERROR:", err)
 			}
 		}
 
@@ -63,8 +53,12 @@ func HighScoresHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 		return
 	}
 
-	funcs := template.FuncMap{"add": add, "formatScore": formatScore}
-	t := template.Must(template.New("high_scores.html").Delims("[[", "]]").Funcs(funcs).ParseFiles("templates/high_scores.html", "templates/footer.html"))
+	t, err := gh.loadTemplate("/templates/high_scores.html")
+	if err != nil {
+		log.Println("ERROR: could not get high scores template: ", err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
 
 	sortedScores := make([]scoreItem, len(*scores))
 	for i := range sortedScores {

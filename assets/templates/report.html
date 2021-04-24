@@ -330,7 +330,7 @@
           // we need to load the results
           loadData.call($("form#check_form")[0], true);
       } else {
-          populateResults(JSON.parse(response));
+          populateResults(response);
           $(".container-loading").slideUp();
       }
 
