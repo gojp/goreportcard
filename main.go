@@ -92,7 +92,7 @@ func setupMetrics() *metrics {
 // recordDuration records the length of a request from start to now
 func (m metrics) recordDuration(start time.Time, name string) {
 	elapsed := time.Since(start)
-	m.responseTimes.WithLabelValues(name).Observe(float64(elapsed.Nanoseconds()))
+	m.responseTimes.WithLabelValues(name).Observe(float64(elapsed.Milliseconds()))
 	log.Printf("Served %s in %s", name, elapsed)
 }
 
