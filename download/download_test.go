@@ -1,15 +1,9 @@
 package download
 
-import (
-	"os"
-	"path/filepath"
-	"testing"
-)
-
+/*
 var testDownloadDir = "test_downloads"
 
 func TestRepoRootForImportPath(t *testing.T) {
-	t.Skip()
 	cases := []struct {
 		giveURL  string
 		wantPath string
@@ -41,3 +35,4 @@ func TestRepoRootForImportPath(t *testing.T) {
 	// clean up the test
 	os.RemoveAll(testDownloadDir)
 }
+*/
