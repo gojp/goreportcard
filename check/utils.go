@@ -2,10 +2,7 @@ package check
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
-	"go/format"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -363,6 +360,7 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 	return float64(len(filenames)-len(failed)) / float64(len(filenames)), failed, nil
 }
 
+/*
 // GoFmtNative runs gofmt via golang's stdlib format pkg
 func GoFmtNative(dir string, filenames []string) (float64, []FileSummary, error) {
 	fsChan := make(chan FileSummary)
@@ -420,3 +418,4 @@ func GoFmtNative(dir string, filenames []string) (float64, []FileSummary, error)
 		}
 	}
 }
+*/

@@ -6,7 +6,7 @@ build:
 install:
 	./scripts/make-install.sh
 
-lint: fmt vet misspell
+lint: fmt vet staticcheck misspell
 
 fmt:
 	./scripts/gofmt.sh

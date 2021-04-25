@@ -7,16 +7,16 @@ type Grade string
 // The Grade constants below indicate the current available
 // grades.
 const (
-	GradeAPlus Grade = "A+"
-	GradeA           = "A"
-	GradeB           = "B"
-	GradeC           = "C"
-	GradeD           = "D"
-	GradeE           = "E"
-	GradeF           = "F"
+	GradeAPlus = "A+"
+	GradeA     = "A"
+	GradeB     = "B"
+	GradeC     = "C"
+	GradeD     = "D"
+	GradeE     = "E"
+	GradeF     = "F"
 )
 
-// GradeFromPercentage is a helper for getting the GradeFromPercentage for a percentage
+// GradeFromPercentage gets the Grade for a percentage
 func GradeFromPercentage(percentage float64) Grade {
 	switch {
 	case percentage > 90:

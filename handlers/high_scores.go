@@ -16,6 +16,9 @@ func (gh *GRCHandler) HighScoresHandler(w http.ResponseWriter, r *http.Request, 
 	err := db.View(func(txn *badger.Txn) error {
 		var scoreBytes = []byte("[]")
 		item, err := txn.Get([]byte("scores"))
+		if err != nil {
+			log.Println("ERROR:", err)
+		}
 
 		if item != nil {
 			err = item.Value(func(val []byte) error {

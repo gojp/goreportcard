@@ -65,7 +65,7 @@ func updateHighScores(txn *badger.Txn, resp checksResp, repo string) error {
 	}
 
 	if item != nil {
-		err = item.Value(func(val []byte) error {
+		item.Value(func(val []byte) error {
 			scoreBytes = val
 
 			return nil
@@ -84,7 +84,7 @@ func updateHighScores(txn *badger.Txn, resp checksResp, repo string) error {
 
 	// if this repo is already in the list, remove the original entry:
 	for i := range *scores {
-		if strings.ToLower((*scores)[i].Repo) == strings.ToLower(repo) {
+		if strings.EqualFold((*scores)[i].Repo, repo) {
 			heap.Remove(scores, i)
 			break
 		}
@@ -156,6 +156,10 @@ type recentItem struct {
 func updateRecentlyViewed(txn *badger.Txn, repo string) error {
 	var recent []recentItem
 	item, err := txn.Get([]byte("recent"))
+	if err != nil {
+		return err
+	}
+
 	if item != nil {
 		item.Value(func(val []byte) error {
 			return json.Unmarshal(val, &recent)
