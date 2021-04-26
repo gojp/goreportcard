@@ -45,7 +45,7 @@ func getFromCache(db *badger.DB, repo string) (checksResp, error) {
 		}
 
 		if item == nil {
-			log.Println("Repo %q not found in badger cache", repo)
+			log.Printf("Repo %q not found in badger cache", repo)
 			return notFoundError{repo}
 		}
 
