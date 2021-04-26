@@ -4,15 +4,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/dgraph-io/badger/v2"
 	"github.com/gojp/goreportcard/check"
 )
-
-func badgePath(grade check.Grade, style string) string {
-	return fmt.Sprintf("assets/badges/%s_%s.svg", strings.ToLower(string(grade)), strings.ToLower(style))
-}
 
 // BadgeHandler handles fetching the badge images
 func BadgeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo string) {
@@ -31,6 +26,26 @@ func BadgeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo st
 		return
 	}
 
-	w.Header().Set("Cache-control", "no-store, no-cache, must-revalidate")
-	http.ServeFile(w, r, badgePath(resp.Grade, style))
+	http.Redirect(w, r, badgeURL(resp.Grade, style), http.StatusTemporaryRedirect)
+}
+
+func badgeURL(grade check.Grade, style string) string {
+	var color string
+	switch grade {
+	case check.GradeAPlus:
+		color = "brightgreen"
+	case check.GradeA:
+		color = "green"
+	case check.GradeB:
+		color = "yellowgreen"
+	case check.GradeC:
+		color = "yellow"
+	case check.GradeD:
+		color = "orange"
+	case check.GradeE:
+		fallthrough
+	case check.GradeF:
+		color = "red"
+	}
+	return fmt.Sprintf("https://img.shields.io/badge/go%%20report-%s-%s.svg?style=%s", grade, color, style)
 }
