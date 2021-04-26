@@ -34,7 +34,6 @@ func getFromCache(db *badger.DB, repo string) (checksResp, error) {
 		}
 
 		if item != nil {
-			log.Printf("repo %q found in badger cache", repo)
 			err = item.Value(func(val []byte) error {
 				err = json.Unmarshal(val, &resp)
 				if err != nil {
@@ -46,7 +45,7 @@ func getFromCache(db *badger.DB, repo string) (checksResp, error) {
 		}
 
 		if item == nil {
-			log.Println("Repo not found in badger")
+			log.Println("Repo %q not found in badger cache", repo)
 			return notFoundError{repo}
 		}
 
