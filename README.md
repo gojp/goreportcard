@@ -19,13 +19,13 @@ Support us over on [Patreon](https://www.patreon.com/goreportcard)!
 Assuming you already have a recent version of Go installed, pull down the code with `go get`:
 
 ```
-go get github.com/gojp/goreportcard
+git clone https://github.com/gojp/goreportcard.git
 ```
 
 Go into the source directory and pull down the project dependencies:
 
 ```
-cd $GOPATH/src/github.com/gojp/goreportcard
+cd goreportcard
 make install
 ```
 
@@ -49,8 +49,10 @@ There is also a CLI available for grading applications on your local machine.
 
 Example usage:
 ```
-go get github.com/gojp/goreportcard/cmd/goreportcard-cli
-cd $GOPATH/src/github.com/gojp/goreportcard
+git clone https://github.com/gojp/goreportcard.git
+cd goreportcard
+make install
+go install ./cmd/goreportcard-cli
 goreportcard-cli
 ```
 
