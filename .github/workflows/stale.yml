@@ -9,5 +9,5 @@ jobs:
     steps:
       - uses: actions/stale@v3
         with:
-          stale-issue-message: 'This issue is stale because it has been open 60 days with no activity.'
-          stale-pr-message: 'This PR is stale because it has been open 60 days with no activity.'
+          stale-issue-message: 'This issue is stale because it has been open for 60 days with no activity.'
+          stale-pr-message: 'This PR is stale because it has been open for 60 days with no activity.'
