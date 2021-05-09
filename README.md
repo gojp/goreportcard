@@ -2,7 +2,7 @@
 
 # Go Report Card
 
-A web application that generates a report on the quality of an open source go project. It uses several measures, including `gofmt`, `go vet`, `go lint` and `gocyclo`. To get a report on your own project, try using the hosted version of this code running at [goreportcard.com](https://goreportcard.com).
+A web application that generates a report on the quality of an open source Go project. It uses several measures, including `gofmt`, `go vet`, `go lint` and `gocyclo`. To get a report on your own project, try [goreportcard.com](https://goreportcard.com).
 
 ### Sponsors
 
@@ -62,7 +62,8 @@ license: 100%
 misspell: 100%
 ```
 
-Verbose output is also available:
+Verbose output:
+
 ```
 goreportcard-cli -v
 ```
@@ -88,7 +89,7 @@ misspell: 100%
 
 ### Contributing
 
-Go Report Card is an open source project run by volunteers, and contributions are welcome! Check out the [Issues](https://github.com/gojp/goreportcard/issues) page to see if your idea for a contribution has already been mentioned, and feel free to raise an issue or submit a pull request.
+Go Report Card is an open source project run by volunteers, and contributions are welcome! Check out the [Issues](https://github.com/gojp/goreportcard/issues) page to see if your idea has already been mentioned. Feel free to raise an issue or submit a pull request.
 
 ### Academic Citation
 
@@ -106,4 +107,4 @@ If you use Go Report Card for academic purposes, please use the following citati
 
 ### License
 
-The code is licensed under the permissive Apache v2.0 licence. This means you can do what you like with the software, as long as you include the required notices. [Read this](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)) for a summary.
+The code is licensed under the permissive Apache v2.0 license. [Read this](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)) for a summary.
