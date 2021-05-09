@@ -16,20 +16,13 @@ Support us over on [Patreon](https://www.patreon.com/goreportcard)!
 
 ### Installation
 
-Assuming you already have a recent version of Go installed, pull down the code with `go get`:
-
 ```
 git clone https://github.com/gojp/goreportcard.git
-```
-
-Go into the source directory and pull down the project dependencies:
-
-```
 cd goreportcard
 make install
 ```
 
-Now run
+Now run:
 
 ```
 make start
@@ -41,7 +34,7 @@ and you should see
 Running on 127.0.0.1:8000...
 ```
 
-Navigate to that URL in your browser and check that you can see the front page.
+Navigate to that URL and you should see the Go Report Card front page.
 
 ### Command Line Interface
 
