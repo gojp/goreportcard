@@ -107,7 +107,3 @@ If you use Go Report Card for academic purposes, please use the following citati
 ### License
 
 The code is licensed under the permissive Apache v2.0 licence. This means you can do what you like with the software, as long as you include the required notices. [Read this](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0)) for a summary.
-
-### Notes
-
-We don't support Go Report Card on Windows.
