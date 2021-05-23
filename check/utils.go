@@ -241,6 +241,7 @@ func goVersionInToGitHub(name string) string {
 	return version
 }
 
+// FileURL generate file url from repo and branch
 func FileURL(base, filename, branch string) string {
 	var fileURL string
 
@@ -295,6 +296,7 @@ outer:
 	return fsMap, nil
 }
 
+// GetBranchNameFromQuery parse branch from http query and repo
 func GetBranchNameFromQuery(repo string, branch string) string {
 	if branch == "" {
 		sp := strings.Split(repo, "/")
@@ -314,8 +316,8 @@ func GetBranchNameFromQuery(repo string, branch string) string {
 	return branch
 }
 
+// GetBranchResolve parse branch name from repo
 func GetBranchResolve(repo string, branch string) string {
-
 	if branch == "" {
 		sp := strings.Split(repo, "/")
 

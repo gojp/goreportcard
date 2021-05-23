@@ -64,25 +64,9 @@ func download(root *vcs.RepoRoot, path, branch, fullLocalPath string, firstAttem
 			root.VCS.CreateCmd = "clone --depth 1 {repo} {dir} -b " + branch
 		}
 
-		var rootRepo = root.Repo
-		u, err := url.Parse(rootRepo)
+		rootRepo, err := getRepoRootAddress(root.Repo)
 		if err != nil {
-			log.Printf("WARN: could not parse root.Repo: %v", err)
-		} else {
-			if u.Scheme == "" {
-				u, err = url.Parse("https://" + rootRepo)
-				if err != nil {
-					log.Printf("WARN: could not parse root.Repo: %v", err)
-				}
-			}
-
-			var errGetCred error
-			u.User, errGetCred = getGitCredential(u.Host)
-			if errGetCred != nil {
-				return root, errGetCred
-			}
-
-			rootRepo = u.String()
+			return root, err
 		}
 
 		err = root.VCS.Create(fullLocalPath, rootRepo)
@@ -157,7 +141,7 @@ func exists(path string) (bool, error) {
 	return true, err
 }
 
-// GetRepoRoot
+// GetRepoRoot get repo root path
 func GetRepoRoot(path string) (root *vcs.RepoRoot, err error) {
 	path, err = Clean(path)
 	if err != nil {
@@ -167,6 +151,30 @@ func GetRepoRoot(path string) (root *vcs.RepoRoot, err error) {
 	root, err = vcs.RepoRootForImportPath(path, true)
 
 	return root, err
+}
+
+func getRepoRootAddress(rootRepo string) (string, error) {
+	u, err := url.Parse(rootRepo)
+	if err != nil {
+		log.Printf("WARN: could not parse root.Repo: %v", err)
+	} else {
+		if u.Scheme == "" {
+			u, err = url.Parse("https://" + rootRepo)
+			if err != nil {
+				log.Printf("WARN: could not parse root.Repo: %v", err)
+			}
+		}
+
+		var errGetCred error
+		u.User, errGetCred = getGitCredential(u.Host)
+		if errGetCred != nil {
+			return "", errGetCred
+		}
+
+		rootRepo = u.String()
+	}
+
+	return rootRepo, nil
 }
 
 func getGitCredential(host string) (*url.Userinfo, error) {
