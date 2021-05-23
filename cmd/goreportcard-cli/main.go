@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/gojp/goreportcard/check"
 )
@@ -35,10 +39,36 @@ func main() {
 	if *post != "" {
 		respBytes, err := json.Marshal(result)
 		if err != nil {
-			fmt.Printf("could not marshal json: %v", err)
-			os.Exit(1)
+			log.Fatalf("Fatal could not marshal json: %v", err)
 		}
-		fmt.Println(string(respBytes))
+
+		log.Println("Total grade: ", result.Average)
+
+		request, err := http.NewRequest("POST", *post, bytes.NewBuffer(respBytes))
+		if err != nil {
+			log.Fatalf("Fatal error create request: %s", err.Error())
+		}
+
+		request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+		client := &http.Client{
+			Timeout:   30 * time.Second,
+			Transport: http.DefaultTransport,
+		}
+		response, err := client.Do(request)
+		if err != nil {
+			log.Fatalf("Fatal error do request: %s", err.Error())
+		}
+		defer response.Body.Close()
+
+		log.Println("Send status", response.Status)
+
+		body, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Fatalf("Fatal error read request: %s", err.Error())
+		}
+		log.Println("response Body:", string(body))
+
 		os.Exit(0)
 	}
 
