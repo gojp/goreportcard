@@ -16,7 +16,7 @@ vet:
 	go vet ./main.go
 
 staticcheck:
-	@[ -x "$(shell which staticcheck)" ] || go install honnef.co/go/tools/cmd/staticcheck
+	@[ -x "$(which staticcheck)" ] || go install honnef.co/go/tools/cmd/staticcheck
 	staticcheck ./...
 
 test:
@@ -26,5 +26,5 @@ start:
 	 go run main.go
 
 misspell:
-	@[ -x "$(shell which misspell)" ] || go install ./vendor/github.com/client9/misspell/cmd/misspell
+	@[ -x "$(which misspell)" ] || go install ./vendor/github.com/client9/misspell/cmd/misspell
 	find . -name '*.go' -not -path './vendor/*' -not -path './_repos/*' -not -path './download/test_downloads/*' | xargs misspell -error

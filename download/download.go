@@ -16,16 +16,7 @@ import (
 // It is forgiving in terms of the exact path given: the path may have
 // a scheme or username, which will be trimmed.
 func Download(path, branch, dest string) (root *vcs.RepoRoot, err error) {
-	return download(path, branch, dest, true)
-}
-
-func download(path, branch, dest string, firstAttempt bool) (root *vcs.RepoRoot, err error) {
 	vcs.ShowCmd = true
-
-	path, err = Clean(path)
-	if err != nil {
-		return root, err
-	}
 
 	root, err = vcs.RepoRootForImportPath(path, true)
 	if err != nil {
@@ -42,6 +33,11 @@ func download(path, branch, dest string, firstAttempt bool) (root *vcs.RepoRoot,
 	}
 
 	fullLocalPath := filepath.Join(dest, root.Root)
+
+	return download(root, path, branch, fullLocalPath, true)
+}
+
+func download(root *vcs.RepoRoot, path, branch, fullLocalPath string, firstAttempt bool) (*vcs.RepoRoot, error) {
 	ex, err := exists(fullLocalPath)
 	if err != nil {
 		return root, err
@@ -57,7 +53,7 @@ func download(path, branch, dest string, firstAttempt bool) (root *vcs.RepoRoot,
 				log.Println("Failed to delete path:", fullLocalPath, err)
 			}
 
-			return download(path, branch, dest, false)
+			return download(root, path, branch, fullLocalPath, false)
 		} else if err != nil {
 			return root, err
 		}
@@ -67,17 +63,28 @@ func download(path, branch, dest string, firstAttempt bool) (root *vcs.RepoRoot,
 		if root.VCS.Name == "Git" {
 			root.VCS.CreateCmd = "clone --depth 1 {repo} {dir} -b " + branch
 		}
+
 		var rootRepo = root.Repo
-		u, err := url.Parse(root.Repo)
+		u, err := url.Parse(rootRepo)
 		if err != nil {
 			log.Printf("WARN: could not parse root.Repo: %v", err)
 		} else {
-			// TODO: read from file config
-			if u.Host == "github.com" {
-				u.User = url.UserPassword("gojp", "gojp")
-				rootRepo = u.String()
+			if u.Scheme == "" {
+				u, err = url.Parse("https://" + rootRepo)
+				if err != nil {
+					log.Printf("WARN: could not parse root.Repo: %v", err)
+				}
 			}
+
+			var errGetCred error
+			u.User, errGetCred = getGitCredential(u.Host)
+			if errGetCred != nil {
+				return root, errGetCred
+			}
+
+			rootRepo = u.String()
 		}
+
 		err = root.VCS.Create(fullLocalPath, rootRepo)
 		if err != nil {
 			return root, err
@@ -93,7 +100,7 @@ func download(path, branch, dest string, firstAttempt bool) (root *vcs.RepoRoot,
 			log.Printf("Failed to delete directory %s", fullLocalPath)
 		}
 
-		return download(path, branch, dest, false)
+		return download(root, path, branch, fullLocalPath, false)
 	}
 
 	return root, err
@@ -110,6 +117,7 @@ func Clean(path string) (string, error) {
 	if root != nil && (root.Root == "" || root.Repo == "") {
 		return root.Root, errors.New("empty repo root")
 	}
+
 	return root.Root, err
 }
 
@@ -159,4 +167,35 @@ func GetRepoRoot(path string) (root *vcs.RepoRoot, err error) {
 	root, err = vcs.RepoRootForImportPath(path, true)
 
 	return root, err
+}
+
+func getGitCredential(host string) (*url.Userinfo, error) {
+	data, err := os.ReadFile("data/.git-credentials")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, cred := range strings.Split(string(data), "\n") {
+		u, err := url.Parse(cred)
+		if err != nil {
+			return nil, err
+		}
+
+		if strings.EqualFold(u.Host, host) {
+			var userInfo *url.Userinfo
+
+			userName := u.User.Username()
+			pass, pasSet := u.User.Password()
+
+			if pasSet {
+				userInfo = url.UserPassword(userName, pass)
+			} else if userName != "" {
+				userInfo = url.User(userName)
+			}
+
+			return userInfo, nil
+		}
+	}
+
+	return nil, nil
 }
