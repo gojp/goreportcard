@@ -35,7 +35,7 @@ func (gh *GRCHandler) ReportHandler(w http.ResponseWriter, r *http.Request, db *
 		needToLoad = true
 	}
 
-	respBytes, err := json.Marshal(resp)
+	respBytes, err := json.Marshal(resp.CalculateFileURLForFileSummaries())
 	if err != nil {
 		log.Println("ERROR ReportHandler: could not marshal JSON: ", err)
 		http.Error(w, "Failed to load cache object", 500)

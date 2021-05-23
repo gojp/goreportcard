@@ -142,3 +142,15 @@ func exists(path string) (bool, error) {
 	}
 	return true, err
 }
+
+// GetRepoRoot
+func GetRepoRoot(path string) (root *vcs.RepoRoot, err error) {
+	path, err = Clean(path)
+	if err != nil {
+		return root, err
+	}
+
+	root, err = vcs.RepoRootForImportPath(path, true)
+
+	return root, err
+}

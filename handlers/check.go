@@ -4,11 +4,13 @@ import (
 	"container/heap"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/dgraph-io/badger/v2"
+	"github.com/gojp/goreportcard/check"
 	"github.com/gojp/goreportcard/download"
 )
 
@@ -44,6 +46,35 @@ func CheckHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(b)
+}
+
+// CheckSaveHandler handles the check save page
+func (gh *GRCHandler) CheckSaveHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo string) {
+	var resultCheck check.ChecksResult
+
+	body, errGetBody := ioutil.ReadAll(r.Body)
+	if errGetBody != nil {
+		log.Println("ERROR: from r.Body:", errGetBody)
+		http.Error(w, "Could not analyze the repository: "+errGetBody.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	if err := json.Unmarshal(body, &resultCheck); err != nil {
+		log.Println("ERROR: from download.Clean:", err)
+		http.Error(w, "Could not download the repository: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("Save check repo %q...", repo)
+
+	if err := saveChecksResp(db, &resultCheck, repo); err != nil {
+		log.Println("ERROR: from saveChecksResp:", err)
+		http.Error(w, "Could not analyze the repository: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func updateHighScores(txn *badger.Txn, resp checksResp, repo string) error {

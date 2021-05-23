@@ -208,27 +208,27 @@ func goPkgInToGitHub(name string) string {
 		version = "master"
 	}
 
-	return "https://github.com/" + user + "/" + pkg + "/blob/" + version + dir
+	return "https://github.com/" + user + "/" + pkg + "/blob/" + version + "/" + dir
 }
 
-func fileURL(dir, filename string) string {
+func FileURL(base, filename string) string {
 	var fileURL string
-	base := strings.TrimPrefix(dir, "_repos/src/")
+
 	switch {
 	case strings.HasPrefix(base, "golang.org/x/"):
 		var pkg string
 		if len(strings.Split(base, "/")) >= 3 {
 			pkg = strings.Split(base, "/")[2]
 		}
-		return fmt.Sprintf("https://github.com/golang/%s/blob/master%s", pkg, strings.TrimPrefix(filename, "/"+base))
+
+		return fmt.Sprintf("https://github.com/golang/%s/blob/master/%s", pkg, strings.TrimPrefix(filename, "/"+base))
 	case strings.HasPrefix(base, "github.com/"):
 		if len(strings.Split(base, "/")) == 4 {
 			base = strings.Join(strings.Split(base, "/")[0:3], "/")
 		}
-		return fmt.Sprintf("https://%s/blob/master%s", base, strings.TrimPrefix(filename, "/"+base))
-	case strings.HasPrefix(base, "gopkg.in/"):
-		fmt.Println(goPkgInToGitHub(base))
-		fmt.Println(strings.TrimPrefix(filename, "/"+base))
+
+		return fmt.Sprintf("https://%s/blob/master/%s", base, strings.TrimPrefix(filename, "/"+base))
+	case strings.HasPrefix(base, "gopkg.in/"):	
 		return goPkgInToGitHub(base) + strings.TrimPrefix(filename, "/"+base)
 	}
 
@@ -239,12 +239,12 @@ func makeFilename(fn string) string {
 	sp := strings.Split(fn, "/")
 	switch {
 	case strings.HasPrefix(fn, "/github.com"):
-		if len(sp) > 3 {
-			return strings.Join(sp[3:], "/")
+		if len(sp) > 4 {
+			return strings.Join(sp[4:], "/")
 		}
 	case strings.HasPrefix(fn, "/golang.org/x"):
-		if len(sp) > 3 {
-			return strings.Join(sp[3:], "/")
+		if len(sp) > 4 {
+			return strings.Join(sp[4:], "/")
 		}
 	case strings.HasPrefix(fn, "/gopkg.in"):
 		if len(sp) > 3 {
@@ -270,11 +270,9 @@ outer:
 		}
 
 		filename = strings.TrimPrefix(filename, "_repos/src")
-		fu := fileURL(dir, filename)
 		fs := fsMap[filename]
 		if fs.Filename == "" {
 			fs.Filename = makeFilename(filename)
-			fs.FileURL = fu
 		}
 		err := fs.AddError(out.Text())
 		if err != nil {

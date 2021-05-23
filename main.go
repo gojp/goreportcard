@@ -129,6 +129,7 @@ func main() {
 
 	http.HandleFunc(m.instrument("/assets/", http.StripPrefix("/assets/", http.FileServer(http.FS(assetsFS))).ServeHTTP))
 	http.HandleFunc(m.instrument("/checks", injectBadgerHandler(db, handlers.CheckHandler)))
+	http.HandleFunc(m.instrument("/check-save/", makeHandler(db, "check-save", gh.CheckSaveHandler)))
 	http.HandleFunc(m.instrument("/report/", makeHandler(db, "report", gh.ReportHandler)))
 	http.HandleFunc(m.instrument("/badge/", makeHandler(db, "badge", handlers.BadgeHandler)))
 	http.HandleFunc(m.instrument("/high_scores/", injectBadgerHandler(db, gh.HighScoresHandler)))
