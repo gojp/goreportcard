@@ -4,11 +4,13 @@ import (
 	"container/heap"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/dgraph-io/badger/v2"
+	"github.com/gojp/goreportcard/check"
 	"github.com/gojp/goreportcard/download"
 )
 
@@ -28,22 +30,55 @@ func CheckHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 		return
 	}
 
-	log.Printf("Checking repo %q...", repo)
+	branch := check.GetBranchNameFromQuery(r.FormValue("repo"), r.FormValue("branch"))
+
+	log.Printf("Checking repo %q and branch %q...", repo, branch)
 
 	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in badger first
-	_, err = newChecksResp(db, repo, forceRefresh)
+	_, err = newChecksResp(db, repo, branch, forceRefresh)
 	if err != nil {
 		log.Println("ERROR: from newChecksResp:", err)
 		http.Error(w, "Could not analyze the repository: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	b, err := json.Marshal(map[string]string{"redirect": "/report/" + repo})
+	b, err := json.Marshal(map[string]string{"redirect": "/report/" + repo + "?branch=" + branch})
 	if err != nil {
 		log.Println("JSON marshal error:", err)
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(b)
+}
+
+// CheckSaveHandler handles the check save page
+func (gh *GRCHandler) CheckSaveHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo string) {
+	var resultCheck check.ChecksResult
+
+	body, errGetBody := ioutil.ReadAll(r.Body)
+	if errGetBody != nil {
+		log.Println("ERROR: from r.Body:", errGetBody)
+		http.Error(w, "Could not analyze the repository: "+errGetBody.Error(), http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	if err := json.Unmarshal(body, &resultCheck); err != nil {
+		log.Println("ERROR: from download.Clean:", err)
+		http.Error(w, "Could not download the repository: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	branch := check.GetBranchNameFromQuery(repo, r.URL.Query().Get("branch"))
+
+	log.Printf("Save check repo %q branch %q...", repo, branch)
+
+	if err := saveChecksResp(db, &resultCheck, repo, branch); err != nil {
+		log.Println("ERROR: from saveChecksResp:", err)
+		http.Error(w, "Could not analyze the repository: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func updateHighScores(txn *badger.Txn, resp checksResp, repo string) error {

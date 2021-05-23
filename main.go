@@ -19,7 +19,8 @@ import (
 )
 
 var (
-	addr = flag.String("http", ":8000", "HTTP listen address")
+	addr      = flag.String("http", ":8000", "HTTP listen address")
+	badgerDir = flag.String("b", "/usr/local/badger", "Root directory of your badger cache")
 
 	//go:embed assets/*
 	embedFS embed.FS
@@ -106,11 +107,11 @@ func (m metrics) instrument(path string, h http.HandlerFunc) (string, http.Handl
 
 func main() {
 	flag.Parse()
-	if err := os.MkdirAll("_repos/src/github.com", 0755); err != nil && !os.IsExist(err) {
+	if err := os.MkdirAll("data/_repos/src/github.com", 0755); err != nil && !os.IsExist(err) {
 		log.Fatal("ERROR: could not create repos dir: ", err)
 	}
 
-	db, err := badger.Open(badger.DefaultOptions("/usr/local/badger"))
+	db, err := badger.Open(badger.DefaultOptions(*badgerDir))
 	if err != nil {
 		log.Fatal("ERROR: could not open badger db: ", err)
 	}
@@ -128,6 +129,7 @@ func main() {
 
 	http.HandleFunc(m.instrument("/assets/", http.StripPrefix("/assets/", http.FileServer(http.FS(assetsFS))).ServeHTTP))
 	http.HandleFunc(m.instrument("/checks", injectBadgerHandler(db, handlers.CheckHandler)))
+	http.HandleFunc(m.instrument("/check-save/", makeHandler(db, "check-save", gh.CheckSaveHandler)))
 	http.HandleFunc(m.instrument("/report/", makeHandler(db, "report", gh.ReportHandler)))
 	http.HandleFunc(m.instrument("/badge/", makeHandler(db, "badge", handlers.BadgeHandler)))
 	http.HandleFunc(m.instrument("/high_scores/", injectBadgerHandler(db, gh.HighScoresHandler)))
