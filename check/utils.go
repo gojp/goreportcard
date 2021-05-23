@@ -228,7 +228,9 @@ func FileURL(base, filename string) string {
 		}
 
 		return fmt.Sprintf("https://%s/blob/master/%s", base, strings.TrimPrefix(filename, "/"+base))
-	case strings.HasPrefix(base, "gopkg.in/"):	
+	case strings.HasPrefix(base, "gitlab.com/"):
+		return fmt.Sprintf("https://%s/-/blob/master/%s", base, strings.TrimPrefix(filename, "/"+base))
+	case strings.HasPrefix(base, "gopkg.in/"):		
 		return goPkgInToGitHub(base) + strings.TrimPrefix(filename, "/"+base)
 	}
 
@@ -249,6 +251,10 @@ func makeFilename(fn string) string {
 	case strings.HasPrefix(fn, "/gopkg.in"):
 		if len(sp) > 3 {
 			return strings.Join(sp[3:], "/")
+		}
+	case strings.HasPrefix(fn, "/gitlab.com"):
+		if len(sp) > 4 {
+			return strings.Join(sp[4:], "/")
 		}
 	}
 
