@@ -19,7 +19,8 @@ import (
 )
 
 var (
-	addr = flag.String("http", ":8000", "HTTP listen address")
+	addr      = flag.String("http", ":8000", "HTTP listen address")
+	badgerDir = flag.String("b", "/usr/local/badger", "Root directory of your badger cache")
 
 	//go:embed assets/*
 	embedFS embed.FS
@@ -110,7 +111,7 @@ func main() {
 		log.Fatal("ERROR: could not create repos dir: ", err)
 	}
 
-	db, err := badger.Open(badger.DefaultOptions("/usr/local/badger"))
+	db, err := badger.Open(badger.DefaultOptions(*badgerDir))
 	if err != nil {
 		log.Fatal("ERROR: could not open badger db: ", err)
 	}
