@@ -259,36 +259,12 @@ func FileURL(base, filename, branch string) string {
 
 		return fmt.Sprintf("https://%s/blob/%s/%s", base, branch, strings.TrimPrefix(filename, "/"+base))
 	case strings.HasPrefix(base, "gitlab.com/"):
-		return fmt.Sprintf("https://%s/-/blob/%s/%s", base, branch, strings.TrimPrefix(filename, "/"+base))
+		return fmt.Sprintf("https://%s/-/blob/%s/%s", strings.TrimSuffix(base, ".git"), branch, strings.TrimPrefix(filename, "/"+base))
 	case strings.HasPrefix(base, "gopkg.in/"):
 		return goPkgInToGitHub(base) + strings.TrimPrefix(filename, "/"+base)
 	}
 
 	return fileURL
-}
-
-func makeFilename(fn string) string {
-	sp := strings.Split(fn, "/")
-	switch {
-	case strings.HasPrefix(fn, "/github.com"):
-		if len(sp) > 4 {
-			return strings.Join(sp[4:], "/")
-		}
-	case strings.HasPrefix(fn, "/golang.org/x"):
-		if len(sp) > 4 {
-			return strings.Join(sp[4:], "/")
-		}
-	case strings.HasPrefix(fn, "/gopkg.in"):
-		if len(sp) > 3 {
-			return strings.Join(sp[3:], "/")
-		}
-	case strings.HasPrefix(fn, "/gitlab.com"):
-		if len(sp) > 4 {
-			return strings.Join(sp[4:], "/")
-		}
-	}
-
-	return fn
 }
 
 func getFileSummaryMap(out *bufio.Scanner, dir string) (map[string]FileSummary, error) {
@@ -305,16 +281,16 @@ outer:
 			continue outer
 		}
 
-		filename = strings.TrimPrefix(filename, "data/_repos/src")
-		fs := fsMap[filename]
+		filenameFull := strings.TrimPrefix(filename, "data/_repos/src")
+		fs := fsMap[filenameFull]
 		if fs.Filename == "" {
-			fs.Filename = makeFilename(filename)
+			fs.Filename = strings.TrimPrefix(strings.TrimPrefix(filename, dir), "/")
 		}
 		err := fs.AddError(out.Text())
 		if err != nil {
 			return nil, err
 		}
-		fsMap[filename] = fs
+		fsMap[filenameFull] = fs
 	}
 	return fsMap, nil
 }
