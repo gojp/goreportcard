@@ -21,14 +21,18 @@ func (n notFoundError) Error() string {
 }
 
 func dirName(repo string) string {
-	return fmt.Sprintf("_repos/src/%s", repo)
+	return fmt.Sprintf("data/_repos/src/%s", repo)
 }
 
-func getFromCache(db *badger.DB, repo string) (checksResp, error) {
+func getKeyForCache(repo, branch string) []byte {
+	return []byte(RepoPrefix + repo + "|branch-" + branch)
+}
+
+func getFromCache(db *badger.DB, repo, branch string) (checksResp, error) {
 	// try and fetch from badger
 	resp := checksResp{}
 	err := db.View(func(txn *badger.Txn) error {
-		item, err := txn.Get([]byte(RepoPrefix + repo))
+		item, err := txn.Get(getKeyForCache(repo, branch))
 		if err != nil && err != badger.ErrKeyNotFound {
 			return err
 		}
@@ -71,14 +75,15 @@ type checksResp struct {
 	Issues               int           `json:"issues"`
 	Repo                 string        `json:"repo"`
 	ResolvedRepo         string        `json:"resolvedRepo"`
+	Branch               string        `json:"branch"`
 	LastRefresh          time.Time     `json:"last_refresh"`
 	LastRefreshFormatted string        `json:"formatted_last_refresh"`
 	LastRefreshHumanized string        `json:"humanized_last_refresh"`
 }
 
-func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, error) {
+func newChecksResp(db *badger.DB, repo, branch string, forceRefresh bool) (checksResp, error) {
 	if !forceRefresh {
-		resp, err := getFromCache(db, repo)
+		resp, err := getFromCache(db, repo, branch)
 		if err != nil {
 			// just log the error and continue
 			log.Println(err)
@@ -89,7 +94,7 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 	}
 
 	// fetch the repo and grade it
-	repoRoot, err := download.Download(repo, "_repos/src")
+	repoRoot, err := download.Download(repo, branch, "data/_repos/src")
 	if err != nil {
 		return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
 	}
@@ -109,6 +114,7 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 		Issues:               checkResult.Issues,
 		Repo:                 repo,
 		ResolvedRepo:         repoRoot.Repo,
+		Branch:               branch,
 		LastRefresh:          t,
 		LastRefreshFormatted: t.Format(time.UnixDate),
 		LastRefreshHumanized: humanize.Time(t),
@@ -123,7 +129,7 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 	isNewRepo := false
 	var oldRepoBytes []byte
 	err = db.View(func(txn *badger.Txn) error {
-		item, err := txn.Get([]byte(RepoPrefix + repo))
+		item, err := txn.Get(getKeyForCache(repo, branch))
 		if err != nil {
 			return err
 		}
@@ -149,7 +155,7 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 			log.Printf("Saving repo %q to cache...", repo)
 
 			// save repo to cache
-			err = txn.Set([]byte(RepoPrefix+repo), respBytes)
+			err = txn.Set(getKeyForCache(repo, branch), respBytes)
 			if err != nil {
 				return err
 			}
@@ -174,7 +180,7 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 	return resp, nil
 }
 
-func saveChecksResp(db *badger.DB, checkResult *check.ChecksResult, repo string) error {
+func saveChecksResp(db *badger.DB, checkResult *check.ChecksResult, repo, branch string) error {
 	// fetch the repo and grade it
 	repoRoot, errClean := download.GetRepoRoot(repo)
 	if errClean != nil {
@@ -189,6 +195,7 @@ func saveChecksResp(db *badger.DB, checkResult *check.ChecksResult, repo string)
 		Files:                checkResult.Files,
 		Issues:               checkResult.Issues,
 		Repo:                 repo,
+		Branch:               branch,
 		ResolvedRepo:         repoRoot.Repo,
 		LastRefresh:          t,
 		LastRefreshFormatted: t.Format(time.UnixDate),
@@ -204,7 +211,7 @@ func saveChecksResp(db *badger.DB, checkResult *check.ChecksResult, repo string)
 	isNewRepo := false
 	var oldRepoBytes []byte
 	err = db.View(func(txn *badger.Txn) error {
-		item, err := txn.Get([]byte(RepoPrefix + repo))
+		item, err := txn.Get(getKeyForCache(repo, branch))
 		if err != nil {
 			return err
 		}
@@ -229,7 +236,7 @@ func saveChecksResp(db *badger.DB, checkResult *check.ChecksResult, repo string)
 		log.Printf("Saving repo %q to cache...", repo)
 
 		// save repo to cache
-		err = txn.Set([]byte(RepoPrefix+repo), respBytes)
+		err = txn.Set(getKeyForCache(repo, branch), respBytes)
 		if err != nil {
 			return err
 		}
@@ -253,9 +260,11 @@ func saveChecksResp(db *badger.DB, checkResult *check.ChecksResult, repo string)
 }
 
 func (cs *checksResp) CalculateFileURLForFileSummaries() *checksResp {
+	ResolvedBranch := check.GetBranchResolve(cs.Repo, cs.Branch)
 	for indexCheck := range cs.Checks {
 		for indexFS := range cs.Checks[indexCheck].FileSummaries {
-			cs.Checks[indexCheck].FileSummaries[indexFS].FileURL = check.FileURL(cs.Repo, cs.Checks[indexCheck].FileSummaries[indexFS].Filename)
+			cs.Checks[indexCheck].FileSummaries[indexFS].FileURL =
+				check.FileURL(cs.Repo, cs.Checks[indexCheck].FileSummaries[indexFS].Filename, ResolvedBranch)
 		}
 	}
 

@@ -211,7 +211,37 @@ func goPkgInToGitHub(name string) string {
 	return "https://github.com/" + user + "/" + pkg + "/blob/" + version + "/" + dir
 }
 
-func FileURL(base, filename string) string {
+func goVersionInToGitHub(name string) string {
+	var pkgversion string
+	parts := strings.Split(name, "/")
+	if len(parts) < 2 {
+		return ""
+	}
+	if parts[0] != "gopkg.in" {
+		return ""
+	}
+
+	idx := strings.Index(parts[1], ".")
+	if idx != -1 {
+		pkgversion = parts[1]
+
+	} else {
+		pkgversion = parts[2]
+	}
+	idx = strings.Index(pkgversion, ".")
+	if idx == -1 {
+		return ""
+	}
+
+	version := pkgversion[idx+1:]
+	if version == "v0" {
+		version = "master"
+	}
+
+	return version
+}
+
+func FileURL(base, filename, branch string) string {
 	var fileURL string
 
 	switch {
@@ -221,16 +251,16 @@ func FileURL(base, filename string) string {
 			pkg = strings.Split(base, "/")[2]
 		}
 
-		return fmt.Sprintf("https://github.com/golang/%s/blob/master/%s", pkg, strings.TrimPrefix(filename, "/"+base))
+		return fmt.Sprintf("https://github.com/golang/%s/blob/%s/%s", pkg, branch, strings.TrimPrefix(filename, "/"+base))
 	case strings.HasPrefix(base, "github.com/"):
 		if len(strings.Split(base, "/")) == 4 {
 			base = strings.Join(strings.Split(base, "/")[0:3], "/")
 		}
 
-		return fmt.Sprintf("https://%s/blob/master/%s", base, strings.TrimPrefix(filename, "/"+base))
+		return fmt.Sprintf("https://%s/blob/%s/%s", base, branch, strings.TrimPrefix(filename, "/"+base))
 	case strings.HasPrefix(base, "gitlab.com/"):
-		return fmt.Sprintf("https://%s/-/blob/master/%s", base, strings.TrimPrefix(filename, "/"+base))
-	case strings.HasPrefix(base, "gopkg.in/"):		
+		return fmt.Sprintf("https://%s/-/blob/%s/%s", base, branch, strings.TrimPrefix(filename, "/"+base))
+	case strings.HasPrefix(base, "gopkg.in/"):
 		return goPkgInToGitHub(base) + strings.TrimPrefix(filename, "/"+base)
 	}
 
@@ -275,7 +305,7 @@ outer:
 			continue outer
 		}
 
-		filename = strings.TrimPrefix(filename, "_repos/src")
+		filename = strings.TrimPrefix(filename, "data/_repos/src")
 		fs := fsMap[filename]
 		if fs.Filename == "" {
 			fs.Filename = makeFilename(filename)
@@ -287,6 +317,47 @@ outer:
 		fsMap[filename] = fs
 	}
 	return fsMap, nil
+}
+
+func GetBranchNameFromQuery(repo string, branch string) string {
+	if branch == "" {
+		sp := strings.Split(repo, "/")
+
+		switch {
+		case strings.HasPrefix(repo, "github.com"):
+			if len(sp) == 4 {
+				branch = sp[3]
+			}
+		}
+	}
+
+	if branch == "" {
+		branch = "master"
+	}
+
+	return branch
+}
+
+func GetBranchResolve(repo string, branch string) string {
+
+	if branch == "" {
+		sp := strings.Split(repo, "/")
+
+		switch {
+		case strings.HasPrefix(repo, "github.com"):
+			if len(sp) == 4 {
+				branch = sp[3]
+			}
+		case strings.HasPrefix(repo, "gopkg.in/"):
+			branch = goVersionInToGitHub(repo)
+		}
+	}
+
+	if branch == "" {
+		branch = "master"
+	}
+
+	return branch
 }
 
 // GoTool runs a given go command (for example gofmt, go tool vet)
@@ -392,10 +463,10 @@ func GoFmtNative(dir string, filenames []string) (float64, []FileSummary, error)
 					errChan <- err
 				}
 				if !bytes.Equal(b, g) {
-					filename := strings.TrimPrefix(f, "_repos/src")
+					filename := strings.TrimPrefix(f, "data/_repos/src")
 					fs := FileSummary{}
 					fs.Filename = makeFilename(filename)
-					fu := fileURL(dir, strings.TrimPrefix(f, "_repos/src"))
+					fu := fileURL(dir, strings.TrimPrefix(f, "data/_repos/src"))
 					fs.FileURL = fu
 					fs.Errors = append(fs.Errors, Error{1, "file is not gofmted"})
 

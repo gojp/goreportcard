@@ -11,7 +11,17 @@ import (
 
 // BadgeHandler handles fetching the badge images
 func BadgeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo string) {
-	resp, err := newChecksResp(db, repo, false)
+	branch := check.GetBranchNameFromQuery(repo, r.URL.Query().Get("branch"))
+	getOnlyCache := r.URL.Query().Get("get-cache")
+
+	var resp checksResp
+	var err error
+
+	if getOnlyCache != "" {
+		resp, err = getFromCache(db, repo, branch)
+	} else {
+		resp, err = newChecksResp(db, repo, branch, false)
+	}
 
 	// See: http://shields.io/#styles
 	style := r.URL.Query().Get("style")

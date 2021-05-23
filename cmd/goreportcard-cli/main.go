@@ -15,6 +15,7 @@ var (
 	verbose = flag.Bool("v", false, "Verbose output")
 	th      = flag.Float64("t", 0, "Threshold of failure command")
 	jsn     = flag.Bool("j", false, "JSON output. The binary will always exit with code 0")
+	post    = flag.String("p", "", "Post local generate checks to cache")
 )
 
 func main() {
@@ -28,6 +29,16 @@ func main() {
 	if *jsn {
 		marshalledResults, _ := json.Marshal(result)
 		fmt.Println(string(marshalledResults))
+		os.Exit(0)
+	}
+
+	if *post != "" {
+		respBytes, err := json.Marshal(result)
+		if err != nil {
+			fmt.Printf("could not marshal json: %v", err)
+			os.Exit(1)
+		}
+		fmt.Println(string(respBytes))
 		os.Exit(0)
 	}
 

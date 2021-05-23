@@ -107,7 +107,7 @@ func (m metrics) instrument(path string, h http.HandlerFunc) (string, http.Handl
 
 func main() {
 	flag.Parse()
-	if err := os.MkdirAll("_repos/src/github.com", 0755); err != nil && !os.IsExist(err) {
+	if err := os.MkdirAll("data/_repos/src/github.com", 0755); err != nil && !os.IsExist(err) {
 		log.Fatal("ERROR: could not create repos dir: ", err)
 	}
 

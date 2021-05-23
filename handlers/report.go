@@ -8,6 +8,7 @@ import (
 	"flag"
 
 	"github.com/dgraph-io/badger/v2"
+	"github.com/gojp/goreportcard/check"
 )
 
 var domain = flag.String("domain", "goreportcard.com", "Domain used for your goreportcard installation")
@@ -15,7 +16,10 @@ var googleAnalyticsKey = flag.String("google_analytics_key", "UA-58936835-1", "G
 
 // ReportHandler handles the report page
 func (gh *GRCHandler) ReportHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo string) {
-	log.Printf("Displaying report: %q", repo)
+	branch := check.GetBranchNameFromQuery(repo, r.URL.Query().Get("branch"))
+
+	log.Printf("Displaying report: %q branch: %q", repo, branch)
+
 	t, err := gh.loadTemplate("/templates/report.html")
 	if err != nil {
 		log.Println("ERROR: could not get report template: ", err)
@@ -23,7 +27,7 @@ func (gh *GRCHandler) ReportHandler(w http.ResponseWriter, r *http.Request, db *
 		return
 	}
 
-	resp, err := getFromCache(db, repo)
+	resp, err := getFromCache(db, repo, branch)
 	needToLoad := false
 	if err != nil {
 		switch err.(type) {
@@ -33,6 +37,7 @@ func (gh *GRCHandler) ReportHandler(w http.ResponseWriter, r *http.Request, db *
 			log.Println("ERROR ReportHandler:", err) // log error, but continue
 		}
 		needToLoad = true
+		resp.Branch = branch
 	}
 
 	respBytes, err := json.Marshal(resp.CalculateFileURLForFileSummaries())
@@ -44,6 +49,7 @@ func (gh *GRCHandler) ReportHandler(w http.ResponseWriter, r *http.Request, db *
 
 	t.Execute(w, map[string]interface{}{
 		"repo":                 repo,
+		"branch":               branch,
 		"response":             string(respBytes),
 		"loading":              needToLoad,
 		"domain":               domain,
