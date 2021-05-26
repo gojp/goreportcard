@@ -156,7 +156,7 @@ type recentItem struct {
 func updateRecentlyViewed(txn *badger.Txn, repo string) error {
 	var recent []recentItem
 	item, err := txn.Get([]byte("recent"))
-	if err != nil {
+	if err != nil && err != badger.ErrKeyNotFound {
 		return err
 	}
 
