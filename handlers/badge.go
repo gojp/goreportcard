@@ -7,11 +7,13 @@ import (
 
 	"github.com/dgraph-io/badger/v2"
 	"github.com/gojp/goreportcard/check"
+	"github.com/gojp/goreportcard/download"
 )
 
 // BadgeHandler handles fetching the badge images
 func BadgeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo string) {
-	resp, err := newChecksResp(db, repo, false)
+	branch := check.GetBranchNameFromQuery(repo, r.URL.Query().Get("branch"))
+	getOnlyCache := r.URL.Query().Get("get-cache")
 
 	// See: http://shields.io/#styles
 	style := r.URL.Query().Get("style")
@@ -19,10 +21,29 @@ func BadgeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo st
 		style = "flat"
 	}
 
+	repo, errClean := download.Clean(repo)
+	if errClean != nil {
+		log.Printf("ERROR: fetching badge for %s: %v", repo, errClean)
+		url := "https://img.shields.io/badge/go%20report-error-lightgrey.svg?style=" + style
+		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+
+		return
+	}
+
+	var resp checksResp
+	var err error
+
+	if getOnlyCache != "" {
+		resp, err = getFromCache(db, repo, branch)
+	} else {
+		resp, err = newChecksResp(db, repo, branch, false)
+	}
+
 	if err != nil {
 		log.Printf("ERROR: fetching badge for %s: %v", repo, err)
 		url := "https://img.shields.io/badge/go%20report-error-lightgrey.svg?style=" + style
 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+
 		return
 	}
 

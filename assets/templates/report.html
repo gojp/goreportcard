@@ -32,6 +32,8 @@
           <div class="header-item">
               <form method="POST" action="/checks" id="check_form">
                 <input name="repo" type="text" class="input-box" value="[[ .repo ]]" placeholder="[[ .repo ]]"/>
+                <input name="branch" type="text" class="input-box-small" value="[[ .branch ]]" placeholder="[[ .branch ]]"/>
+                <input type="submit" tabindex="-1" style="display:none"/>
               </form>
           </div>
         </div>
@@ -100,11 +102,11 @@
   </script>
   <script id="template-grade" type="text/x-handlebars-template">
       <div class="column">
-          <h1 class="title">Report for {{#if link}}<a href="{{ link }}">{{/if}}<strong>{{repo}}</strong>{{#if link}}</a>{{/if}}</h1>
+          <h1 class="title">Report for {{#if link}}<a href="{{ link }}">{{/if}}<strong>{{repo}}</strong>{{#if link}}</a>{{/if}} branch: {{branch}}</h1>
         <p><span class="huge">{{grade}}</span> &nbsp;&nbsp; {{gradeMessage grade}} &emsp;&emsp; Found <strong>{{issues}}</strong> issues across <strong>{{files}}</strong> files</p>
       </div>
       <div class="column is-one-quarter badge-col">
-        <img class="badge" tag="{{repo}}" src="/badge/{{repo}}"/>
+        <img class="badge" tag="{{repo}}" src="/badge/{{repo}}?get-cache=true&branch={{branch}}"/>
         <a class="button is-info is-small tweet-button"
           href="https://twitter.com/intent/tweet?text={{ repo }} gets {{#if use_an}}an{{else}}a{{/if}} {{ grade_encoded }} on goreportcard.com! #golang">
             <span class="icon is-small">
@@ -203,7 +205,7 @@
     });
 
     var allowedLinkDomains = ["https://github.com/", "https://bitbucket.org/",
-      "https://golang.org/", "https://go.googlesource.com/"];
+      "https://golang.org/", "https://go.googlesource.com/", "https://gitlab.com/"];
 
     // initialize handlebars templates
     var templates = {};
@@ -260,8 +262,8 @@
         });
 
         var badgeData = {
-            url: "https://[[ .domain ]]/report/" + data.repo,
-            image_url: "https://[[ .domain ]]/badge/" + data.repo,
+            url: "https://[[ .domain ]]/report/" + data.repo + "?branch=" + data.branch,
+            image_url: "https://[[ .domain ]]/badge/" + data.repo + "?branch=" + data.branch,
         }
         var $badgeDropdown = $(templates.badgedropdown(badgeData));
         $badgeDropdown.find("input").on("click", function(){
@@ -298,7 +300,7 @@
             return false;
         }
 
-        $("#check_form .button").addClass("is-loading");
+        $("#check_form > input").prop("disabled", true);
       $.ajax({
           type: getRequest ? "GET" : "POST",
           url: url,
@@ -313,7 +315,7 @@
       }).always(function(){
           loading = false;
           $("a.refresh-button").removeClass("is-loading");
-          $("#check_form .button").removeClass("is-loading");
+          $("#check_form > input").prop("disabled", false);
           $(".container-loading").slideUp();
       });
       return false;

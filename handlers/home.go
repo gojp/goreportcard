@@ -18,7 +18,7 @@ var cache struct {
 // HomeHandler handles the homepage
 func (gh *GRCHandler) HomeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 	if r.URL.Path[1:] == "" {
-		var recentRepos = []string{}
+		var recentRepos []string
 
 		cache.mux.Lock()
 		cache.count++

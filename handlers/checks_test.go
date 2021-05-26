@@ -6,7 +6,7 @@ var dirNameTests = []struct {
 	url  string
 	want string
 }{
-	{"github.com/foo/bar", "_repos/src/github.com/foo/bar"},
+	{"github.com/foo/bar", "data/_repos/src/github.com/foo/bar"},
 }
 
 func TestDirName(t *testing.T) {

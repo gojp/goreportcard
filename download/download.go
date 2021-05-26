@@ -15,22 +15,15 @@ import (
 // Go repository, and attempts to download it in a way similar to go get.
 // It is forgiving in terms of the exact path given: the path may have
 // a scheme or username, which will be trimmed.
-func Download(path, dest string) (root *vcs.RepoRoot, err error) {
-	return download(path, dest, true)
-}
-
-func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err error) {
+func Download(path, branch, dest string) (root *vcs.RepoRoot, err error) {
 	vcs.ShowCmd = true
-
-	path, err = Clean(path)
-	if err != nil {
-		return root, err
-	}
 
 	root, err = vcs.RepoRootForImportPath(path, true)
 	if err != nil {
 		return root, err
 	}
+
+	root.VCS.TagSyncDefault = branch
 
 	localDirPath := filepath.Join(dest, root.Root, "..")
 
@@ -40,6 +33,11 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 	}
 
 	fullLocalPath := filepath.Join(dest, root.Root)
+
+	return download(root, path, branch, fullLocalPath, true)
+}
+
+func download(root *vcs.RepoRoot, path, branch, fullLocalPath string, firstAttempt bool) (*vcs.RepoRoot, error) {
 	ex, err := exists(fullLocalPath)
 	if err != nil {
 		return root, err
@@ -54,7 +52,8 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 			if err != nil {
 				log.Println("Failed to delete path:", fullLocalPath, err)
 			}
-			return download(path, dest, false)
+
+			return download(root, path, branch, fullLocalPath, false)
 		} else if err != nil {
 			return root, err
 		}
@@ -62,25 +61,21 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 		log.Println("Create", root.Repo)
 
 		if root.VCS.Name == "Git" {
-			root.VCS.CreateCmd = "clone --depth 1 {repo} {dir}"
-			root.VCS.TagSyncDefault = ""
+			root.VCS.CreateCmd = "clone --depth 1 {repo} {dir} -b " + branch
 		}
-		var rootRepo = root.Repo
-		u, err := url.Parse(root.Repo)
+
+		rootRepo, err := getRepoRootAddress(root.Repo)
 		if err != nil {
-			log.Printf("WARN: could not parse root.Repo: %v", err)
-		} else {
-			if u.Host == "github.com" {
-				u.User = url.UserPassword("gojp", "gojp")
-				rootRepo = u.String()
-			}
+			return root, err
 		}
+
 		err = root.VCS.Create(fullLocalPath, rootRepo)
 		if err != nil {
 			return root, err
 		}
 	}
-	err = root.VCS.TagSync(fullLocalPath, "")
+
+	err = root.VCS.TagSync(fullLocalPath, branch)
 	if err != nil && firstAttempt {
 		// may have been rebased; we delete the directory, then try one more time:
 		log.Printf("Failed to update %q (%v), trying again...", root.Repo, err.Error())
@@ -88,8 +83,10 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 		if err != nil {
 			log.Printf("Failed to delete directory %s", fullLocalPath)
 		}
-		return download(path, dest, false)
+
+		return download(root, path, branch, fullLocalPath, false)
 	}
+
 	return root, err
 }
 
@@ -104,6 +101,7 @@ func Clean(path string) (string, error) {
 	if root != nil && (root.Root == "" || root.Repo == "") {
 		return root.Root, errors.New("empty repo root")
 	}
+
 	return root.Root, err
 }
 
@@ -141,4 +139,71 @@ func exists(path string) (bool, error) {
 		return false, nil
 	}
 	return true, err
+}
+
+// GetRepoRoot get repo root path
+func GetRepoRoot(path string) (root *vcs.RepoRoot, err error) {
+	path, err = Clean(path)
+	if err != nil {
+		return root, err
+	}
+
+	root, err = vcs.RepoRootForImportPath(path, true)
+
+	return root, err
+}
+
+func getRepoRootAddress(rootRepo string) (string, error) {
+	u, err := url.Parse(rootRepo)
+	if err != nil {
+		log.Printf("WARN: could not parse root.Repo: %v", err)
+	} else {
+		if u.Scheme == "" {
+			u, err = url.Parse("https://" + rootRepo)
+			if err != nil {
+				log.Printf("WARN: could not parse root.Repo: %v", err)
+			}
+		}
+
+		var errGetCred error
+		u.User, errGetCred = getGitCredential(u.Host)
+		if errGetCred != nil {
+			return "", errGetCred
+		}
+
+		rootRepo = u.String()
+	}
+
+	return rootRepo, nil
+}
+
+func getGitCredential(host string) (*url.Userinfo, error) {
+	data, err := os.ReadFile("data/.git-credentials")
+	if err != nil {
+		return nil, err
+	}
+
+	for _, cred := range strings.Split(string(data), "\n") {
+		u, err := url.Parse(cred)
+		if err != nil {
+			return nil, err
+		}
+
+		if strings.EqualFold(u.Host, host) {
+			var userInfo *url.Userinfo
+
+			userName := u.User.Username()
+			pass, pasSet := u.User.Password()
+
+			if pasSet {
+				userInfo = url.UserPassword(userName, pass)
+			} else if userName != "" {
+				userInfo = url.User(userName)
+			}
+
+			return userInfo, nil
+		}
+	}
+
+	return nil, nil
 }

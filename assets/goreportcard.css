@@ -30,6 +30,15 @@ time {
     padding: 3px;
     font-size: 0.9em;
 }
+#check_form .input-box-small {
+    padding: 0.5em;
+    min-width: 75px;
+    max-width: 150px;
+}
+.header-item #check_form .input-box-small {
+    padding: 3px;
+    font-size: 0.9em;
+}
 
 .hidden {
     display: none;
