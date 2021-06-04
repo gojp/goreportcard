@@ -291,7 +291,7 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 	// started := time.Now()
 	// temporary disabling of misspell as it's the slowest
 	// command right now
-	if strings.Contains(command[len(command)-1], "misspell") && len(filenames) > 1000 {
+	if strings.Contains(command[len(command)-1], "misspell") && len(filenames) > 300 {
 		log.Println("disabling misspell on large repo...")
 		return 1, []FileSummary{}, nil
 	}
