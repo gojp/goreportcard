@@ -27,4 +27,4 @@ start:
 
 misspell:
 	@[ -x "$(shell which misspell)" ] || go install ./vendor/github.com/client9/misspell/cmd/misspell
-	find . -name '*.go' -not -path './vendor/*' -not -path './_repos/*' -not -path './download/test_downloads/*' -not -path './check/testrepo/*' | xargs misspell -error
+	find . -name '*.go' -not -path './vendor/*' -not -path './_repos/*' -not -path './download/test_downloads/*' -not -path './check/testdata/*' | xargs misspell -error
