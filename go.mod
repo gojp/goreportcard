@@ -17,7 +17,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/gordonklaus/ineffassign v0.0.0-20210225214923-2e10b2664254
+	github.com/gordonklaus/ineffassign v0.0.0-20210522101830-0589229737b2
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v0.9.0-pre1.0.20171201122222-661e31bf844d
@@ -25,9 +25,8 @@ require (
 	github.com/prometheus/common v0.0.0-20171117163051-2e54d0b93cba // indirect
 	github.com/prometheus/procfs v0.0.0-20171221151313-8f918ac9ab4b // indirect
 	golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5
-	golang.org/x/net v0.0.0-20210331212208-0fccb6fa2b5c // indirect
-	golang.org/x/sys v0.0.0-20210402192133-700132347e07 // indirect
-	golang.org/x/tools v0.1.0
+	golang.org/x/sys v0.0.0-20210603125802-9665404d3644 // indirect
+	golang.org/x/tools v0.1.2
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	honnef.co/go/tools v0.1.3
 )
