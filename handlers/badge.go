@@ -19,7 +19,7 @@ func BadgeHandler(w http.ResponseWriter, r *http.Request, db *badger.DB, repo st
 		style = "flat"
 	}
 
-	if err != nil {
+	if err != nil || resp.DidError {
 		log.Printf("ERROR: fetching badge for %s: %v", repo, err)
 		url := "https://img.shields.io/badge/go%20report-error-lightgrey.svg?style=" + style
 		http.Redirect(w, r, url, http.StatusTemporaryRedirect)
