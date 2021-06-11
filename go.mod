@@ -25,8 +25,8 @@ require (
 	github.com/prometheus/common v0.0.0-20171117163051-2e54d0b93cba // indirect
 	github.com/prometheus/procfs v0.0.0-20171221151313-8f918ac9ab4b // indirect
 	golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5
-	golang.org/x/sys v0.0.0-20210603125802-9665404d3644 // indirect
-	golang.org/x/tools v0.1.2
+	golang.org/x/sys v0.0.0-20210611083646-a4fc73990273 // indirect
+	golang.org/x/tools v0.1.3
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	honnef.co/go/tools v0.1.3
 )
