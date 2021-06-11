@@ -295,6 +295,12 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 		log.Println("disabling misspell on large repo...")
 		return 1, []FileSummary{}, nil
 	}
+
+	if strings.Contains(command[len(command)-1], "ineffassign") && len(filenames) > 100 {
+		log.Println("disabling ineffassign on large repo...")
+		return 1, []FileSummary{}, nil
+	}
+
 	params := command[1:]
 	params = addSkipDirs(params)
 	params = append(params, dir+"/...")
