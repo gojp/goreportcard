@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/dgraph-io/badger/v2"
-	"github.com/dustin/go-humanize"
+	badger "github.com/dgraph-io/badger/v2"
+	humanize "github.com/dustin/go-humanize"
 	"github.com/gojp/goreportcard/check"
 	"github.com/gojp/goreportcard/download"
 )
@@ -74,6 +74,7 @@ type checksResp struct {
 	LastRefresh          time.Time     `json:"last_refresh"`
 	LastRefreshFormatted string        `json:"formatted_last_refresh"`
 	LastRefreshHumanized string        `json:"humanized_last_refresh"`
+	DidError             bool          `json:"did_error"`
 }
 
 func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, error) {
@@ -112,6 +113,7 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 		LastRefresh:          t,
 		LastRefreshFormatted: t.Format(time.UnixDate),
 		LastRefreshHumanized: humanize.Time(t),
+		DidError:             checkResult.DidError,
 	}
 
 	respBytes, err := json.Marshal(resp)

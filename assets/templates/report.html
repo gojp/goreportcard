@@ -101,7 +101,13 @@
   <script id="template-grade" type="text/x-handlebars-template">
       <div class="column">
           <h1 class="title">Report for {{#if link}}<a href="{{ link }}">{{/if}}<strong>{{repo}}</strong>{{#if link}}</a>{{/if}}</h1>
-        <p><span class="huge">{{grade}}</span> &nbsp;&nbsp; {{gradeMessage grade}} &emsp;&emsp; Found <strong>{{issues}}</strong> issues across <strong>{{files}}</strong> files</p>
+        <p>
+          {{#if did_error}}
+            <span>An error occurred while generating the report.</span> &emsp;&emsp; Found <strong>{{issues}}</strong> issues across <strong>{{files}}</strong> files</p>
+          {{else}}
+          <span class="huge">{{grade}}</span> &nbsp;&nbsp; {{gradeMessage grade}} &emsp;&emsp; Found <strong>{{issues}}</strong> issues across <strong>{{files}}</strong> files
+          {{/if}}
+        </p>
       </div>
       <div class="column is-one-quarter badge-col">
         <img class="badge" tag="{{repo}}" src="/badge/{{repo}}"/>

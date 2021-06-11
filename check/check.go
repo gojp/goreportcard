@@ -29,11 +29,12 @@ type Score struct {
 
 // ChecksResult represents the combined result of multiple checks
 type ChecksResult struct {
-	Checks  []Score `json:"checks"`
-	Average float64 `json:"average"`
-	Grade   Grade   `json:"GradeFromPercentage"`
-	Files   int     `json:"files"`
-	Issues  int     `json:"issues"`
+	Checks   []Score `json:"checks"`
+	Average  float64 `json:"average"`
+	Grade    Grade   `json:"GradeFromPercentage"`
+	Files    int     `json:"files"`
+	Issues   int     `json:"issues"`
+	DidError bool    `json:"did_error"`
 }
 
 // Run executes all checks on the given directory
@@ -97,6 +98,9 @@ func Run(dir string) (ChecksResult, error) {
 		totalWeight += s.Weight
 		for _, fs := range s.FileSummaries {
 			issues[fs.Filename] = true
+		}
+		if s.Error != "" {
+			resp.DidError = true
 		}
 	}
 	total /= totalWeight
