@@ -86,17 +86,16 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 		log.Printf("Failed to update %q (%v), trying again...", root.Repo, err.Error())
 		// May be using main as default branch, try again
 		root.VCS.TagSyncDefault = "checkout main"
-	}
-
-	err = root.VCS.TagSync(fullLocalPath, "")
-	if err != nil && firstAttempt {
-		// may have been rebased; we delete the directory, then try one more time:
-		log.Printf("Failed to update %q (%v), trying again...", root.Repo, err.Error())
-		err = os.RemoveAll(fullLocalPath)
-		if err != nil {
-			log.Printf("Failed to delete directory %s", fullLocalPath)
+		err = root.VCS.TagSync(fullLocalPath, "")
+		if err != nil && firstAttempt {
+			// may have been rebased; we delete the directory, then try one more time:
+			log.Printf("Failed to update %q (%v), trying again...", root.Repo, err.Error())
+			err = os.RemoveAll(fullLocalPath)
+			if err != nil {
+				log.Printf("Failed to delete directory %s", fullLocalPath)
+			}
+			return download(path, dest, false)
 		}
-		return download(path, dest, false)
 	}
 
 	return root, err
