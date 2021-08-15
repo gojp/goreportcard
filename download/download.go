@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/go-git/go-git/v5"
 	"golang.org/x/tools/go/vcs"
 )
 
@@ -63,7 +64,6 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 
 		if root.VCS.Name == "Git" {
 			root.VCS.CreateCmd = "clone --depth 1 {repo} {dir}"
-			root.VCS.TagSyncDefault = "checkout master"
 		}
 		var rootRepo = root.Repo
 		u, err := url.Parse(root.Repo)
@@ -81,21 +81,29 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 		}
 	}
 
-	err = root.VCS.TagSync(fullLocalPath, "")
+	gitRepo, err := git.PlainOpen(fullLocalPath)
 	if err != nil {
+		log.Printf("Failed to open %q (%v), trying again...", root.Repo, err.Error())
+	}
+
+	headRef, err := gitRepo.Head()
+	if err != nil {
+		log.Printf("Failed to get HEAD %q (%v), trying again...", root.Repo, err.Error())
+	}
+
+	defaultBranch := filepath.Base(headRef.Name().String())
+
+	root.VCS.TagSyncDefault = "checkout " + defaultBranch
+
+	err = root.VCS.TagSync(fullLocalPath, "")
+	if err != nil && firstAttempt {
+		// may have been rebased; we delete the directory, then try one more time:
 		log.Printf("Failed to update %q (%v), trying again...", root.Repo, err.Error())
-		// May be using main as default branch, try again
-		root.VCS.TagSyncDefault = "checkout main"
-		err = root.VCS.TagSync(fullLocalPath, "")
-		if err != nil && firstAttempt {
-			// may have been rebased; we delete the directory, then try one more time:
-			log.Printf("Failed to update %q (%v), trying again...", root.Repo, err.Error())
-			err = os.RemoveAll(fullLocalPath)
-			if err != nil {
-				log.Printf("Failed to delete directory %s", fullLocalPath)
-			}
-			return download(path, dest, false)
+		err = os.RemoveAll(fullLocalPath)
+		if err != nil {
+			log.Printf("Failed to delete directory %s", fullLocalPath)
 		}
+		return download(path, dest, false)
 	}
 
 	return root, err
