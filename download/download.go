@@ -83,16 +83,17 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 
 	gitRepo, err := git.PlainOpen(fullLocalPath)
 	if err != nil {
-		log.Printf("Failed to open %q (%v), trying again...", root.Repo, err.Error())
+		log.Printf("Failed to open %s (%v)", fullLocalPath, err.Error())
+		return root, err
 	}
 
 	headRef, err := gitRepo.Head()
 	if err != nil {
-		log.Printf("Failed to get HEAD %q (%v), trying again...", root.Repo, err.Error())
+		log.Printf("Failed to get HEAD %q (%v)", root.Repo, err.Error())
+		return root, err
 	}
 
 	defaultBranch := filepath.Base(headRef.Name().String())
-
 	root.VCS.TagSyncDefault = "checkout " + defaultBranch
 
 	err = root.VCS.TagSync(fullLocalPath, "")
