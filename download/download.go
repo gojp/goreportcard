@@ -64,9 +64,6 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 		if root.VCS.Name == "Git" {
 			root.VCS.CreateCmd = "clone --depth 1 {repo} {dir}"
 			root.VCS.TagSyncDefault = "checkout master"
-			if !firstAttempt {
-				root.VCS.TagSyncDefault = "checkout main"
-			}
 		}
 		var rootRepo = root.Repo
 		u, err := url.Parse(root.Repo)
@@ -83,6 +80,14 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 			return root, err
 		}
 	}
+
+	err = root.VCS.TagSync(fullLocalPath, "")
+	if err != nil {
+		log.Printf("Failed to update %q (%v), trying again...", root.Repo, err.Error())
+		// May be using main as default branch, try again
+		root.VCS.TagSyncDefault = "checkout main"
+	}
+
 	err = root.VCS.TagSync(fullLocalPath, "")
 	if err != nil && firstAttempt {
 		// may have been rebased; we delete the directory, then try one more time:
@@ -93,6 +98,7 @@ func download(path, dest string, firstAttempt bool) (root *vcs.RepoRoot, err err
 		}
 		return download(path, dest, false)
 	}
+
 	return root, err
 }
 
