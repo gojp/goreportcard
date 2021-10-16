@@ -53,7 +53,7 @@ github.com/golang/snappy
 # github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 ## explicit
 github.com/google/shlex
-# github.com/gordonklaus/ineffassign v0.0.0-20210522101830-0589229737b2
+# github.com/gordonklaus/ineffassign v0.0.0-20210914165742-4cc7213b9bc8
 ## explicit
 github.com/gordonklaus/ineffassign
 github.com/gordonklaus/ineffassign/pkg/ineffassign
@@ -83,25 +83,21 @@ github.com/prometheus/procfs/xfs
 ## explicit
 golang.org/x/lint
 golang.org/x/lint/golint
-# golang.org/x/mod v0.4.2
+# golang.org/x/mod v0.5.1
+## explicit
 golang.org/x/mod/semver
-# golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
+# golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20210603125802-9665404d3644
+# golang.org/x/sys v0.0.0-20211015200801-69063c4bb744
 ## explicit
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
-# golang.org/x/tools v0.1.2
+# golang.org/x/tools v0.1.7
 ## explicit
 golang.org/x/tools/go/analysis
-golang.org/x/tools/go/analysis/internal/analysisflags
-golang.org/x/tools/go/analysis/internal/checker
-golang.org/x/tools/go/analysis/internal/facts
 golang.org/x/tools/go/analysis/passes/inspect
-golang.org/x/tools/go/analysis/singlechecker
-golang.org/x/tools/go/analysis/unitchecker
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/ast/inspector
 golang.org/x/tools/go/buildutil
@@ -122,7 +118,7 @@ golang.org/x/tools/internal/event/label
 golang.org/x/tools/internal/gocommand
 golang.org/x/tools/internal/lsp/fuzzy
 golang.org/x/tools/internal/packagesinternal
-golang.org/x/tools/internal/span
+golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
 # golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
 golang.org/x/xerrors
