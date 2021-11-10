@@ -15,6 +15,7 @@ Support us over on [Patreon](https://www.patreon.com/goreportcard)!
 <a href="https://www.digitalocean.com?utm_medium=opensource&utm_source=goreportcard"><img src="https://goreportcard.com/assets/digitalocean.svg" width="50%" height="50%"></a>
 
 - [Cody Wood](https://www.linkedin.com/in/sprkyco/)
+- Pascal Wenger
 
 ### Installation
 
