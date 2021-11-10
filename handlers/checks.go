@@ -95,6 +95,11 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 		return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
 	}
 
+	// err = download.ProxyDownload(repo)
+	// if err != nil {
+	// 	fmt.Println("ERROR:", err)
+	// }
+
 	repo = repoRoot.Root
 	checkResult, err := check.Run(dirName(repo))
 	if err != nil {
