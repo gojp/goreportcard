@@ -21,6 +21,8 @@ import (
 var (
 	addr = flag.String("http", ":8000", "HTTP listen address")
 
+	databasePath = flag.String("db",  getEnv("GRC_DATABASE_PATH", "/usr/local/badger"), "path to local badger database")
+
 	//go:embed assets/*
 	embedFS embed.FS
 )
@@ -103,13 +105,21 @@ func (m metrics) instrument(path string, h http.HandlerFunc) (string, http.Handl
 	}
 }
 
+func getEnv(name, def string) string {
+	got := os.Getenv(name)
+	if got == "" {
+		return def
+	}
+	return got
+}
+
 func main() {
 	flag.Parse()
 	if err := os.MkdirAll("_repos/src/github.com", 0755); err != nil && !os.IsExist(err) {
 		log.Fatal("ERROR: could not create repos dir: ", err)
 	}
 
-	db, err := badger.Open(badger.DefaultOptions("./badger").WithTruncate(true))
+	db, err := badger.Open(badger.DefaultOptions(*databasePath).WithTruncate(true))
 	if err != nil {
 		log.Fatal("ERROR: could not open badger db: ", err)
 	}

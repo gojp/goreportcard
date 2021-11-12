@@ -28,16 +28,16 @@ make install
 Now run:
 
 ```
-make start
+GRC_DATABASE_PATH=./db make start
 ```
 
 and you should see
 
 ```
-Running on 127.0.0.1:8000...
+Running on :8000...
 ```
 
-Navigate to that URL and you should see the Go Report Card front page.
+Navigate to `localhost:8000` and you should see the Go Report Card front page.
 
 ### Command Line Interface
 
