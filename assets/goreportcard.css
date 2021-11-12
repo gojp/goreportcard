@@ -94,6 +94,7 @@ time {
 }
 .results-details .percentage {
     float: right;
+    font-weight: bold;
 }
 .results-details .wrapper {
     margin-bottom: 20px;

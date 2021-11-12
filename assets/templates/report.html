@@ -139,7 +139,7 @@
   <script id="template-details" type="text/x-handlebars-template">
     <div class="wrapper">
       <a name="{{{name}}}"></a><h1 class="tool-title">{{{name}}}<span class="percentage {{color percentage}}">{{percentage}}%</span></h1>
-      <p class="tool-description">{{{description}}}</p>
+      <p class="notification tool-description">{{{description}}}</p>
     {{#if error}}
         <p class="error-msg">An error occurred while running this test ({{error}})</p>
     {{else}}
