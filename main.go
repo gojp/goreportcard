@@ -21,7 +21,7 @@ import (
 var (
 	addr = flag.String("http", ":8000", "HTTP listen address")
 
-	databasePath = flag.String("db",  getEnv("GRC_DATABASE_PATH", "/usr/local/badger"), "path to local badger database")
+	databasePath = flag.String("db", getEnv("GRC_DATABASE_PATH", "/usr/local/badger"), "path to local badger database")
 
 	//go:embed assets/*
 	embedFS embed.FS
