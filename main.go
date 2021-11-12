@@ -27,10 +27,9 @@ var (
 
 func makeHandler(db *badger.DB, name string, fn func(http.ResponseWriter, *http.Request, *badger.DB, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		validPath := regexp.MustCompile(fmt.Sprintf(`^/%s/([a-zA-Z0-9\-_\/\.]+)$`, name))
+		validPath := regexp.MustCompile(fmt.Sprintf(`^/%s/([a-zA-Z0-9\-_\/\.~]+)$`, name))
 
 		m := validPath.FindStringSubmatch(r.URL.Path)
-
 		if m == nil {
 			http.NotFound(w, r)
 			return
@@ -110,7 +109,7 @@ func main() {
 		log.Fatal("ERROR: could not create repos dir: ", err)
 	}
 
-	db, err := badger.Open(badger.DefaultOptions("/usr/local/badger").WithTruncate(true))
+	db, err := badger.Open(badger.DefaultOptions("./badger").WithTruncate(true))
 	if err != nil {
 		log.Fatal("ERROR: could not open badger db: ", err)
 	}
