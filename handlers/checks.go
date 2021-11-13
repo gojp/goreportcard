@@ -90,17 +90,17 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 	}
 
 	// fetch the repo and grade it
-	repoRoot, err := download.Download(repo, "_repos/src")
-	if err != nil {
-		return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
-	}
-
-	//err := download.ProxyDownload(repo)
+	//repoRoot, err := download.Download(repo, "_repos/src")
 	//if err != nil {
-	//	fmt.Println("ERROR:", err)
+	//	return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
 	//}
 
-	repo = repoRoot.Root
+	err := download.ProxyDownload(repo)
+	if err != nil {
+		fmt.Println("ERROR:", err)
+	}
+
+	// repo = repoRoot.Root
 	checkResult, err := check.Run(dirName(repo))
 	if err != nil {
 		return checksResp{}, err
@@ -114,7 +114,7 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 		Files:                checkResult.Files,
 		Issues:               checkResult.Issues,
 		Repo:                 repo,
-		ResolvedRepo:         repoRoot.Repo,
+		ResolvedRepo:         repo,
 		LastRefresh:          t,
 		LastRefreshFormatted: t.Format(time.UnixDate),
 		LastRefreshHumanized: humanize.Time(t),
