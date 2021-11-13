@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -35,8 +36,6 @@ func ProxyDownload(path string) error {
 		return err
 	}
 
-	fmt.Println(mv)
-
 	resp, err = http.Get(fmt.Sprintf(proxyZipURL, path, mv.Version))
 	if err != nil {
 		return err
@@ -60,5 +59,17 @@ func ProxyDownload(path string) error {
 		return err
 	}
 
-	return nil
+	err = os.RemoveAll(filepath.Join(reposDir, path))
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command("unzip", "-o", filepath.Join(reposDir, zipPath), "-d", reposDir)
+
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return os.Rename(filepath.Join(reposDir, path+"@"+mv.Version), filepath.Join(reposDir, path))
 }
