@@ -70,6 +70,7 @@ type checksResp struct {
 	Files                int           `json:"files"`
 	Issues               int           `json:"issues"`
 	Repo                 string        `json:"repo"`
+	Version              string        `json:"version"`
 	ResolvedRepo         string        `json:"resolvedRepo"`
 	LastRefresh          time.Time     `json:"last_refresh"`
 	LastRefreshFormatted string        `json:"formatted_last_refresh"`
@@ -95,7 +96,7 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 	//	return checksResp{}, fmt.Errorf("could not clone repo: %v", err)
 	//}
 
-	err := download.ProxyDownload(repo)
+	ver, err := download.ProxyDownload(repo)
 	if err != nil {
 		fmt.Println("ERROR:", err)
 	}
@@ -114,6 +115,7 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 		Files:                checkResult.Files,
 		Issues:               checkResult.Issues,
 		Repo:                 repo,
+		Version:              ver,
 		ResolvedRepo:         repo,
 		LastRefresh:          t,
 		LastRefreshFormatted: t.Format(time.UnixDate),

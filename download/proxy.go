@@ -21,10 +21,10 @@ type moduleVersion struct {
 }
 
 // ProxyDownload downloads a package from proxy.golang.org
-func ProxyDownload(path string) error {
+func ProxyDownload(path string) (string, error) {
 	resp, err := http.Get(fmt.Sprintf(proxyLatestURL, path))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	defer resp.Body.Close()
@@ -33,48 +33,48 @@ func ProxyDownload(path string) error {
 
 	err = json.NewDecoder(resp.Body).Decode(&mv)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	resp, err = http.Get(fmt.Sprintf(proxyZipURL, path, mv.Version))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("status %d", resp.StatusCode)
+		return "", fmt.Errorf("status %d", resp.StatusCode)
 	}
 
 	zipPath := filepath.Base(path) + "@" + mv.Version + ".zip"
 	out, err := os.Create(filepath.Join(reposDir, zipPath))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	defer out.Close()
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = os.RemoveAll(filepath.Join(reposDir, path))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	cmd := exec.Command("unzip", "-o", filepath.Join(reposDir, zipPath), "-d", reposDir)
 
 	err = cmd.Run()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = os.RemoveAll(filepath.Join(reposDir, zipPath))
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return os.Rename(filepath.Join(reposDir, path+"@"+mv.Version), filepath.Join(reposDir, path))
+	return mv.Version, os.Rename(filepath.Join(reposDir, path+"@"+mv.Version), filepath.Join(reposDir, path))
 }
