@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -22,12 +23,18 @@ type moduleVersion struct {
 
 // ProxyDownload downloads a package from proxy.golang.org
 func ProxyDownload(path string) (string, error) {
-	resp, err := http.Get(fmt.Sprintf(proxyLatestURL, path))
+	u := fmt.Sprintf(proxyLatestURL, path)
+	resp, err := http.Get(u)
 	if err != nil {
 		return "", err
 	}
 
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		b, _ := ioutil.ReadAll(resp.Body)
+		return "", fmt.Errorf("could not get latest module version from %s: %s", u, string(b))
+	}
 
 	var mv moduleVersion
 
