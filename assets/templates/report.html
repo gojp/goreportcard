@@ -100,7 +100,8 @@
   </script>
   <script id="template-grade" type="text/x-handlebars-template">
       <div class="column">
-          <h1 class="title">Report for {{#if link}}<a href="{{ link }}">{{/if}}<strong>{{repo}} {{#if version}}({{version}}){{/if}}</strong>{{#if link}}</a>{{/if}}</h1>
+          <h1 class="title">Report for {{#if link}}<a href="{{ link }}">{{/if}}<strong>{{repo}}</strong>{{#if link}}</a>{{/if}}</h1>
+          <h2 class="subtitle">{{#if version}} ({{version}}) {{/if}}</h2>
         <p>
           {{#if did_error}}
             <span>An error occurred while generating the report.</span> &emsp;&emsp; Found <strong>{{issues}}</strong> issues across <strong>{{files}}</strong> files</p>
