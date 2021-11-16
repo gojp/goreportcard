@@ -98,7 +98,8 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 
 	ver, err := download.ProxyDownload(repo)
 	if err != nil {
-		return checksResp{}, fmt.Errorf("could not download repo: %v", err)
+		log.Println("ERROR:", err)
+		// return checksResp{}, fmt.Errorf("could not download repo: %v", err)
 	}
 
 	// repo = repoRoot.Root
