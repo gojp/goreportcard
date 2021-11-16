@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -23,6 +24,7 @@ type moduleVersion struct {
 
 // ProxyDownload downloads a package from proxy.golang.org
 func ProxyDownload(path string) (string, error) {
+	path = strings.ToLower(path)
 	u := fmt.Sprintf(proxyLatestURL, path)
 	resp, err := http.Get(u)
 	if err != nil {
