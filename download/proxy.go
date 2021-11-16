@@ -24,8 +24,8 @@ type moduleVersion struct {
 
 // ProxyDownload downloads a package from proxy.golang.org
 func ProxyDownload(path string) (string, error) {
-	path = strings.ToLower(path)
-	u := fmt.Sprintf(proxyLatestURL, path)
+	lowerPath := strings.ToLower(path)
+	u := fmt.Sprintf(proxyLatestURL, lowerPath)
 	resp, err := http.Get(u)
 	if err != nil {
 		return "", err
@@ -45,7 +45,7 @@ func ProxyDownload(path string) (string, error) {
 		return "", err
 	}
 
-	resp, err = http.Get(fmt.Sprintf(proxyZipURL, path, mv.Version))
+	resp, err = http.Get(fmt.Sprintf(proxyZipURL, lowerPath, mv.Version))
 	if err != nil {
 		return "", err
 	}
