@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -108,6 +109,13 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 	if err != nil {
 		return checksResp{}, err
 	}
+
+	defer func() {
+		err := os.RemoveAll(dirName(repo))
+		if err != nil {
+			log.Println("ERROR: could not remove dir:", err)
+		}
+	}()
 
 	t := time.Now().UTC()
 	resp := checksResp{
