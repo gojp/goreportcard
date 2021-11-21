@@ -85,7 +85,7 @@ func ProxyDownload(path string) (string, error) {
 		return "", err
 	}
 
-	err = os.Rename(strings.ToLower(filepath.Join(reposDir, path+"@"+mv.Version)), filepath.Join(reposDir, path))
+	err = os.Rename(strings.ToLower(filepath.Join(reposDir, path+"@"+mv.Version)), strings.ToLower(filepath.Join(reposDir, path)))
 	if err != nil {
 		return "", err
 	}
