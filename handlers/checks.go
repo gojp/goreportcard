@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	badger "github.com/dgraph-io/badger/v2"
@@ -21,7 +22,7 @@ func (n notFoundError) Error() string {
 }
 
 func dirName(repo string) string {
-	return fmt.Sprintf("_repos/src/%s", repo)
+	return fmt.Sprintf("_repos/src/%s", strings.ToLower(repo))
 }
 
 func getFromCache(db *badger.DB, repo string) (checksResp, error) {
