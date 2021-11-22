@@ -55,8 +55,8 @@ func ProxyDownload(path string) (string, error) {
 		return "", fmt.Errorf("status %d", resp.StatusCode)
 	}
 
-	zipPath := filepath.Base(path) + "@" + mv.Version + ".zip"
-	out, err := os.Create(filepath.Join(reposDir, zipPath))
+	zipPath := filepath.Join(reposDir, filepath.Base(path)+"@"+mv.Version+".zip")
+	out, err := os.Create(zipPath)
 	if err != nil {
 		return "", err
 	}
@@ -73,19 +73,19 @@ func ProxyDownload(path string) (string, error) {
 		return "", err
 	}
 
-	cmd := exec.Command("unzip", "-o", filepath.Join(reposDir, zipPath), "-d", reposDir)
+	cmd := exec.Command("unzip", "-o", zipPath, "-d", reposDir)
 
 	err = cmd.Run()
 	if err != nil {
 		return "", err
 	}
 
-	err = os.RemoveAll(filepath.Join(reposDir, zipPath))
+	err = os.RemoveAll(zipPath)
 	if err != nil {
 		return "", err
 	}
 
-	err = os.Rename(strings.ToLower(filepath.Join(reposDir, path+"@"+mv.Version)), strings.ToLower(filepath.Join(reposDir, path)))
+	err = os.Rename(filepath.Join(reposDir, lowerPath+"@"+mv.Version), filepath.Join(reposDir, lowerPath))
 	if err != nil {
 		return "", err
 	}
