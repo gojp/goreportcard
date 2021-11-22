@@ -28,6 +28,15 @@ func CheckHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 		return
 	}
 
+	moduleName, err := download.ModuleName(repo)
+	if err != nil {
+		log.Println("ERROR: could not get module name:", err)
+	}
+
+	if moduleName != "" {
+		repo = moduleName
+	}
+
 	log.Printf("Checking repo %q...", repo)
 
 	forceRefresh := r.Method != "GET" // if this is a GET request, try to fetch from cached version in badger first
