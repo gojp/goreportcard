@@ -28,7 +28,8 @@ func CheckHandler(w http.ResponseWriter, r *http.Request, db *badger.DB) {
 		return
 	}
 
-	moduleName, err := download.ModuleName(repo)
+	c := download.NewProxyClient("https://proxy.golang.org")
+	moduleName, err := c.ModuleName(repo)
 	if err != nil {
 		log.Println("ERROR: could not get module name:", err)
 	}

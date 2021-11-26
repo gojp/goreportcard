@@ -13,26 +13,45 @@ import (
 )
 
 const (
-	proxyLatestURL = "https://proxy.golang.org/%s/@latest"
-	proxyZipURL    = "https://proxy.golang.org/%s/@v/%s.zip"
-	proxyModURL    = "https://proxy.golang.org/%s/@v/%s.mod"
-	reposDir       = "_repos/src"
+	reposDir = "_repos/src"
 )
 
 type moduleVersion struct {
 	Version string
 }
 
+// ProxyClient is a client for the module proxy
+type ProxyClient struct {
+	URL string
+}
+
+// NewProxyClient returns a new ProxyClient
+func NewProxyClient(url string) ProxyClient {
+	return ProxyClient{URL: url}
+}
+
+func (c *ProxyClient) latestURL(module string) string {
+	return fmt.Sprintf("%s/%s/@latest", c.URL, module)
+}
+
+func (c *ProxyClient) zipURL(module, version string) string {
+	return fmt.Sprintf("%s/%s/@v/%s.zip", c.URL, module, version)
+}
+
+func (c *ProxyClient) modURL(module, version string) string {
+	return fmt.Sprintf("%s/%s/@v/%s.mod", c.URL, module, version)
+}
+
 // ModuleName gets the name of a module from the proxy
-func ModuleName(path string) (string, error) {
+func (c *ProxyClient) ModuleName(path string) (string, error) {
 	lowerPath := strings.ToLower(path)
 
-	ver, err := LatestVersion(path)
+	ver, err := c.LatestVersion(path)
 	if err != nil {
 		return "", err
 	}
 
-	u := fmt.Sprintf(proxyModURL, lowerPath, ver)
+	u := c.modURL(lowerPath, ver)
 	resp, err := http.Get(u)
 	if err != nil {
 		return "", err
@@ -62,9 +81,9 @@ func ModuleName(path string) (string, error) {
 }
 
 // LatestVersion gets the latest module version from the proxy
-func LatestVersion(path string) (string, error) {
+func (c *ProxyClient) LatestVersion(path string) (string, error) {
 	lowerPath := strings.ToLower(path)
-	u := fmt.Sprintf(proxyLatestURL, lowerPath)
+	u := fmt.Sprintf(c.latestURL(lowerPath))
 	resp, err := http.Get(u)
 	if err != nil {
 		return "", err
@@ -88,15 +107,15 @@ func LatestVersion(path string) (string, error) {
 }
 
 // ProxyDownload downloads a package from proxy.golang.org
-func ProxyDownload(path string) (string, error) {
+func (c *ProxyClient) ProxyDownload(path string) (string, error) {
 	lowerPath := strings.ToLower(path)
 
-	ver, err := LatestVersion(path)
+	ver, err := c.LatestVersion(path)
 	if err != nil {
 		return "", err
 	}
 
-	resp, err := http.Get(fmt.Sprintf(proxyZipURL, lowerPath, ver))
+	resp, err := http.Get(c.zipURL(lowerPath, ver))
 	if err != nil {
 		return "", err
 	}
