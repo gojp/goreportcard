@@ -83,7 +83,7 @@ func (c *ProxyClient) ModuleName(path string) (string, error) {
 // LatestVersion gets the latest module version from the proxy
 func (c *ProxyClient) LatestVersion(path string) (string, error) {
 	lowerPath := strings.ToLower(path)
-	u := fmt.Sprintf(c.latestURL(lowerPath))
+	u := c.latestURL(lowerPath)
 	resp, err := http.Get(u)
 	if err != nil {
 		return "", err
