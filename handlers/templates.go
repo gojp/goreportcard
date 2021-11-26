@@ -27,18 +27,6 @@ func (gh *GRCHandler) loadTemplate(name string) (*template.Template, error) {
 		return nil, err
 	}
 
-	footer, err := gh.AssetsFS.Open("/templates/footer.html")
-	if err != nil {
-		return nil, err
-	}
-
-	defer footer.Close()
-
-	footerContents, err := ioutil.ReadAll(footer)
-	if err != nil {
-		return nil, err
-	}
-
 	tpl, err := template.New(name).Delims("[[", "]]").Funcs(template.FuncMap{
 		"add":         add,
 		"formatScore": formatScore,
@@ -47,5 +35,21 @@ func (gh *GRCHandler) loadTemplate(name string) (*template.Template, error) {
 		return nil, err
 	}
 
-	return tpl.Parse(string(footerContents))
+	if name == "/templates/report.html" {
+		return tpl, nil
+	}
+
+	base, err := gh.AssetsFS.Open("/templates/base.html")
+	if err != nil {
+		return nil, err
+	}
+
+	defer base.Close()
+
+	baseContents, err := ioutil.ReadAll(base)
+	if err != nil {
+		return nil, err
+	}
+
+	return tpl.Parse(string(baseContents))
 }

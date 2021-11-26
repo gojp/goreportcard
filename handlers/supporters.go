@@ -14,7 +14,9 @@ func (gh *GRCHandler) SupportersHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	t.Execute(w, map[string]interface{}{
+	if err := t.ExecuteTemplate(w, "base", map[string]interface{}{
 		"google_analytics_key": googleAnalyticsKey,
-	})
+	}); err != nil {
+		log.Println("ERROR:", err)
+	}
 }

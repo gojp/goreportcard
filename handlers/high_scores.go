@@ -68,9 +68,11 @@ func (gh *GRCHandler) HighScoresHandler(w http.ResponseWriter, r *http.Request, 
 		sortedScores[len(sortedScores)-i-1] = heap.Pop(scores).(scoreItem)
 	}
 
-	t.Execute(w, map[string]interface{}{
+	if err := t.ExecuteTemplate(w, "base", map[string]interface{}{
 		"HighScores":           sortedScores,
 		"Count":                humanize.Comma(int64(count)),
 		"google_analytics_key": googleAnalyticsKey,
-	})
+	}); err != nil {
+		log.Println("ERROR:", err)
+	}
 }

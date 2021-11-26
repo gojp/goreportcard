@@ -42,11 +42,13 @@ func (gh *GRCHandler) ReportHandler(w http.ResponseWriter, r *http.Request, db *
 		return
 	}
 
-	t.Execute(w, map[string]interface{}{
+	if err := t.Execute(w, map[string]interface{}{
 		"repo":                 repo,
 		"response":             string(respBytes),
 		"loading":              needToLoad,
 		"domain":               domain,
 		"google_analytics_key": googleAnalyticsKey,
-	})
+	}); err != nil {
+		log.Println("ERROR:", err)
+	}
 }

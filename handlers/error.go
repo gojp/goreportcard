@@ -15,6 +15,8 @@ func (gh *GRCHandler) errorHandler(w http.ResponseWriter, r *http.Request, statu
 			return
 		}
 
-		t.Execute(w, nil)
+		if err := t.ExecuteTemplate(w, "base", nil); err != nil {
+			log.Println("ERROR:", err)
+		}
 	}
 }

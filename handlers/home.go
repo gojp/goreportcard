@@ -69,10 +69,12 @@ func (gh *GRCHandler) HomeHandler(w http.ResponseWriter, r *http.Request, db *ba
 			return
 		}
 
-		t.Execute(w, map[string]interface{}{
+		if err := t.ExecuteTemplate(w, "base", map[string]interface{}{
 			"Recent":               recentRepos,
 			"google_analytics_key": googleAnalyticsKey,
-		})
+		}); err != nil {
+			log.Println(err)
+		}
 
 		return
 	}
