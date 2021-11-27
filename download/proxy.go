@@ -138,10 +138,10 @@ func (c *ProxyClient) ProxyDownload(path string) (string, error) {
 		return "", err
 	}
 
-	err = os.RemoveAll(filepath.Join(reposDir, path))
-	if err != nil {
-		return "", err
-	}
+	// err = os.RemoveAll(filepath.Join(reposDir, path, "@"+ver))
+	// if err != nil {
+	// 	return "", err
+	// }
 
 	cmd := exec.Command("unzip", "-o", zipPath, "-d", reposDir)
 
@@ -155,10 +155,10 @@ func (c *ProxyClient) ProxyDownload(path string) (string, error) {
 		return "", err
 	}
 
-	err = os.Rename(filepath.Join(reposDir, lowerPath+"@"+ver), filepath.Join(reposDir, lowerPath))
-	if err != nil {
-		return "", err
-	}
+	// err = os.Rename(filepath.Join(reposDir, lowerPath+"@"+ver), filepath.Join(reposDir, lowerPath))
+	// if err != nil {
+	// 	return "", err
+	// }
 
 	return ver, nil
 }

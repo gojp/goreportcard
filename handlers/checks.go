@@ -99,7 +99,7 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 		return checksResp{}, fmt.Errorf("could not download repo: %v", err)
 	}
 
-	checkResult, err := check.Run(dirName(repo))
+	checkResult, err := check.Run(dirName(repo + "@" + ver))
 	if err != nil {
 		return checksResp{}, err
 	}

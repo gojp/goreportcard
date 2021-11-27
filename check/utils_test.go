@@ -69,7 +69,8 @@ func TestFileURL(t *testing.T) {
 		fn   string
 		want string
 	}{
-		{"_repos/src/github.com/foo/bar/baz.go", "/github.com/foo/bar/baz.go", "https://github.com/foo/bar/blob/master/baz.go"},
+		{"_repos/src/github.com/foo/testrepo@v0.1.0/bar/baz.go", "/github.com/foo/testrepo@v0.1.0/bar/baz.go", "https://github.com/foo/testrepo/blob/v0.1.0/bar/baz.go"},
+		{"_repos/src/github.com/foo/testrepo@v0.0.0-20211126063219-a5e10ccf946a/bar/baz.go", "/github.com/foo/testrepo@v0.0.0-20211126063219-a5e10ccf946a/bar/baz.go", "https://github.com/foo/testrepo/blob/a5e10ccf946a/bar/baz.go"},
 	}
 
 	for _, tt := range cases {
@@ -78,4 +79,20 @@ func TestFileURL(t *testing.T) {
 		}
 	}
 
+}
+
+func TestDisplayFilename(t *testing.T) {
+	cases := []struct {
+		fn   string
+		want string
+	}{
+		{"foo@v0.1.0/bar/baz.go", "bar/baz.go"},
+		{"foo@v0.1.0/a/b/c/d/baz.go", "a/b/c/d/baz.go"},
+	}
+
+	for _, tt := range cases {
+		if got := displayFilename(tt.fn); got != tt.want {
+			t.Errorf("displayFilename(%q) = %q, want %q", tt.fn, got, tt.want)
+		}
+	}
 }
