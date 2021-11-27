@@ -177,7 +177,7 @@ func displayFilename(filename string) string {
 
 	fsp := strings.Split(sp[1], "/")
 
-	return filepath.Join(fsp[1:len(fsp)]...)
+	return filepath.Join(fsp[1:]...)
 }
 
 // borrowed from github.com/client9/gosupplychain
