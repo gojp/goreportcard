@@ -47,3 +47,35 @@ func TestGoTool(t *testing.T) {
 		}
 	}
 }
+
+func TestMakeFilename(t *testing.T) {
+	cases := []struct {
+		fn   string
+		want string
+	}{
+		{"/github.com/foo/bar/baz.go", "bar/baz.go"},
+	}
+
+	for _, tt := range cases {
+		if got := makeFilename(tt.fn); got != tt.want {
+			t.Errorf("makeFilename(%q) = %q, want %q", tt.fn, got, tt.want)
+		}
+	}
+}
+
+func TestFileURL(t *testing.T) {
+	cases := []struct {
+		dir  string
+		fn   string
+		want string
+	}{
+		{"_repos/src/github.com/foo/bar/baz.go", "/github.com/foo/bar/baz.go", "https://github.com/foo/bar/blob/master/baz.go"},
+	}
+
+	for _, tt := range cases {
+		if got := fileURL(tt.dir, tt.fn); got != tt.want {
+			t.Errorf("fileURL(%q, %q) = %q, want %q", tt.dir, tt.fn, got, tt.want)
+		}
+	}
+
+}
