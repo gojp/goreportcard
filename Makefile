@@ -20,7 +20,7 @@ staticcheck:
 	staticcheck ./...
 
 test:
-	 go test -cover ./check ./handlers
+	 go test -cover ./...
 
 start:
 	 go run main.go
