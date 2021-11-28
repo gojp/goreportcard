@@ -4,7 +4,6 @@ go 1.16
 
 require (
 	github.com/DataDog/zstd v1.4.8 // indirect
-	github.com/alecthomas/gocyclo v0.0.0-20150208221726-aa8f8b160214
 	github.com/alecthomas/gometalinter v1.0.3
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15 // indirect
@@ -14,6 +13,7 @@ require (
 	github.com/dgraph-io/ristretto v0.0.3 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/dustin/go-humanize v1.0.0
+	github.com/fzipp/gocyclo v0.3.1
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect

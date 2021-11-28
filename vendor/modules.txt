@@ -3,9 +3,6 @@ github.com/BurntSushi/toml
 # github.com/DataDog/zstd v1.4.8
 ## explicit
 github.com/DataDog/zstd
-# github.com/alecthomas/gocyclo v0.0.0-20150208221726-aa8f8b160214
-## explicit
-github.com/alecthomas/gocyclo
 # github.com/alecthomas/gometalinter v1.0.3
 ## explicit
 github.com/alecthomas/gometalinter
@@ -44,6 +41,10 @@ github.com/dgryski/go-farm
 # github.com/dustin/go-humanize v1.0.0
 ## explicit
 github.com/dustin/go-humanize
+# github.com/fzipp/gocyclo v0.3.1
+## explicit
+github.com/fzipp/gocyclo
+github.com/fzipp/gocyclo/cmd/gocyclo
 # github.com/golang/protobuf v1.5.2
 ## explicit
 github.com/golang/protobuf/proto

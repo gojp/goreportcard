@@ -334,7 +334,12 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 
 	params := command[1:]
 	params = addSkipDirs(params)
-	params = append(params, dir+"/...")
+
+	if strings.Contains(command[len(command)-1], "cyclo") {
+		params = append(params, dir)
+	} else {
+		params = append(params, dir+"/...")
+	}
 
 	cmd := exec.Command(command[0], params...)
 	stdout, err := cmd.StdoutPipe()
