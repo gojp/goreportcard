@@ -22,8 +22,8 @@ func (n notFoundError) Error() string {
 	return fmt.Sprintf("%q not found in cache", n.repo)
 }
 
-func dirName(repo string) string {
-	return fmt.Sprintf("_repos/src/%s", strings.ToLower(repo))
+func dirName(repo, ver string) string {
+	return fmt.Sprintf("_repos/src/%s@%s", strings.ToLower(repo), ver)
 }
 
 func getFromCache(db *badger.DB, repo string) (checksResp, error) {
@@ -99,13 +99,13 @@ func newChecksResp(db *badger.DB, repo string, forceRefresh bool) (checksResp, e
 		return checksResp{}, fmt.Errorf("could not download repo: %v", err)
 	}
 
-	checkResult, err := check.Run(dirName(repo + "@" + ver))
+	checkResult, err := check.Run(dirName(repo, ver))
 	if err != nil {
 		return checksResp{}, err
 	}
 
 	defer func() {
-		err := os.RemoveAll(dirName(repo))
+		err := os.RemoveAll(dirName(repo, ver))
 		if err != nil {
 			log.Println("ERROR: could not remove dir:", err)
 		}
