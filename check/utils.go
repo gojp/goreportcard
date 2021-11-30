@@ -251,6 +251,10 @@ func fileURL(dir, filename string) string {
 				ver = strings.Split(ver, "-")[2]
 			}
 
+			if strings.Contains(ver, "+incompatible") {
+				ver = strings.TrimSuffix(ver, "+incompatible")
+			}
+
 			return fmt.Sprintf("https://%s/blob/%s/%s", base, ver, f)
 		}
 

@@ -71,6 +71,7 @@ func TestFileURL(t *testing.T) {
 	}{
 		{"_repos/src/github.com/foo/testrepo@v0.1.0/bar/baz.go", "/github.com/foo/testrepo@v0.1.0/bar/baz.go", "https://github.com/foo/testrepo/blob/v0.1.0/bar/baz.go"},
 		{"_repos/src/github.com/foo/testrepo@v0.0.0-20211126063219-a5e10ccf946a/bar/baz.go", "/github.com/foo/testrepo@v0.0.0-20211126063219-a5e10ccf946a/bar/baz.go", "https://github.com/foo/testrepo/blob/a5e10ccf946a/bar/baz.go"},
+		{"_repos/src/github.com/foo/testrepo@v20.10.11+incompatible/bar/baz.go", "/github.com/foo/testrepo@v20.10.11+incompatible/bar/baz.go", "https://github.com/foo/testrepo/blob/v20.10.11/bar/baz.go"},
 	}
 
 	for _, tt := range cases {
