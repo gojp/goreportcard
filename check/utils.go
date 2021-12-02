@@ -228,8 +228,12 @@ func fileURL(dir, filename string) string {
 
 	dirSp := strings.Split(dir, "@")
 	repo := dirSp[0]
-	verSp := strings.Split(dirSp[1], "/")
-	ver := verSp[0]
+
+	var ver string
+	if len(dirSp) > 1 {
+		verSp := strings.Split(dirSp[1], "/")
+		ver = verSp[0]
+	}
 
 	var fileURL string
 	base := strings.TrimPrefix(repo, "_repos/src/")
