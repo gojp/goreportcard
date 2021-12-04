@@ -252,7 +252,10 @@ func fileURL(dir, filename string) string {
 
 		if ver != "" {
 			if strings.Contains(ver, "-") {
-				ver = strings.Split(ver, "-")[2]
+				verSp := strings.Split(ver, "-")
+				if len(verSp) > 2 {
+					ver = strings.Split(ver, "-")[2]
+				}
 			}
 
 			if strings.Contains(ver, "+incompatible") {
