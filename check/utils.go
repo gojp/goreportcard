@@ -223,15 +223,16 @@ func goPkgInToGitHub(name string) string {
 	return "https://github.com/" + user + "/" + pkg + "/blob/" + version + dir
 }
 
-func fileURL(dir, filename string) string {
+func fileURL(filename string) string {
 	f := displayFilename(filename)
 
-	dirSp := strings.Split(dir, "@")
-	repo := dirSp[0]
+	fsp := strings.Split(filename, "@")
+
+	repo := strings.TrimPrefix(fsp[0], "/")
 
 	var ver string
-	if len(dirSp) > 1 {
-		verSp := strings.Split(dirSp[1], "/")
+	if len(fsp) > 1 {
+		verSp := strings.Split(fsp[1], "/")
 		ver = verSp[0]
 	}
 
@@ -311,7 +312,7 @@ outer:
 
 		filename = strings.TrimPrefix(filename, "_repos/src")
 		dfn := displayFilename(filename)
-		fu := fileURL(dir, filename)
+		fu := fileURL(filename)
 		fs := fsMap[dfn]
 		if fs.Filename == "" {
 			// fs.Filename = makeFilename(filename)
