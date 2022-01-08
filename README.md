@@ -15,7 +15,7 @@ Support us over on [Patreon](https://www.patreon.com/goreportcard)!
 - [Cody Wood](https://www.linkedin.com/in/sprkyco/)
 - Pascal Wenger
 - Jonas Kwiedor
-- Michael Mayer
+- [PhotoPrism](https://photoprism.app)
 
 ### Installation
 
