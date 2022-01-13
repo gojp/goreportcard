@@ -16,6 +16,7 @@ Support us over on [Patreon](https://www.patreon.com/goreportcard)!
 - Pascal Wenger
 - Jonas Kwiedor
 - [PhotoPrism](https://photoprism.app)
+- Kia Farhang
 
 ### Installation
 
