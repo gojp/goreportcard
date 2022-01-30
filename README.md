@@ -18,6 +18,7 @@ Support us over on [Patreon](https://www.patreon.com/goreportcard)!
 - [PhotoPrism](https://photoprism.app)
 - Kia Farhang
 - [Patrick DeVivo](https://twitter.com/patrickdevivo) ([MergeStat](https://github.com/mergestat/mergestat))
+- [Alexis Geoffrey](https://github.com/alexisgeoffrey)
 
 ### Installation
 
