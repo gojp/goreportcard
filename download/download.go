@@ -1,24 +1,13 @@
 package download
 
 import (
-	"errors"
 	"strings"
-
-	"golang.org/x/tools/go/vcs"
 )
 
 // Clean trims any URL parts, like the scheme or username, that might be present
 // in a user-submitted URL
-func Clean(path string) (string, error) {
-	importPath := trimUsername(trimScheme(path))
-	root, err := vcs.RepoRootForImportPath(importPath, true)
-	if err != nil {
-		return "", err
-	}
-	if root != nil && (root.Root == "" || root.Repo == "") {
-		return root.Root, errors.New("empty repo root")
-	}
-	return root.Root, err
+func Clean(path string) string {
+	return trimUsername(trimScheme(path))
 }
 
 // trimScheme removes a scheme (e.g. https://) from the URL for more
