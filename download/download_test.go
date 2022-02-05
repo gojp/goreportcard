@@ -10,6 +10,7 @@ func TestClean(t *testing.T) {
 		{"github.com/foo/bar", "github.com/foo/bar"},
 		{"https://github.com/foo/bar", "github.com/foo/bar"},
 		{"https://user@github.com/foo/bar", "github.com/foo/bar"},
+		{"github.com/foo/bar/v2", "github.com/foo/bar/v2"},
 	}
 
 	for _, tt := range cases {
