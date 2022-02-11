@@ -64,7 +64,7 @@ func (c *ProxyClient) ModuleName(path string) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("could not get latest module version from %s: %s", u, string(b))
+		return "", fmt.Errorf("could not get module name from %s: %s", u, string(b))
 	}
 
 	sp := strings.Split(string(b), "\n")
