@@ -16,7 +16,7 @@ vet:
 	go vet ./main.go
 
 staticcheck:
-	@[ -x "$(shell which staticcheck)" ] || go install honnef.co/go/tools/cmd/staticcheck
+	@[ -x "$(shell which staticcheck)" ] || go install honnef.co/go/tools/cmd/staticcheck@master
 	staticcheck ./...
 
 test:
