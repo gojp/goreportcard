@@ -153,6 +153,8 @@ google.golang.org/protobuf/types/descriptorpb
 # gopkg.in/alecthomas/kingpin.v2 v2.2.6
 ## explicit
 gopkg.in/alecthomas/kingpin.v2
+# gopkg.in/yaml.v2 v2.2.8
+## explicit
 # honnef.co/go/tools v0.1.3
 ## explicit
 honnef.co/go/tools/analysis/code
