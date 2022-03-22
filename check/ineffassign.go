@@ -13,7 +13,7 @@ func (g IneffAssign) Name() string {
 
 // Weight returns the weight this check has in the overall average
 func (g IneffAssign) Weight() float64 {
-	return 0.05
+	return 0.10
 }
 
 // Percentage returns the percentage of .go files that pass gofmt

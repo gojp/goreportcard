@@ -56,7 +56,7 @@ func Run(dir string) (ChecksResult, error) {
 	checks := []Check{
 		GoFmt{Dir: dir, Filenames: filenames},
 		GoVet{Dir: dir, Filenames: filenames},
-		GoLint{Dir: dir, Filenames: filenames},
+		// GoLint{Dir: dir, Filenames: filenames},
 		GoCyclo{Dir: dir, Filenames: filenames},
 		License{Dir: dir, Filenames: []string{}},
 		Misspell{Dir: dir, Filenames: filenames},
