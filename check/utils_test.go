@@ -10,7 +10,7 @@ func TestGoFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"testfiles/a.go", "testfiles/b.go", "testfiles/c.go"}
+	want := []string{"testfiles/a.go", "testfiles/b.go", "testfiles/c.go", "testfiles/d.go"}
 	if !reflect.DeepEqual(files, want) {
 		t.Errorf("GoFiles(%q) = %v, want %v", "testfiles/", files, want)
 	}
@@ -30,7 +30,23 @@ var goToolTests = []struct {
 	failed    []FileSummary
 	wantErr   bool
 }{
-	{"go vet", "testfiles/", []string{"testfiles/a.go", "testfiles/b.go", "testfiles/c.go"}, []string{"go", "tool", "vet"}, 1, []FileSummary{}, false},
+	{"go vet", "testfiles", []string{"testfiles/a.go", "testfiles/b.go", "testfiles/c.go"}, []string{"go", "vet"}, 1, []FileSummary{}, false},
+	{
+		"staticcheck",
+		"testfiles/",
+		[]string{"testfiles/a.go", "testfiles/b.go", "testfiles/c.go", "testfiles/d.go"},
+		[]string{"staticcheck", "./..."},
+		0.75,
+		[]FileSummary{
+			{
+				Filename: "testfiles/d.go", FileURL: "",
+				Errors: []Error{
+					{LineNumber: 8, ErrorString: " func foo is unused (U1000)"},
+					{LineNumber: 10, ErrorString: " should use time.Until instead of t.Sub(time.Now()) (S1024)"}},
+			},
+		},
+		false,
+	},
 }
 
 func TestGoTool(t *testing.T) {
@@ -43,7 +59,7 @@ func TestGoTool(t *testing.T) {
 			t.Errorf("[%s] GoTool percent = %f, want %f", tt.name, f, tt.percent)
 		}
 		if !reflect.DeepEqual(fs, tt.failed) {
-			t.Errorf("[%s] GoTool failed = %v, want %v", tt.name, fs, tt.failed)
+			t.Errorf("[%s] GoTool failed = %#v, want %v", tt.name, fs, tt.failed)
 		}
 	}
 }

@@ -335,7 +335,10 @@ outer:
 // GoTool runs a given go command (for example gofmt, go tool vet)
 // on a directory
 func GoTool(dir string, filenames, command []string) (float64, []FileSummary, error) {
-	enabledCheck := command[len(command)-1]
+	var enabledCheck = command[0]
+	if command[0] == "gometalinter" {
+		enabledCheck = command[len(command)-1]
+	}
 
 	// temporary disabling of misspell as it's the slowest
 	// command right now
@@ -350,7 +353,10 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 	}
 
 	params := command[1:]
-	params = addSkipDirs(params)
+
+	if command[0] == "gometalinter" {
+		params = addSkipDirs(params)
+	}
 
 	switch {
 	case strings.Contains(enabledCheck, "cyclo"):
