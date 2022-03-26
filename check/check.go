@@ -49,9 +49,8 @@ func Run(dir string) (ChecksResult, error) {
 
 	err = RenameFiles(skipped)
 	if err != nil {
-		log.Println("Could not remove files:", err)
+		log.Println("Could not rename files:", err)
 	}
-	defer RevertFiles(skipped)
 
 	checks := []Check{
 		GoFmt{Dir: dir, Filenames: filenames},
