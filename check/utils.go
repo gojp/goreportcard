@@ -299,6 +299,9 @@ func getFileSummaryMap(out *bufio.Scanner, dir string) (map[string]FileSummary, 
 outer:
 	for out.Scan() {
 		filename := strings.Split(out.Text(), ":")[0]
+		if !strings.Contains(filename, dir) {
+			filename = filepath.Join(dir, filename)
+		}
 
 		for _, skip := range skipSuffixes {
 			if strings.HasSuffix(filename, skip) {
@@ -332,14 +335,16 @@ outer:
 // GoTool runs a given go command (for example gofmt, go tool vet)
 // on a directory
 func GoTool(dir string, filenames, command []string) (float64, []FileSummary, error) {
+	enabledCheck := command[len(command)-1]
+
 	// temporary disabling of misspell as it's the slowest
 	// command right now
-	if strings.Contains(command[len(command)-1], "misspell") && len(filenames) > 300 {
+	if strings.Contains(enabledCheck, "misspell") && len(filenames) > 300 {
 		log.Println("disabling misspell on large repo...")
 		return 1, []FileSummary{}, nil
 	}
 
-	if strings.Contains(command[len(command)-1], "ineffassign") && len(filenames) > 100 {
+	if strings.Contains(enabledCheck, "ineffassign") && len(filenames) > 100 {
 		log.Println("disabling ineffassign on large repo...")
 		return 1, []FileSummary{}, nil
 	}
@@ -347,13 +352,25 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 	params := command[1:]
 	params = addSkipDirs(params)
 
-	if strings.Contains(command[len(command)-1], "cyclo") {
+	switch {
+	case strings.Contains(enabledCheck, "cyclo"):
 		params = append(params, dir)
-	} else {
+	case strings.Contains(enabledCheck, "staticcheck"):
+		params[len(params)-1] = "./..."
+	default:
 		params = append(params, dir+"/...")
 	}
 
+	if strings.Contains(enabledCheck, "staticcheck") {
+		params[len(params)-1] = "./..."
+	}
+
 	cmd := exec.Command(command[0], params...)
+
+	if strings.Contains(enabledCheck, "staticcheck") {
+		cmd.Dir = dir
+	}
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return 0, []FileSummary{}, err

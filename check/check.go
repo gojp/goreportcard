@@ -61,6 +61,7 @@ func Run(dir string) (ChecksResult, error) {
 		License{Dir: dir, Filenames: []string{}},
 		Misspell{Dir: dir, Filenames: filenames},
 		IneffAssign{Dir: dir, Filenames: filenames},
+		// Staticcheck{Dir: dir, Filenames: filenames},
 		// ErrCheck{Dir: dir, Filenames: filenames}, // disable errcheck for now, too slow and not finalized
 	}
 
