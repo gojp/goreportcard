@@ -361,10 +361,6 @@ func GoTool(dir string, filenames, command []string) (float64, []FileSummary, er
 		params = append(params, dir+"/...")
 	}
 
-	if strings.Contains(enabledCheck, "staticcheck") {
-		params[len(params)-1] = "./..."
-	}
-
 	cmd := exec.Command(command[0], params...)
 
 	if strings.Contains(enabledCheck, "staticcheck") {
