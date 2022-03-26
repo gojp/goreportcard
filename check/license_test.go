@@ -3,7 +3,7 @@ package check
 import "testing"
 
 func TestPercentage(t *testing.T) {
-	g := License{"testfiles", []string{}}
+	g := License{"testdata/testfiles", []string{}}
 	p, _, err := g.Percentage()
 	if err != nil {
 		t.Fatal(err)
