@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/gojp/goreportcard/check"
 )
@@ -16,6 +17,19 @@ var (
 	th      = flag.Float64("t", 0, "Threshold of failure command")
 	jsn     = flag.Bool("j", false, "JSON output. The binary will always exit with code 0")
 )
+
+// dotPrintf fills in the blank space between two strings with dots. The total
+// length displayed is indicated by fullLen. The left string is specified by
+// lfStr. The right string is formatted. At least two dots are shown, even if
+// this means the total length exceeds fullLen.
+func dotPrintf(fullLen int, lfStr, rtFmtStr string, args ...interface{}) {
+	rtStr := fmt.Sprintf(rtFmtStr, args...)
+	dotLen := fullLen - len(lfStr) - len(rtStr)
+	if dotLen < 2 {
+		dotLen = 2
+	}
+	fmt.Printf("%s %s %s\n", lfStr, strings.Repeat(".", dotLen), rtStr)
+}
 
 func main() {
 	flag.Parse()
@@ -31,12 +45,12 @@ func main() {
 		os.Exit(0)
 	}
 
-	fmt.Printf("Grade: %s (%.1f%%)\n", result.Grade, result.Average*100)
-	fmt.Printf("Files: %d\n", result.Files)
-	fmt.Printf("Issues: %d\n", result.Issues)
+	dotPrintf(24, "Grade", "%s %.1f%%", result.Grade, result.Average*100)
+	dotPrintf(24, "Files", "%d", result.Files)
+	dotPrintf(24, "Issues", "%d", result.Issues)
 
 	for _, c := range result.Checks {
-		fmt.Printf("%s: %d%%\n", c.Name, int64(c.Percentage*100))
+		dotPrintf(24, c.Name, "%d%%", int64(c.Percentage*100))
 		if *verbose && len(c.FileSummaries) > 0 {
 			for _, f := range c.FileSummaries {
 				fmt.Printf("\t%s\n", f.Filename)
