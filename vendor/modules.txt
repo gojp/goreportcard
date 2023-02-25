@@ -1,7 +1,8 @@
 # github.com/BurntSushi/toml v0.3.1
+## explicit
 github.com/BurntSushi/toml
 # github.com/DataDog/zstd v1.4.8
-## explicit
+## explicit; go 1.14
 github.com/DataDog/zstd
 # github.com/alecthomas/gometalinter v1.0.3
 ## explicit
@@ -11,19 +12,20 @@ github.com/alecthomas/gometalinter
 github.com/alecthomas/template
 github.com/alecthomas/template/parse
 # github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15
-## explicit
+## explicit; go 1.15
 github.com/alecthomas/units
 # github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a
 ## explicit
 github.com/beorn7/perks/quantile
 # github.com/cespare/xxhash v1.1.0
+## explicit
 github.com/cespare/xxhash
 # github.com/client9/misspell v0.3.4
 ## explicit
 github.com/client9/misspell
 github.com/client9/misspell/cmd/misspell
 # github.com/dgraph-io/badger/v2 v2.2007.2
-## explicit
+## explicit; go 1.12
 github.com/dgraph-io/badger/v2
 github.com/dgraph-io/badger/v2/options
 github.com/dgraph-io/badger/v2/pb
@@ -32,7 +34,7 @@ github.com/dgraph-io/badger/v2/table
 github.com/dgraph-io/badger/v2/trie
 github.com/dgraph-io/badger/v2/y
 # github.com/dgraph-io/ristretto v0.0.3
-## explicit
+## explicit; go 1.12
 github.com/dgraph-io/ristretto
 github.com/dgraph-io/ristretto/z
 # github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13
@@ -42,20 +44,20 @@ github.com/dgryski/go-farm
 ## explicit
 github.com/dustin/go-humanize
 # github.com/fzipp/gocyclo v0.3.1
-## explicit
+## explicit; go 1.15
 github.com/fzipp/gocyclo
 github.com/fzipp/gocyclo/cmd/gocyclo
 # github.com/golang/protobuf v1.5.2
-## explicit
+## explicit; go 1.9
 github.com/golang/protobuf/proto
 # github.com/golang/snappy v0.0.3
 ## explicit
 github.com/golang/snappy
 # github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-## explicit
+## explicit; go 1.13
 github.com/google/shlex
 # github.com/gordonklaus/ineffassign v0.0.0-20210914165742-4cc7213b9bc8
-## explicit
+## explicit; go 1.14
 github.com/gordonklaus/ineffassign
 github.com/gordonklaus/ineffassign/pkg/ineffassign
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
@@ -69,7 +71,7 @@ github.com/pkg/errors
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/promhttp
 # github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4
-## explicit
+## explicit; go 1.9
 github.com/prometheus/client_model/go
 # github.com/prometheus/common v0.0.0-20171117163051-2e54d0b93cba
 ## explicit
@@ -81,21 +83,23 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/xfs
 # golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5
-## explicit
+## explicit; go 1.11
 golang.org/x/lint
 golang.org/x/lint/golint
 # golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
+## explicit; go 1.17
 golang.org/x/mod/semver
 # golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f
+## explicit; go 1.17
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
 # golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8
-## explicit
+## explicit; go 1.17
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 # golang.org/x/tools v0.1.10
-## explicit
+## explicit; go 1.17
 golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/passes/inspect
 golang.org/x/tools/go/ast/astutil
@@ -120,9 +124,11 @@ golang.org/x/tools/internal/packagesinternal
 golang.org/x/tools/internal/typeparams
 golang.org/x/tools/internal/typesinternal
 # golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
+## explicit; go 1.11
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
 # google.golang.org/protobuf v1.26.0
+## explicit; go 1.9
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
@@ -156,7 +162,7 @@ gopkg.in/alecthomas/kingpin.v2
 # gopkg.in/yaml.v2 v2.2.8
 ## explicit
 # honnef.co/go/tools v0.1.3
-## explicit
+## explicit; go 1.14
 honnef.co/go/tools/analysis/code
 honnef.co/go/tools/analysis/edit
 honnef.co/go/tools/analysis/facts
