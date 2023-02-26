@@ -32,7 +32,7 @@ require (
 	github.com/prometheus/common v0.0.0-20171117163051-2e54d0b93cba // indirect
 	github.com/prometheus/procfs v0.0.0-20171221151313-8f918ac9ab4b // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
-	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/tools v0.1.10 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
