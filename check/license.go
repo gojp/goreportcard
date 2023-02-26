@@ -1,7 +1,7 @@
 package check
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -34,7 +34,7 @@ var licenses = []string{
 
 // Percentage returns 0 if no LICENSE, 1 if LICENSE
 func (g License) Percentage() (float64, []FileSummary, error) {
-	files, err := ioutil.ReadDir(g.Dir)
+	files, err := os.ReadDir(g.Dir)
 	if err != nil {
 		return 0.0, []FileSummary{}, err
 	}

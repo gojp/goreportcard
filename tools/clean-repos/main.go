@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,7 +12,7 @@ var real = flag.Bool("real", false, "run the deletions")
 
 func main() {
 	flag.Parse()
-	files, err := ioutil.ReadDir("_repos/src")
+	files, err := os.ReadDir("_repos/src")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -23,18 +22,24 @@ func main() {
 			continue
 		}
 		if f.IsDir() {
-			dirs, err := ioutil.ReadDir("_repos/src/" + f.Name())
+			dirs, err := os.ReadDir("_repos/src/" + f.Name())
 			if err != nil {
 				log.Fatal(err)
 			}
 			for _, d := range dirs {
-				repos, err := ioutil.ReadDir("_repos/src/" + f.Name() + "/" + d.Name())
+				repos, err := os.ReadDir("_repos/src/" + f.Name() + "/" + d.Name())
 				if err != nil {
 					log.Fatal(err)
 				}
 				for _, repo := range repos {
 					path := "_repos/src/" + f.Name() + "/" + d.Name() + "/" + repo.Name()
-					if time.Since(d.ModTime()) > 30*24*time.Hour {
+
+					info, err := d.Info()
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					if time.Since(info.ModTime()) > 30*24*time.Hour {
 						if *real {
 							log.Printf("Deleting %s (repo is old)...", path)
 							os.RemoveAll(path)

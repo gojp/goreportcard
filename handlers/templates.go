@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"text/template"
 )
 
@@ -22,7 +22,7 @@ func (gh *GRCHandler) loadTemplate(name string) (*template.Template, error) {
 
 	defer f.Close()
 
-	contents, err := ioutil.ReadAll(f)
+	contents, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (gh *GRCHandler) loadTemplate(name string) (*template.Template, error) {
 
 	defer base.Close()
 
-	baseContents, err := ioutil.ReadAll(base)
+	baseContents, err := io.ReadAll(base)
 	if err != nil {
 		return nil, err
 	}
