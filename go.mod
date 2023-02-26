@@ -6,7 +6,7 @@ require (
 	github.com/alecthomas/gometalinter v1.0.3
 	github.com/client9/misspell v0.3.4
 	github.com/dgraph-io/badger/v2 v2.2007.2
-	github.com/dustin/go-humanize v1.0.0
+	github.com/dustin/go-humanize v1.0.1
 	github.com/fzipp/gocyclo v0.3.1
 	github.com/gordonklaus/ineffassign v0.0.0-20210914165742-4cc7213b9bc8
 	github.com/prometheus/client_golang v1.14.0
