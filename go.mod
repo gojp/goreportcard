@@ -1,6 +1,6 @@
 module github.com/gojp/goreportcard
 
-go 1.20
+go 1.22
 
 require (
 	github.com/alecthomas/gometalinter v1.0.3
