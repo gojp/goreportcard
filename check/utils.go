@@ -82,6 +82,19 @@ func RenameFiles(names []string) (err error) {
 	return err
 }
 
+// RevertFiles removes the ".grc.bk" extension from files
+func RevertFiles(names []string) (err error) {
+	for i := range names {
+		tmpErr := os.Rename(names[i]+".grc.bk", names[i])
+		if tmpErr != nil {
+			// save this error, but still continue with other files
+			err = tmpErr
+		}
+	}
+
+	return err
+}
+
 // lineCount returns the number of lines in a given file
 func lineCount(filepath string) (int, error) {
 	out, err := exec.Command("wc", "-l", filepath).Output()

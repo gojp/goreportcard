@@ -38,7 +38,7 @@ type ChecksResult struct {
 }
 
 // Run executes all checks on the given directory
-func Run(dir string) (ChecksResult, error) {
+func Run(dir string, cli bool) (ChecksResult, error) {
 	filenames, skipped, err := GoFiles(dir)
 	if err != nil {
 		return ChecksResult{}, fmt.Errorf("could not get filenames: %v", err)
@@ -50,6 +50,10 @@ func Run(dir string) (ChecksResult, error) {
 	err = RenameFiles(skipped)
 	if err != nil {
 		log.Println("Could not rename files:", err)
+	}
+
+	if cli {
+		defer RevertFiles(skipped)
 	}
 
 	checks := []Check{

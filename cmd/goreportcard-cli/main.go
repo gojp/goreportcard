@@ -34,7 +34,7 @@ func dotPrintf(fullLen int, lfStr, rtFmtStr string, args ...interface{}) {
 func main() {
 	flag.Parse()
 
-	result, err := check.Run(*dir)
+	result, err := check.Run(*dir, true)
 	if err != nil {
 		log.Fatalf("Fatal error checking %s: %s", *dir, err.Error())
 	}
