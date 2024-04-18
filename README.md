@@ -56,14 +56,13 @@ goreportcard-cli
 ```
 
 ```
-Grade .......... A+  99.9%
-Files ................ 362
-Issues ................. 2
+Grade ........... A+ 98.1%
+Files ................ 962
+Issues ............... 158
 gofmt ............... 100%
-go_vet ............... 99%
-gocyclo .............. 99%
-golint .............. 100%
+go_vet .............. 100%
 ineffassign ......... 100%
+gocyclo .............. 83%
 license ............. 100%
 misspell ............ 100%
 ```
@@ -75,20 +74,16 @@ goreportcard-cli -v
 ```
 
 ```
-Grade .......... A+  99.9%
-Files ................ 362
-Issues ................. 2
+Grade ........... A+ 98.1%
+Files ................ 962
+Issues ............... 158
 gofmt ............... 100%
-go_vet ............... 99%
-go_vet  vendor/github.com/prometheus/client_golang/prometheus/desc.go:25
-        error: cannot find package "github.com/prometheus/client_model/go" in any of: (vet)
-
-gocyclo .............. 99%
-gocyclo download/download.go:22
-        warning: cyclomatic complexity 17 of function download() is high (> 15) (gocyclo)
-
-golint .............. 100%
+go_vet .............. 100%
 ineffassign ......... 100%
+gocyclo .............. 83%
+        vendor/honnef.co/go/tools/staticcheck/structtag.go
+                Line 8: warning: cyclomatic complexity 19 of function parseStructTag() is high (> 15) (gocyclo)
+
 license ............. 100%
 misspell ............ 100%
 ```
