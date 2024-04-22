@@ -6,8 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Go Report Card | Go project code quality report cards</title>
     <link rel="stylesheet" href="/assets/bulma.0.0.23.min.css">
-    <link rel="stylesheet" href="/assets/font-awesome/css/font-awesome.min.css">
     <link rel="stylesheet" href="/assets/goreportcard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -140,12 +140,12 @@
       </div>
       <div class="column is-one-quarter badge-col">
         <img class="badge" tag="{{repo}}" src="/badge/{{repo}}"/>
-        <a class="button is-info is-small tweet-button"
+        <a class="button is-dark is-small tweet-button"
           href="https://twitter.com/intent/tweet?text={{ repo }} gets {{#if use_an}}an{{else}}a{{/if}} {{ grade_encoded }} on goreportcard.com! #golang">
             <span class="icon is-small">
-              <i class="fa fa-twitter"></i>
+              <i class="fa-brands fa-x-twitter"></i>
             </span>
-            <span>Tweet</span>
+            <span>Post</span>
         </a>
       </div>
   </script>
