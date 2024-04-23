@@ -88,10 +88,6 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
-# golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5
-## explicit; go 1.11
-golang.org/x/lint
-golang.org/x/lint/golint
 # golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3
 ## explicit; go 1.17
 golang.org/x/mod/semver
