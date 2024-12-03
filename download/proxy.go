@@ -91,7 +91,6 @@ func (c *ProxyClient) LatestVersion(path string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		b, _ := io.ReadAll(resp.Body)
 		return "", fmt.Errorf("could not get latest module version from %s", u)
 	}
 
