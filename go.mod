@@ -1,7 +1,6 @@
 module github.com/gojp/goreportcard
 
-go 1.22.1
-toolchain go1.23.7
+go 1.24.2
 
 require (
 	github.com/alecthomas/gometalinter v1.0.3
