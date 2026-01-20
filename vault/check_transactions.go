@@ -122,7 +122,7 @@ func (tp *TransactionProcessor) readSingleCSV(filename string) ([]Transaction, e
 	}
 
 	var transactions []Transaction
-	lineNum := 1 // Header is line 1, data starts at line 2
+	lineNum := 1 // Track line number for error reporting (header was line 1, data starts at line 2)
 
 	// Read data rows
 	for {

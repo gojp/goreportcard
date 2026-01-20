@@ -114,7 +114,6 @@ This package follows Go best practices and passes all standard quality checks:
 - ✓ `go fmt` - Code formatting
 - ✓ `go vet` - Static analysis
 - ✓ `staticcheck` - Advanced static analysis
-- ✓ `golint` - Code style checking
 - ✓ `gocyclo` - Cyclomatic complexity (all functions < 15)
 - ✓ `misspell` - Spelling checks
 - ✓ Test coverage: 66.7%
