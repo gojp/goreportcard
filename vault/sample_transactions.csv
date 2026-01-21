@@ -1,0 +1,8 @@
+Date,Type,Amount,Description,Transaction ID
+2024-01-15,Payment,100.50,Product sale payment,TXN001
+2024-01-16,Transfer,-50.00,Bank transfer,TXN002
+2024-01-17,Fee,-2.99,PayPal processing fee,TXN003
+2024-01-18,Payment,250.00,Service payment,TXN004
+2024-01-19,Transfer,-100.00,Transfer to savings,TXN005
+2024-01-20,Fee,-5.50,International fee,TXN006
+2024-01-21,Payment,75.25,Subscription payment,TXN007
