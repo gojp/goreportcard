@@ -1,10 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 200 50" style="enable-background:new 0 0 200 50;" xml:space="preserve">
-<style type="text/css">
-	.st0{fill:#1A1A1A;}
-</style>
-<g>
-	<text x="10" y="35" font-family="Arial, sans-serif" font-size="28" font-weight="bold" class="st0">Litslink</text>
-</g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 80" fill="none">
+  <style>
+    .text { fill: #1a1a1a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-weight: 700; }
+  </style>
+  <text x="10" y="50" class="text" font-size="36">Litslink</text>
 </svg>
