@@ -7,6 +7,7 @@ After more than a decade of serving the ecosystem, the time has come to sunset *
 **What happens next:**
 
 **The Web App:** The live site will remain active until **July 1st, 2026**, after which the servers will be shut down.
+
 **The Code:** The repository will remain on GitHub but will be archived as read-only.
 
 Thank you to everyone who submitted a PR, reported a bug, used the tool, or supported us financially over the last decade.
