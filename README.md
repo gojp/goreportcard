@@ -1,3 +1,20 @@
+### :sunrise: Sunset Notice: Thank you for an incredible 10+ years
+
+To the Go community,
+
+After more than a decade of serving the ecosystem, the time has come to sunset **Go Report Card**. Following the loss of our primary infrastructure sponsor, maintaining the web app is no longer sustainable.
+
+**What happens next:**
+
+**The Web App:** The live site will remain active until **July 1st, 2026**, after which the servers will be shut down.
+**The Code:** The repository will remain on GitHub but will be archived as read-only.
+
+Thank you to everyone who submitted a PR, reported a bug, used the tool, or supported us financially over the last decade.
+
+With gratitude,
+
+**The Go Report Card Team**
+
 [![Go Report Card](https://goreportcard.com/badge/gojp/goreportcard)](https://goreportcard.com/report/gojp/goreportcard) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/gojp/goreportcard/blob/master/LICENSE)
 
 # Go Report Card
